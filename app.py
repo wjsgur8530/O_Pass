@@ -37,6 +37,9 @@ class User(db.Model):
     def __unicode__(self):
         return self.username
     
+    def __repr__(self):
+        return '%r' % self.username
+    
 class Visitor(db.Model):
     __tablename__ = "Visitor"
 
@@ -45,10 +48,12 @@ class Visitor(db.Model):
     department = db.Column(db.String(30), unique=False)
     phone = db.Column(db.String(30), unique=False)
     manager = db.Column(db.String(30), unique=False)
-    device = db.Column(db.String(50), unique=False)
-    serial_number = db.Column(db.String(50), unique=False)
+    device = db.Column(db.String(50), unique=False, nullable=True)
+    serial_number = db.Column(db.String(50), unique=False, nullable=True)
     object = db.Column(db.String(50), unique=False)
     created_date = db.Column(db.DateTime, unique=False)
+    exit_date = db.Column(db.DateTime, unique=False, nullable=True)
+    exit = db.Column(db.Boolean(), unique=False, nullable=True)
     approve = db.Column(db.Boolean(), unique=False)
 
     def __init__(self, name, department, phone, manager, device, serial_number, object, created_time, approve):
@@ -61,3 +66,5 @@ class Visitor(db.Model):
         self.approve = approve
         self.object = object
         self.created_date = created_time
+        self.exit_date = exit_date
+        self.exit = exit

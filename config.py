@@ -12,14 +12,17 @@ def create_app():
     app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
     app.secret_key = 'acjkehrjkawekvhjkawtejk'
 
-    # Login
-    login_manager = LoginManager()
-    login_manager.init_app(app)
+    # # Login
+    # login_manager = LoginManager()
+    # login_manager.init_app(app)
+    # login_manager.login_view = 'login'
+    # login_manager.login_message = u"로그인 후에 서비스를 이용해주세요."
+    # login_manager.login_message_category = "info"
 
-    from app import User
-    @login_manager.user_loader
-    def load_user(id):
-        return User.query.get(id)  # primary_key
+    # from app import User
+    # @login_manager.user_loader
+    # def load_user(id):
+    #     return User.query.get(id)  # primary_key
 
     # ORM
     db.init_app(app)

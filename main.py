@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-from flask import Flask, flash, session, url_for, render_template, request, redirect
+from flask import Flask, flash, session, url_for, render_template, request, redirect, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from werkzeug.security import generate_password_hash, check_password_hash # Password Hash
 from flask_bcrypt import Bcrypt
@@ -15,14 +15,40 @@ import requests
 app = create_app()
 bcrypt = Bcrypt(app)
 
+# Login
+login_manager = LoginManager()
+login_manager.init_app(app)
+login_manager.login_view = 'login'
+login_manager.login_message = u"로그인 후에 서비스를 이용해주세요."
+login_manager.login_message_category = "info"
+@login_manager.user_loader
+def load_user(id):
+    return db.session.get(User, id)  # primary_key
+
 @app.route('/')
 @app.route('/index')
 @login_required
 def index():
-    img = qrcode.make("안녕하세요")
-    img.save("C:\\Users\\User\\Desktop\\flask_O_pass\\flask_O_Pass\\qr_code.png")
-    print(img)
-    return render_template('index.html')
+    today_weekday = datetime.now().weekday()
+    weekdays = {
+        0: "월요일", 1: "화요일", 2: "수요일", 3: "목요일", 4: "금요일", 5: "토요일", 6: "일요일"
+    }
+    weekday = weekdays.get(today_weekday, "")
+    current_date = datetime.now().strftime('%Y년 %m월 %d일 ') + weekday
+    current_time = datetime.now().strftime('\n%p %H:%M:%S')
+    time = [ current_date, current_time]
+
+    approve_visitors = Visitor.query.filter_by(approve=1)
+    print(approve_visitors.count())
+
+    visitor_count = []
+    daily_visitor = approve_visitors.count()
+    visitor_count = [
+        daily_visitor, #일간 방문자
+    ]
+    
+    # print('현재 로그인한 사용자: ' + str(current_user))
+    return render_template('index.html', current_user=current_user, approve_visitors=approve_visitors, visitor_count=visitor_count, time=time)
 
 @app.route('/<pagename>')
 def admin(pagename):
@@ -37,6 +63,7 @@ def register():
         email = request.form['email']
         password1 = request.form['password1']
         password2 = request.form['password2']
+        department = request.form['registerDepartment']
 
         # 유효성 검사
         user = User.query.filter_by(email=email).first()
@@ -54,13 +81,13 @@ def register():
             # # 비밀번호 암호화
             hashed_password = bcrypt.generate_password_hash(password1)
 
-            user = User(username, email, hashed_password)
+            user = User(username, email, hashed_password, department)
             db.session.add(user)
             db.session.commit()
 
             # 회원가입이 성공적으로 완료됨을 알리는 메시지 표시
             flash("회원가입 완료")
-            return render_template('login.html')
+            return redirect('login')
 
     # GET 요청인 경우 회원가입 양식을 표시
     return render_template('register.html')
@@ -73,12 +100,11 @@ def login():
         password = request.form['password1']
 
         user = User.query.filter_by(email=email).first()
-
         if user:
             if bcrypt.check_password_hash(user.password, password):
                 print('로그인 완료')
                 login_user(user, remember=True)
-                return redirect(url_for('index'))
+                return redirect(url_for('index', user=user.username))
             else: 
                 flash('비밀번호가 다릅니다.')
                 return render_template('login.html')
@@ -103,6 +129,7 @@ def visitor():
     if request.method == 'POST':
         name = request.form['inputName']
         department = request.form['inputDepartment']
+        object = request.form['inputObject']
         phone = request.form['inputPhoneNumber']
         manager = request.form['inputManager']
         created_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
@@ -111,7 +138,7 @@ def visitor():
 
         page = request.args.get('page', type=int, default=1) # 페이지
         # visitor_info = Visitor.query.all()
-        visitor_info = Visitor.query.order_by('id')
+        visitor_info = Visitor.query.filter_by(approve=0)
         page_list = visitor_info.paginate(page=page, per_page=4)
 
         department_list = [
@@ -124,14 +151,14 @@ def visitor():
             '기타',
         ]
 
-        visitor = Visitor(name, department, phone, manager, device, serial_number, created_time, 0)
+        visitor = Visitor(name, department, phone, manager, device, serial_number, object, created_time, 0)
         db.session.add(visitor)
         db.session.commit()
         return render_template('visitor.html', department_list=department_list, page_list=page_list)
     else:
         page = request.args.get('page', type=int, default=1) # 페이지
         # visitor_info = Visitor.query.all()
-        visitor_info = Visitor.query.order_by('id')
+        visitor_info = Visitor.query.filter_by(approve=0)
         page_list = visitor_info.paginate(page=page, per_page=4)
         department_list = [
             'CJ Olivenetworks',
@@ -144,25 +171,75 @@ def visitor():
         ]
         return render_template('visitor.html', department_list=department_list, page_list=page_list) #visitor_info=visitor_info
 
-# @app.route('/cjworld', methods=['GET', 'POST'])
-# def login_cj():
-#     if request.method == 'POST':
-#         url = "http://cj.cj.net/PT/login.aspx?sLang=KOR"
-#         datas = { #ID name: txtID, PW name: txtPWD
-#             "txtID": 'jeonhyuk',
-#             "txtPWD": 'jj119672@@'
-#         }
-#         response = requests.post(url, data=datas)
-#         content = response.text
-#         print(content)
-#         email = request.form['cj_email']
-#         password = request.form['cj_password1']
-#         print(response)
-#         return render_template('cj_login.html')
+# 승인 버튼 클릭시 로직 ajax
+@app.route('/ajax_approve', methods=['POST'])
+def ajax_approve():
+    data = request.get_json()
+    print(data['visitor_id'])
+    print(data['approve'])
+    visitor = Visitor.query.filter_by(id=data['visitor_id']).first()
+    visitor.approve = 1
+    db.session.commit()
+    return jsonify(result = "success", result2= data)
 
-#     else: # GET 로그인 페이지
-#         return render_template('cj_login.html')
+# 삭제 버튼 클릭시 로직 ajax
+@app.route('/ajax_deny', methods=['POST'])
+def ajax_deny():
+    data = request.get_json()
+    print(data['visitor_id'])
+    print(data['approve'])
+    visitor = Visitor.query.filter_by(id=data['visitor_id']).first()
+    db.session.delete(visitor)
+    db.session.commit()
+    return jsonify(result = "success", result2= data)
+
+@app.route('/abc')
+def count_visitors():
+    today = datetime.today().date()
+    print(today)
+    # # 일간 방문자 수 카운트 및 저장
+    # daily_visitors = Visitors.query.filter_by(date=today).first()
+    # if daily_visitors:
+    #     daily_visitors.visitors += 1
+    # else:
+    #     daily_visitors = Visitors(date=today, visitors=1)
+    #     db.session.add(daily_visitors)
     
+    # # 주간 방문자 수 카운트 및 저장
+    # start_of_week = today - timedelta(days=today.weekday())
+    # end_of_week = start_of_week + timedelta(days=6)
+    # weekly_visitors = Visitors.query.filter(Visitors.date.between(start_of_week, end_of_week)).first()
+    # if weekly_visitors:
+    #     weekly_visitors.visitors += 1
+    # else:
+    #     weekly_visitors = Visitors(date=start_of_week, visitors=1)
+    #     db.session.add(weekly_visitors)
+    
+    # # 월간 방문자 수 카운트 및 저장
+    # start_of_month = today.replace(day=1)
+    # end_of_month = start_of_month + timedelta(days=31)  # 최대 31일로 설정 (조정 필요)
+    # monthly_visitors = Visitors.query.filter(Visitors.date.between(start_of_month, end_of_month)).first()
+    # if monthly_visitors:
+    #     monthly_visitors.visitors += 1
+    # else:
+    #     monthly_visitors = Visitors(date=start_of_month, visitors=1)
+    #     db.session.add(monthly_visitors)
+    
+    # # 연간 방문자 수 카운트 및 저장
+    # start_of_year = today.replace(month=1, day=1)
+    # end_of_year = start_of_year.replace(month=12, day=31)
+    # yearly_visitors = Visitors.query.filter(Visitors.date.between(start_of_year, end_of_year)).first()
+    # if yearly_visitors:
+    #     yearly_visitors.visitors += 1
+    # else:
+    #     yearly_visitors = Visitors(date=start_of_year, visitors=1)
+    #     db.session.add(yearly_visitors)
+    
+    # db.session.commit()
+    
+    return '방문자 수 카운트 완료'
+
+
 @app.errorhandler(jinja2.exceptions.TemplateNotFound)
 def template_not_found(e):
     return not_found(e)
