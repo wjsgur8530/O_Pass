@@ -46,8 +46,8 @@
             <div class="card-body">
               <div class="row no-gutters align-items-center">
                 <div class="col mr-2">
-                  <div class="text-xs font-weight-bold text-gray text-uppercase mb-1">실시간 출입 방문객</div>
-                  <div class="h5 mb-0 font-weight-bold text-gray-800">{{ visitor_count[0] }}명</div>
+                  <div class="text-xs font-weight-bold text-danger text-uppercase mb-1">실시간 출입 방문객</div>
+                  <div class="h5 mb-0 font-weight-bold text-gray-800">{{ visitor_count[1] }}명</div>
                 </div>
                 <div class="col-auto">
                   <i class="fas fa-calendar fa-2x text-gray-300"></i>
@@ -98,11 +98,7 @@
               <div class="row no-gutters align-items-center">
                 <div class="col mr-2">
                   <div class="text-xs font-weight-bold text-info text-uppercase mb-1">월간 방문자 (Monthly)</div>
-                  <div class="row no-gutters align-items-center">
-                    <div class="col-auto">
-                      <div class="h5 mb-0 mr-3 font-weight-bold text-gray-800">{{ visitor_count[0] }}명</div>
-                    </div>
-                  </div>
+                  <div class="h5 mb-0 font-weight-bold text-gray-800">{{ visitor_count[0] }}명</div>
                 </div>
                 <div class="col-auto">
                   <i class="fas fa-calendar fa-2x text-gray-300"></i>
@@ -136,31 +132,55 @@
 
         <!-- Area Chart -->
         <div class="col-xl-12 col-lg-7">
+          <!-- DataTales Example -->
           <div class="card shadow mb-4">
-            <!-- Card Header - Dropdown -->
-            <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
-              <h6 class="m-0 font-weight-bold text-primary">Visitor Overview</h6>
-              <div class="dropdown no-arrow">
-                <a class="dropdown-toggle" href="#" role="button" id="dropdownMenuLink" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                  <i class="fas fa-ellipsis-v fa-sm fa-fw text-gray-400"></i>
-                </a>
-                <div class="dropdown-menu dropdown-menu-right shadow animated--fade-in" aria-labelledby="dropdownMenuLink">
-                  <div class="dropdown-header">Dropdown Header:</div>
-                  <a class="dropdown-item" href="#">Action</a>
-                  <a class="dropdown-item" href="#">Another action</a>
-                  <div class="dropdown-divider"></div>
-                  <a class="dropdown-item" href="#">Something else here</a>
+            <div class="card-header py-3">
+              <div style="display:flex;">
+                <!-- 방문객 퇴실 -->
+                <div class="border-left-secondary">
+                  <label for="name" class="ml-3">담당자명 수정:</label>
+                  <div class="input-group">
+                    <input type="text" class="form-control col-xl-3 ml-3 btn-sm" id="name" placeholder="이름" maxlength="8" style="height:30.7px;">
+                    <span class="input-group-btn">
+                      <button class="btn btn-secondary btn-sm ml-1" type="button">수정</button>
+                    </span>
+                  </div>
+                </div>
+                <div class="border-left-secondary">
+                  <label for="name" class="ml-3">퇴실(선택 체크 후 버튼 클릭):</label>
+                  <div class="input-group">
+                    <span class="input-group-btn">
+                      <button type="button" class="btn btn-secondary btn-sm ml-3" id="exit_checkbox">퇴실</button>
+                    </span>
+                  </div>
                 </div>
               </div>
-            </div>
-            <!-- Card Body -->
             <div class="card-body">
-              <div class="chart-area">
-                
-                
-                <table class="table" style="text-align: center;">
-                  <thead class="thead-light">
+              <div class="table-responsive">
+                <table class="table table-bordered" id="dataTable" width="100%" cellspacing="0">
+                  <thead>
                     <tr>
+                      <th scope="col">
+                        <div class="form-check">
+                          <input type="checkbox" class="form-check-input" name="index_total_check_box" id="index_total_check_box">
+                        </div>
+                      </th>
+                      <th scope="col">#</th>
+                      <th scope="col">방문 목적</th>
+                      <th scope="col" style="width:75px;">이름</th>
+                      <th scope="col">소속</th>
+                      <th scope="col">연락처</th>
+                      <th scope="col">담당자</th>
+                      <th scope="col">장비명</th>
+                      <th scope="col">시리얼번호</th>
+                      <th scope="col">방문 시각</th>
+                      <th scope="col">퇴실 시각</th>
+                      <th scope="col"></th>
+                    </tr>
+                  </thead>
+                  <tfoot>
+                    <tr>
+                      <th scope="col">#</th>
                       <th scope="col">#</th>
                       <th scope="col">방문 목적</th>
                       <th scope="col">이름</th>
@@ -170,33 +190,69 @@
                       <th scope="col">장비명</th>
                       <th scope="col">시리얼번호</th>
                       <th scope="col">방문 시각</th>
-                      <th scope="col">승인 여부</th>
+                      <th scope="col">퇴실 시각</th>
+                      <th scope="col"></th>
                     </tr>
-                  </thead>
+                  </tfoot>
                   <tbody>
-                    {% for approve_visitor in approve_visitors %}
-                      <tr>
-                        <th scope="row">{{ approve_visitor.id }}</th>
-                        <td><span class="visitor_object">{{ approve_visitor.object }}</span></td>
-                        <td>{{ approve_visitor.name }}</td>
-                        <td>{{ approve_visitor.department }}</td>
-                        <td>{{ approve_visitor.phone }}</td>
-                        <td>{{ approve_visitor.manager }}</td>
-                        <td>{{ approve_visitor.device }}</td>
-                        <td>{{ approve_visitor.serial_number }}</td>
-                        <td>{{ approve_visitor.created_date }}</td>
-                        <td>
-                          <a href="#" class="btn btn-success btn-circle btn-sm">
-                            <i class="fas fa-check"></i>
-                          </a>
-                        </td>
-                        <!-- .btn-circle -->
-                      </tr>
-                    {% endfor %}
+                  {% for approve_visitor in approve_visitors %}
+                    <tr>
+                      <th scope="row">
+                        <div class="form-check">
+                          <input type="checkbox" class="form-check-input" name="check_box" id="checkbox{{approve_visitor.id}}" value="{{approve_visitor.id}}">
+                        </div>
+                      </th>
+                      <td>{{ approve_visitor.id }}</td>
+                      <td>{{ approve_visitor.object }}</td>
+                      <td>{{ approve_visitor.name }}</td>
+                      <td>{{ approve_visitor.department }}</td>
+                      <td>{{ approve_visitor.phone }}</td>
+                      <td>{{ approve_visitor.manager }}</td>
+                      <td>{{ approve_visitor.device }}</td>
+                      <td>{{ approve_visitor.serial_number }}</td>
+                      <td>{{ approve_visitor.created_date }}</td>
+                      <td>
+                        {% if approve_visitor.exit_date != None %}
+                        {{ approve_visitor.exit_date }}
+                      </td>
+                        {% else %}
+                        {% endif %}
+                      <td>
+                        {% if approve_visitor.exit == 0 %}
+                        <button class="btn btn-secondary btn-sm" id="exit_btn{{approve_visitor.id}}" value="{{approve_visitor.id}}">퇴실</button>
+                        {% else %}
+                        {% endif %}
+                      </td>
+                    </tr>
+                    <!-- 퇴실 스크립트 -->
+                  <script>
+                    $('#exit_btn{{approve_visitor.id}}').click(function(){
+                      var exit_btn = $('#exit_btn{{approve_visitor.id}}').val();
+                      var postdata = {
+                        'exit_id': exit_btn,
+                        'exit': 1
+                      };
+                      $.ajax({
+                        contentType: 'application/json',
+                        type: 'POST',
+                        url: 'http://127.0.0.1:5000/api/ajax_exit',
+                        data: JSON.stringify(postdata),
+                        dataType: 'json',
+                        success: function(data) {
+                          alert('퇴실 되었습니다.');
+                        },
+                        error: function(request, status, error) {
+                          alert('퇴실 오류');
+                        }
+                      })
+                    })
+                  </script>
+                  {% endfor %}
                   </tbody>
                 </table>
               </div>
             </div>
+          </div>
           </div>
         </div>
       <!-- Content Row -->
@@ -342,16 +398,57 @@
 
   </body>
 </html>
+<!-- 체크박스 전체 선택/해제 스크립트 -->
+<script type="text/javascript">
+  $(document).ready(function() {
+    $("#index_total_check_box").click(function() {
+      if($("#index_total_check_box").is(":checked")) $("input[name=check_box]").prop("checked", true);
+      else $("input[name=check_box]").prop("checked", false);
+    });
+    
+    $("input[name=check_box]").click(function() {
+      var total = $("input[name=check_box]").length;
+      var checked = $("input[name=check_box]:checked").length;
+      
+      if(total != checked) $("#index_total_check_box").prop("checked", false);
+      else $("#index_total_check_box").prop("checked", true); 
+    });
+  });
+</script>
+
+<!-- 체크박스 퇴실 스크립트 -->
+<script>
+  $('#exit_checkbox').click(function(){
+    var checked_list = [];
+    $("input[name='check_box']:checked").each(function(){
+      checked_list.push($(this).val());
+    });
+    var postdata = {'checked_datas': checked_list}
+    $.ajax({
+      contentType: 'application/json',
+      type: 'POST',
+      url: 'http://127.0.0.1:5000/api/ajax_index_exit_checkbox',
+      data: JSON.stringify(postdata),
+      dataType: 'json',
+      success: function(data) {
+        alert('퇴실 되었습니다.');
+      },
+      error: function(request, status, error) {
+        alert('퇴실 오류');
+      }
+    })
+  })
+</script>
 
 <!-- 시간 새로고침 js -->
-<script>
+<!-- <script>
   function autoRefresh_sample_div()
   {
     var currentLocation = window.location;
     $("#refresh_div").load(currentLocation + ' #refresh_div')
   }
   setInterval('autoRefresh_sample_div()', 1000); //1초 후 새로고침
-</script>
+</script> -->
         
 {% endblock %}
 
@@ -363,4 +460,11 @@
     <!-- Page level custom scripts -->
     <script src="{{ url_for('static', filename='js/demo/chart-area-demo.js')}}"></script>
     <script src="{{ url_for('static', filename='js/demo/chart-pie-demo.js')}}"></script>
+
+    <!-- 테이블 데이터 처리 부트스트랩 Page level plugins -->
+    <script src="{{ url_for('static', filename='vendor/datatables/jquery.dataTables.min.js')}}"></script>
+    <script src="{{ url_for('static', filename='vendor/datatables/dataTables.bootstrap4.min.js')}}"></script>
+
+    <!-- Page level custom scripts -->
+    <script src="{{ url_for('static', filename='js/demo/datatables-demo.js')}}"></script>
 {% endblock %}

@@ -66,5 +66,3 @@ class Visitor(db.Model):
         self.approve = approve
         self.object = object
         self.created_date = created_time
-        self.exit_date = exit_date
-        self.exit = exit

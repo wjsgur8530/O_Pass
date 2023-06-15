@@ -2,9 +2,6 @@
 {% block content %}
 <html>
     <head>
-        <!-- ajax, comman.js 호출 -->
-        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
-        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
         <style>
             * {
               padding:0;
@@ -134,32 +131,27 @@
           <div class="row">
 
             <!-- Area Chart -->
-            <div class="col-xl-12 col-lg-7 h-100">
+            <div class="col-xl-12 col-lg-7">
+              <!-- DataTales Example -->
               <div class="card shadow mb-4">
-                <!-- Card Header - Dropdown -->
-                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
-                  <h6 class="m-0 font-weight-bold text-primary">Overview</h6>
-                  <div class="dropdown no-arrow">
-                    <a class="dropdown-toggle" href="#" role="button" id="dropdownMenuLink" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                      <i class="fas fa-ellipsis-v fa-sm fa-fw text-gray-400"></i>
-                    </a>
-                    <div class="dropdown-menu dropdown-menu-right shadow animated--fade-in" aria-labelledby="dropdownMenuLink">
-                      <div class="dropdown-header">Dropdown Header:</div>
-                      <a class="dropdown-item" href="#">Action</a>
-                      <a class="dropdown-item" href="#">Another action</a>
-                      <div class="dropdown-divider"></div>
-                      <a class="dropdown-item" href="#">Something else here</a>
-                    </div>
+                <div class="card-header py-3">
+                  <div class="border-left-secondary">
+                    <!-- 체크 박스 전체 승인 버튼 -->
+                    <button type="button" class="btn btn-success btn-sm ml-3" id="approve_checkbox">승인(선택 체크 후 버튼 클릭)</button>
+                    <!-- 체크 박스 전체 반려 버튼 -->
+                    <button type="button" class="btn btn-danger btn-sm ml-3" id="deny_checkbox">반려(선택 체크 후 버튼 클릭)</button>
                   </div>
                 </div>
-
-                <div class="table-responsive" style="width: 100%; table-layout: fixed;">
-                  <!-- Card Body -->
                 <div class="card-body">
-                  <div class="chart-area" style="height: 350px;">
-                    <table class="table" style="text-align: center;">
-                      <thead class="thead-light">
+                  <div class="table-responsive">
+                    <table class="table table-bordered" id="dataTable" width="100%" cellspacing="0">
+                      <thead>
                         <tr>
+                          <th scope="col">
+                            <div class="form-check">
+                              <input type="checkbox" class="form-check-input" name="visit_total_check_box" id="visit_total_check_box">
+                            </div>
+                          </th>
                           <th scope="col">#</th>
                           <th scope="col">방문 목적</th>
                           <th scope="col">이름</th>
@@ -173,9 +165,30 @@
                           <th scope="col">승인 여부(팀장급)</th>
                         </tr>
                       </thead>
-                      {% for visitor in page_list %}
+                      <tfoot>
+                        <tr>
+                          <th scope="col">#</th>
+                          <th scope="col">#</th>
+                          <th scope="col">방문 목적</th>
+                          <th scope="col">이름</th>
+                          <th scope="col">소속</th>
+                          <th scope="col">연락처</th>
+                          <th scope="col">담당자</th>
+                          <th scope="col">장비명</th>
+                          <th scope="col">시리얼 번호</th>
+                          <th scope="col">방문 시각</th>
+                          <!-- <th scope="col">승인 여부(일반 구성원)</th> -->
+                          <th scope="col">승인 여부(팀장급)</th>
+                        </tr>
+                      </tfoot>
                       <tbody>
-                          <tr style="line-height: 50px;">
+                        {% for visitor in visitor_info %}
+                          <tr>
+                            <td>
+                              <div class="form-check">
+                                <input type="checkbox" class="form-check-input" name="check_box" id="checkbox{{visitor.id}}" value="{{visitor.id}}">
+                              </div>
+                            </td>
                             <th scope="row">{{ visitor.id }}</th>
                             <td><span class="visitor_object">{{ visitor.object }}</span></td>
                             <td>{{ visitor.name }}</td>
@@ -187,11 +200,10 @@
                             <td>{{ visitor.created_date }}</td>
                             <!-- <td><button class="btn btn-primary mr-2" id="approve_btn">긴급 승인</button></td> -->
                             <td>
-                              <button class="btn btn-success mr-2" id="approve_btn{{visitor.id}}" value="{{visitor.id}}">승인</button>
-                              <button class="btn btn-danger" id="deny_btn{{visitor.id}}" value="{{visitor.id}}">반려</button>
+                              <button class="btn btn-success mr-2 btn-sm" id="approve_btn{{visitor.id}}" value="{{visitor.id}}">승인</button>
+                              <button class="btn btn-danger btn-sm" id="deny_btn{{visitor.id}}" value="{{visitor.id}}">반려</button>
                             </td>
                           </tr>
-                      </tbody>
                       <script>
                         $('#approve_btn{{visitor.id}}').click(function(){
                           var visitor_id = $('#approve_btn{{visitor.id}}').val();
@@ -202,7 +214,7 @@
                           $.ajax({
                             contentType: 'application/json',
                             type: 'POST',
-                            url: 'http://127.0.0.1:5000/ajax_approve',
+                            url: 'http://127.0.0.1:5000/api/ajax_approve',
                             data: JSON.stringify(postdata),
                             dataType: 'json',
                             success: function(data) {
@@ -224,7 +236,7 @@
                             $.ajax({
                               contentType: 'application/json',
                               type: 'POST',
-                              url: 'http://127.0.0.1:5000/ajax_deny',
+                              url: 'http://127.0.0.1:5000/api/ajax_deny',
                               data: JSON.stringify(postdata),
                               dataType: 'json',
                               success: function(data) {
@@ -237,75 +249,16 @@
                           })
                           </script>
                       {% endfor %}
+                    </tbody>
                     </table>
-                    
-                    <!-- 페이징 -->
-                    <nav aria-label="Page navigation example" style="position: relative; z-index: 0; position: absolute; bottom: -15%; left: 50%; transform: translateX(-50%)">
-                      <ul class="pagination pagination-sm my-5 justify-content-center">
-                          <!-- 이전 페이징 구현 (이전 페이지 있을시)-->
-                          {% if page_list.has_prev %}
-                            <li class="page-item">
-                                <a class="page-link" href="?page={{ page_list.prev_num }}">이전</a>
-                            </li>
-                          <!-- 이전 페이지가 없을 시 -->
-                          {% else %}
-                            <li class="page-item disabled">
-                                <a class="page-link" href="">이전</a>
-                            </li>
-                          {% endif %}
-                          <!-- 중간 페이징 -->
-                          {% for page_num in page_list.iter_pages() %}
-                            {% if page_num %}
-                                {% if page_num != page_list.page %}
-                                    <li class="page-item">
-                                        <a class="page-link" href="?page={{ page_num }}">{{ page_num }}</a>
-                                    </li>
-                                {% else %}
-                                    <li class="page-item active" aria-current="page">
-                                        <a class="page-link" href="#">{{ page_num }}</a>
-                                    </li>
-                                {% endif %}
-                            {% else %}
-                                <li class="disabled">
-                                    <a class="page-link" href="#">...</a>
-                                </li>
-                            {% endif %}
-                          {% endfor %}
-                          <!-- 다음 페이징 구현 (다음 페이지가 있는 경우_ -->
-                          {% if page_list.has_next %}
-                              <li class="page-item">
-                                  <a class="page-link" href="?page={{ page_list.next_num }}">다음</a>
-                              </li>
-                          <!-- 다음 페이지 없는 경우 -->
-                          {% else %}
-                              <li class="page-item disabled">
-                                  <a class="page-link" tabindex="100" aria-disabled="true" href="#">다음</a>
-                              </li>
-                          {% endif %}
-                      </ul>
-                    </nav>
-                    <!-- 페이지 끝 -->
-
                   </div>
                 </div>
-                <!-- Card 끝 -->
-              </div>
-
               </div>
             </div>
+          </div>
         </div>
     </body>
-
-<!-- Bootstrap core JavaScript-->
-<script src="vendor/jquery/jquery.min.js"></script>
-<script src="vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
-
-<!-- Core plugin JavaScript-->
-<script src="vendor/jquery-easing/jquery.easing.min.js"></script>
-
-<!-- Custom scripts for all pages-->
-<script src="js/sb-admin-2.min.js"></script>
-
+  </html>
 <!-- 팝업 창 스크립트 -->
 <script>
     const btn = document.getElementById('popupBtn');
@@ -343,5 +296,79 @@
     }
 </script>
 
-</html>
+<!-- 체크박스 전체 선택/해제 스크립트 -->
+<script type="text/javascript">
+  $(document).ready(function() {
+    $("#visit_total_check_box").click(function() {
+      if($("#visit_total_check_box").is(":checked")) $("input[name=check_box]").prop("checked", true);
+      else $("input[name=check_box]").prop("checked", false);
+    });
+    
+    $("input[name=check_box]").click(function() {
+      var total = $("input[name=check_box]").length;
+      var checked = $("input[name=check_box]:checked").length;
+      
+      if(total != checked) $("#visit_total_check_box").prop("checked", false);
+      else $("#visit_total_check_box").prop("checked", true); 
+    });
+  });
+</script>
+
+<!-- 체크박스 승인 스크립트 -->
+<script>
+  $('#approve_checkbox').click(function(){
+    var checked_list = [];
+    $("input[name='check_box']:checked").each(function(){
+      checked_list.push($(this).val());
+    });
+    var postdata = {'checked_datas': checked_list}
+    $.ajax({
+      contentType: 'application/json',
+      type: 'POST',
+      url: 'http://127.0.0.1:5000/api/ajax_visit_approve_checkbox',
+      data: JSON.stringify(postdata),
+      dataType: 'json',
+      success: function(data) {
+        alert('승인 되었습니다.');
+      },
+      error: function(request, status, error) {
+        alert('승인 오류');
+      }
+    })
+  })
+</script>
+
+<!-- 체크박스 반려 스크립트 -->
+<script>
+  $('#deny_checkbox').click(function(){
+    var checked_list = [];
+    $("input[name='check_box']:checked").each(function(){
+      checked_list.push($(this).val());
+    });
+    var postdata = {'checked_datas': checked_list}
+    $.ajax({
+      contentType: 'application/json',
+      type: 'POST',
+      url: 'http://127.0.0.1:5000/api/ajax_visit_deny_checkbox',
+      data: JSON.stringify(postdata),
+      dataType: 'json',
+      success: function(data) {
+        alert('승인 되었습니다.');
+      },
+      error: function(request, status, error) {
+        alert('승인 오류');
+      }
+    })
+  })
+</script>
+{% endblock %}
+
+{% block js %}
+    {{ super() }}
+    <!-- 테이블 데이터 처리 부트스트랩 Page level plugins -->
+    <script src="{{ url_for('static', filename='vendor/datatables/jquery.dataTables.min.js')}}"></script>
+    <script src="{{ url_for('static', filename='vendor/datatables/dataTables.bootstrap4.min.js')}}"></script>
+
+    <!-- Page level custom scripts -->
+    <script src="{{ url_for('static', filename='js/demo/datatables-demo.js')}}"></script>
 {% endblock %}

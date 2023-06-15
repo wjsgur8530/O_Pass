@@ -38,13 +38,19 @@ def index():
     current_time = datetime.now().strftime('\n%p %H:%M:%S')
     time = [ current_date, current_time]
 
-    approve_visitors = Visitor.query.filter_by(approve=1)
+    approve_visitors = Visitor.query.filter_by(approve=1).order_by(Visitor.id.desc())
+
+    # 실시간 출입 방문객
+    in_visitor = Visitor.query.filter_by(exit=0)
+    in_visitor = in_visitor.count()
+
     print(approve_visitors.count())
 
     visitor_count = []
     daily_visitor = approve_visitors.count()
     visitor_count = [
         daily_visitor, #일간 방문자
+        in_visitor,
     ]
     
     # print('현재 로그인한 사용자: ' + str(current_user))
@@ -136,10 +142,8 @@ def visitor():
         device = request.form['inputDevice']
         serial_number = request.form['inputSerialNumber']
 
-        page = request.args.get('page', type=int, default=1) # 페이지
         # visitor_info = Visitor.query.all()
         visitor_info = Visitor.query.filter_by(approve=0)
-        page_list = visitor_info.paginate(page=page, per_page=4)
 
         department_list = [
             'CJ Olivenetworks',
@@ -150,16 +154,14 @@ def visitor():
             '디아이웨어',
             '기타',
         ]
-
+        # 내방객 등록하기
         visitor = Visitor(name, department, phone, manager, device, serial_number, object, created_time, 0)
         db.session.add(visitor)
         db.session.commit()
-        return render_template('visitor.html', department_list=department_list, page_list=page_list)
+        return render_template('visitor.html', department_list=department_list, visitor_info=visitor_info)
     else:
-        page = request.args.get('page', type=int, default=1) # 페이지
         # visitor_info = Visitor.query.all()
         visitor_info = Visitor.query.filter_by(approve=0)
-        page_list = visitor_info.paginate(page=page, per_page=4)
         department_list = [
             'CJ Olivenetworks',
             'CJ 대한통운',
@@ -169,21 +171,29 @@ def visitor():
             '디아이웨어',
             '기타',
         ]
-        return render_template('visitor.html', department_list=department_list, page_list=page_list) #visitor_info=visitor_info
+        return render_template('visitor.html', department_list=department_list, visitor_info=visitor_info)
+
+# 테이블 테스트
+@app.route('/tables_test', methods=['GET', 'POST'])
+@login_required
+def table_test():
+    approve_visitors = Visitor.query.filter_by(approve=1)
+    return render_template('tables_test.html', approve_visitors=approve_visitors)
 
 # 승인 버튼 클릭시 로직 ajax
-@app.route('/ajax_approve', methods=['POST'])
+@app.route('/api/ajax_approve', methods=['POST'])
 def ajax_approve():
     data = request.get_json()
     print(data['visitor_id'])
     print(data['approve'])
     visitor = Visitor.query.filter_by(id=data['visitor_id']).first()
     visitor.approve = 1
+    visitor.exit = 0
     db.session.commit()
-    return jsonify(result = "success", result2= data)
+    return jsonify(result = "success")
 
-# 삭제 버튼 클릭시 로직 ajax
-@app.route('/ajax_deny', methods=['POST'])
+# 반려 버튼 클릭시 로직 ajax
+@app.route('/api/ajax_deny', methods=['POST'])
 def ajax_deny():
     data = request.get_json()
     print(data['visitor_id'])
@@ -191,12 +201,58 @@ def ajax_deny():
     visitor = Visitor.query.filter_by(id=data['visitor_id']).first()
     db.session.delete(visitor)
     db.session.commit()
-    return jsonify(result = "success", result2= data)
+    return jsonify(result = "success")
 
-@app.route('/abc')
-def count_visitors():
-    today = datetime.today().date()
-    print(today)
+# 퇴실 버튼 클릭시 로직 ajax
+@app.route('/api/ajax_exit', methods=['POST'])
+def ajax_exit():
+    data = request.get_json()
+    print(data['exit_id'])
+    print(data['exit'])
+    visitor = Visitor.query.filter_by(id=data['exit_id']).first()
+    if visitor.exit_date == None and visitor.exit == 0:
+        visitor.exit_date = datetime.now().strftime('%Y-%m-%d %H-%M-%S')
+        visitor.exit = 1
+        db.session.commit()
+    return jsonify(result = "success")
+
+# index 체크 박스 퇴실 api
+@app.route('/api/ajax_index_exit_checkbox', methods=['POST'])
+def ajax_index_exit_checkbox():
+    data = request.get_json()
+    for checked_data in data['checked_datas']:
+        visitor = Visitor.query.filter_by(id=checked_data).first()
+        if visitor.exit_date == None and visitor.exit == 0:
+            visitor.exit_date = datetime.now().strftime('%Y-%m-%d %H-%M-%S')
+            visitor.exit = 1
+            db.session.commit()
+    return jsonify(result = "success")
+
+# visit 체크 박스 승인 api
+@app.route('/api/ajax_visit_approve_checkbox', methods=['POST'])
+def ajax_visit_approve_checkbox():
+    data = request.get_json()
+    for checked_data in data['checked_datas']:
+        visitor = Visitor.query.filter_by(id=checked_data).first()
+        visitor.approve = 1
+        visitor.exit = 0
+        db.session.commit()
+    return jsonify(result = "success")
+
+# visit 체크 박스 반려 api
+@app.route('/api/ajax_visit_deny_checkbox', methods=['POST'])
+def ajax_visit_deny_checkbox():
+    data = request.get_json()
+    for checked_data in data['checked_datas']:
+        visitor = Visitor.query.filter_by(id=checked_data).first()
+        db.session.delete(visitor)
+        db.session.commit()
+    return jsonify(result = "success")
+
+# @app.route('/abc')
+# def count_visitors():
+#     today = datetime.today().date()
+#     print(today)
     # # 일간 방문자 수 카운트 및 저장
     # daily_visitors = Visitors.query.filter_by(date=today).first()
     # if daily_visitors:
@@ -237,7 +293,7 @@ def count_visitors():
     
     # db.session.commit()
     
-    return '방문자 수 카운트 완료'
+    # return '방문자 수 카운트 완료'
 
 
 @app.errorhandler(jinja2.exceptions.TemplateNotFound)
