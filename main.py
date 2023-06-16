@@ -29,22 +29,25 @@ def load_user(id):
 @app.route('/index')
 @login_required
 def index():
+    # 타임 스탬프
     today_weekday = datetime.now().weekday()
-    weekdays = {
-        0: "월요일", 1: "화요일", 2: "수요일", 3: "목요일", 4: "금요일", 5: "토요일", 6: "일요일"
-    }
+    weekdays = {0: "월요일", 1: "화요일", 2: "수요일", 3: "목요일", 4: "금요일", 5: "토요일", 6: "일요일"}
     weekday = weekdays.get(today_weekday, "")
     current_date = datetime.now().strftime('%Y년 %m월 %d일 ') + weekday
     current_time = datetime.now().strftime('\n%p %H:%M:%S')
     time = [ current_date, current_time]
 
-    approve_visitors = Visitor.query.filter_by(approve=1).order_by(Visitor.id.desc())
-
     # 실시간 출입 방문객
     in_visitor = Visitor.query.filter_by(exit=0)
     in_visitor = in_visitor.count()
 
+    # 승인된 방문객 Sort_Desc
+    approve_visitors = Visitor.query.filter_by(approve=1).order_by(Visitor.id.desc())
     print(approve_visitors.count())
+
+    # 출입 카드
+    categories = ['일반', '공사', '전산']
+    elements = [f'{category}{i}' for category in categories for i in range(1, 16)]
 
     visitor_count = []
     daily_visitor = approve_visitors.count()
@@ -54,7 +57,7 @@ def index():
     ]
     
     # print('현재 로그인한 사용자: ' + str(current_user))
-    return render_template('index.html', current_user=current_user, approve_visitors=approve_visitors, visitor_count=visitor_count, time=time)
+    return render_template('index.html', current_user=current_user, approve_visitors=approve_visitors, visitor_count=visitor_count, time=time, cards_element=elements)
 
 @app.route('/<pagename>')
 def admin(pagename):
@@ -248,6 +251,20 @@ def ajax_visit_deny_checkbox():
         db.session.delete(visitor)
         db.session.commit()
     return jsonify(result = "success")
+
+# index 담당자 업데이트 체크 박스 api
+@app.route('/api/ajax_index_manager_update_checkbox', methods=['POST'])
+def ajax_index_manager_update_checkbox():
+    data = request.get_json()
+    manager = data['manager']
+    print(data['manager'])
+    if manager:
+        for checked_data in data['checked_datas']:
+            visitor = Visitor.query.filter_by(id=checked_data).first()
+            visitor.manager = manager
+            db.session.commit()
+        return jsonify(result = "success")
+    return jsonify(result = "error")
 
 # @app.route('/abc')
 # def count_visitors():

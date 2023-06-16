@@ -27,7 +27,7 @@
         <div class="col-xl-2 col-md-6 mb-4" id="current_time">
           <div class="card border-left-secondary shadow h-100 py-2">
             <div class="card-body">
-              <div class="row no-gutters align-items-center">
+              <div class="row no-gutters align-items-center" id="index_timestamp">
                 <div class="col mr-2">
                   <div class="text-xs font-weight-bold text-gray text-uppercase mb-1">{{time[0]}}</div>
                   <div class="h5 mb-0 font-weight-bold text-gray-800">{{time[1]}}</div>
@@ -135,33 +135,65 @@
           <!-- DataTales Example -->
           <div class="card shadow mb-4">
             <div class="card-header py-3">
-              <div style="display:flex;">
-                <!-- 방문객 퇴실 -->
-                <div class="border-left-secondary">
-                  <label for="name" class="ml-3">담당자명 수정:</label>
+              <div class="row">
+                <div class="col border-left-secondary">
+                  <div class="custom-select" id="custom-select" style="overflow: hidden;">
+                    <label for="custom-select-box">
+                    <select name="custom-select-box" id="custom-select-box">
+                      <option value="10">10</option>
+                      <option value="25">25</option>
+                      <option value="50">50</option>
+                      <option value="100">100</option>
+                    </select> 개씩 보기
+                    </label>
+                  </div>
+                </div>
+                <div class="col border-left-secondary">
                   <div class="input-group">
-                    <input type="text" class="form-control col-xl-3 ml-3 btn-sm" id="name" placeholder="이름" maxlength="8" style="height:30.7px;">
+                    <div class="custom-select" style="overflow: hidden;">
+                      <label for="custom-select-box">
+                      <select name="custom-select-box" id="custom-select-box">
+                        {% for card in cards_element %}
+                          <option value="10">{{card}}</option>
+                        {% endfor %}
+                      </select> 카드
+                      </label>
+                    </div>
+                    <button class="btn btn-secondary" type="button" id="manager_update">불출</button>
+                  </div>
+                </div>
+                <!-- 방문객 퇴실 -->
+                <div class="col border-left-secondary">
+                  <div class="input-group">
+                    <input type="text" class="form-control" id="manager_update_input" name="manager_update_input" placeholder="담당자명 입력" maxlength="8" style="height: 38px;">
+                    <button class="btn btn-secondary" type="button" id="manager_update">수정</button>
+                  </div>
+                </div>
+                <div class="col border-left-secondary">
+                  <div class="input-group">
                     <span class="input-group-btn">
-                      <button class="btn btn-secondary btn-sm ml-1" type="button">수정</button>
+                      <button type="button" class="btn btn-secondary" id="exit_checkbox" style="height: 38px; overflow: hidden;">퇴실(선택 체크 후 버튼 클릭)</button>
                     </span>
                   </div>
                 </div>
-                <div class="border-left-secondary">
-                  <label for="name" class="ml-3">퇴실(선택 체크 후 버튼 클릭):</label>
+                <div class="col border-left-secondary">
                   <div class="input-group">
                     <span class="input-group-btn">
-                      <button type="button" class="btn btn-secondary btn-sm ml-3" id="exit_checkbox">퇴실</button>
+                      <div id="custom-search">
+                        <input type="text" id="search-input" class="form-control" placeholder="Search..."/>
+                      </div>
                     </span>
                   </div>
                 </div>
               </div>
+            </div>
             <div class="card-body">
               <div class="table-responsive">
-                <table class="table table-bordered" id="dataTable" width="100%" cellspacing="0">
+                <table class="table table-bordered" id="dataTable" width="100%" cellspacing="0" style="text-align: center;">
                   <thead>
                     <tr>
                       <th scope="col">
-                        <div class="form-check">
+                        <div class="form-check" style="display: flex; justify-content: center; align-items: center;">
                           <input type="checkbox" class="form-check-input" name="index_total_check_box" id="index_total_check_box">
                         </div>
                       </th>
@@ -198,7 +230,7 @@
                   {% for approve_visitor in approve_visitors %}
                     <tr>
                       <th scope="row">
-                        <div class="form-check">
+                        <div class="form-check" style="display: flex; justify-content: center; align-items: center;">
                           <input type="checkbox" class="form-check-input" name="check_box" id="checkbox{{approve_visitor.id}}" value="{{approve_visitor.id}}">
                         </div>
                       </th>
@@ -252,7 +284,6 @@
                 </table>
               </div>
             </div>
-          </div>
           </div>
         </div>
       <!-- Content Row -->
@@ -440,16 +471,88 @@
   })
 </script>
 
+<!-- 체크박스 담당자 수정 스크립트 -->
+<script>
+  $('#manager_update').click(function(){
+    var manager = document.getElementById("manager_update_input");
+    var input_manager = manager.value
+    var checked_list = [];
+    $("input[name='check_box']:checked").each(function(){
+      checked_list.push($(this).val());
+    });
+    var postdata = {'checked_datas': checked_list, 'manager': input_manager}
+    $.ajax({
+      contentType: 'application/json',
+      type: 'POST',
+      url: 'http://127.0.0.1:5000/api/ajax_index_manager_update_checkbox',
+      data: JSON.stringify(postdata),
+      dataType: 'json',
+      success: function(data) {
+        alert('담당자가 수정 되었습니다.');
+      },
+      error: function(request, status, error) {
+        alert('담당자 수정 오류');
+      }
+    })
+  })
+</script>
+
+<!-- 커스텀 검색 기능 -->
+<script>
+  $(document).ready(function() {
+    // DataTable 초기화
+    var table = $('#dataTable').DataTable({
+      lengthMenu: [10, 15, 20, 25, 50, 100],
+      pageLength: 10 // 기본 페이지 길이 설정
+    });
+    // 기존 페이지 길이 조정 기능 활성화
+    $('#dataTable_length select').on('change', function() {
+      var newLength = parseInt($(this).val(), 10);
+      table.page.len(newLength).draw();
+    });
+
+    // 셀릭트 이벤트 처리
+    $('#custom-select-box').on('change', function() {
+      var newLength = parseInt($(this).val(), 10);
+      table.page.len(newLength).draw();
+    });
+
+    var initialLength = table.page.len();
+    $('#custom-select-box').val(initialLength);
+
+    // 기존 datatable_length select 요소의 옵션 복사
+    var options = $('#dataTable_length select').html();
+    // 새로운 커스텀 select 요소에 옵션 추가
+    $('#custom-select-box').html(options);
+
+    // 검색 이벤트 처리
+    $('#search-input').on('keyup', function() {
+      table.search(this.value).draw();
+    });
+  });
+</script>
+
+<!-- 기존 검색 폼 제거 -->
+<script>
+  $(document).ready(function() {
+    var search = document.querySelector('#dataTable_filter');
+    var select = document.querySelector('#dataTable_length')
+
+    search.style.display = 'none';
+    select.style.display = 'none';
+  });
+</script>
+
+
 <!-- 시간 새로고침 js -->
 <!-- <script>
   function autoRefresh_sample_div()
   {
     var currentLocation = window.location;
-    $("#refresh_div").load(currentLocation + ' #refresh_div')
+    $("#index_timestamp").load(currentLocation + ' #index_timestamp')
   }
   setInterval('autoRefresh_sample_div()', 1000); //1초 후 새로고침
 </script> -->
-        
 {% endblock %}
 
 {% block js %}
