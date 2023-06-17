@@ -11,7 +11,7 @@
         
             #modalWrap {
               position: fixed; /* Stay in place */
-              z-index: 1; /* Sit on top */
+              z-index: 10; /* Sit on top */
               padding-top: 100px; /* Location of the box */
               left: 0;
               top: 0;
@@ -37,13 +37,6 @@
               font-size:25px;
               cursor: pointer;
             }
-            
-            .visitor_object {
-              color: black;
-              border: 1px solid black;
-              border-radius: 25px 25px 25px 25px;
-              padding: 3px 5px;
-            }
           </style>
     </head>
     <body>
@@ -51,7 +44,7 @@
         <div class="container-fluid">
 
             <!-- 팝업 닫기 -->
-            <div id="modalWrap">
+            <div id="modalWrap" style="display: none;">
             <div id="modalContent">
                 <div id="modalBody">
                     <!-- 팝업 닫기 -->
@@ -135,20 +128,44 @@
               <!-- DataTales Example -->
               <div class="card shadow mb-4">
                 <div class="card-header py-3">
-                  <div class="border-left-secondary">
-                    <!-- 체크 박스 전체 승인 버튼 -->
-                    <button type="button" class="btn btn-success btn-sm ml-3" id="approve_checkbox">승인(선택 체크 후 버튼 클릭)</button>
-                    <!-- 체크 박스 전체 반려 버튼 -->
-                    <button type="button" class="btn btn-danger btn-sm ml-3" id="deny_checkbox">반려(선택 체크 후 버튼 클릭)</button>
+                  <div class="row">
+                    <div class="col border-left-secondary">
+                      <div class="custom-select" id="custom-select" style="overflow: hidden;">
+                        <label for="custom-select-box">
+                        <select name="custom-select-box" id="custom-select-box">
+                          <option value="10">10</option>
+                          <option value="25">25</option>
+                          <option value="50">50</option>
+                          <option value="100">100</option>
+                        </select> 개씩 보기
+                        </label>
+                      </div>
+                    </div>
+                    <div class="col border-left-secondary">
+                      <div class="input-group">
+                        <span class="input-group-btn">
+                          <!-- 체크 박스 전체 승인 버튼 -->
+                          <button type="button" class="btn btn-success ml-3" id="approve_checkbox">승인(체크 선택 승인)</button>
+                          <!-- 체크 박스 전체 반려 버튼 -->
+                          <button type="button" class="btn btn-danger ml-3" id="deny_checkbox">반려(체크 선택 반려)</button>
+                        </span>
+                      </div>
+                    </div>
+                    <div class="col border-left-secondary">
+                      <div class="input-group">
+                        <input type="text" id="search-input" class="form-control" placeholder="Search..."/>
+                        <button class="btn btn-secondary" type="button">검색</button>
+                      </div>
+                    </div>
                   </div>
                 </div>
                 <div class="card-body">
                   <div class="table-responsive">
-                    <table class="table table-bordered" id="dataTable" width="100%" cellspacing="0">
+                    <table class="table table-bordered" id="dataTable" width="100%" cellspacing="0" style="text-align: center;">
                       <thead>
                         <tr>
                           <th scope="col">
-                            <div class="form-check">
+                            <div class="form-check" style="display: flex; justify-content: center; align-items: center;">
                               <input type="checkbox" class="form-check-input" name="visit_total_check_box" id="visit_total_check_box">
                             </div>
                           </th>
@@ -185,7 +202,7 @@
                         {% for visitor in visitor_info %}
                           <tr>
                             <td>
-                              <div class="form-check">
+                              <div class="form-check" style="display: flex; justify-content: center; align-items: center;">
                                 <input type="checkbox" class="form-check-input" name="check_box" id="checkbox{{visitor.id}}" value="{{visitor.id}}">
                               </div>
                             </td>
@@ -273,10 +290,10 @@
     }
 
     window.onclick = function(event) {
-    if (event.target == modal) {
+    if (event.target == modalWrap) {
         modal.style.display = "none";
     }
-    }
+}
 </script>
 
 <!-- 인풋 창 disabled/abled -->
@@ -361,6 +378,53 @@
     })
   })
 </script>
+
+<!-- 커스텀 셀렉트, 검색 기능 -->
+<script>
+  $(document).ready(function() {
+    // DataTable 초기화
+    var table = $('#dataTable').DataTable({
+      lengthMenu: [10, 15, 20, 25, 50, 100],
+      pageLength: 10 // 기본 페이지 길이 설정
+    });
+    // 기존 페이지 길이 조정 기능 활성화
+    $('#dataTable_length select').on('change', function() {
+      var newLength = parseInt($(this).val(), 10);
+      table.page.len(newLength).draw();
+    });
+
+    // 셀릭트 이벤트 처리
+    $('#custom-select-box').on('change', function() {
+      var newLength = parseInt($(this).val(), 10);
+      table.page.len(newLength).draw();
+    });
+
+    var initialLength = table.page.len();
+    $('#custom-select-box').val(initialLength);
+
+    // 기존 datatable_length select 요소의 옵션 복사
+    var options = $('#dataTable_length select').html();
+    // 새로운 커스텀 select 요소에 옵션 추가
+    $('#custom-select-box').html(options);
+
+    // 검색 이벤트 처리
+    $('#search-input').on('keyup', function() {
+      table.search(this.value).draw();
+    });
+  });
+</script>
+
+<!-- 기존 셀렉트, 검색 폼 제거 -->
+<script>
+  $(document).ready(function() {
+    var search = document.querySelector('#dataTable_filter');
+    var select = document.querySelector('#dataTable_length')
+
+    search.style.display = 'none';
+    select.style.display = 'none';
+  });
+</script>
+
 {% endblock %}
 
 {% block js %}

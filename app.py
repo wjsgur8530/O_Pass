@@ -55,6 +55,7 @@ class Visitor(db.Model):
     exit_date = db.Column(db.DateTime, unique=False, nullable=True)
     exit = db.Column(db.Boolean(), unique=False, nullable=True)
     approve = db.Column(db.Boolean(), unique=False)
+    card_id = db.Column(db.Integer, db.ForeignKey('Card.id'))
 
     def __init__(self, name, department, phone, manager, device, serial_number, object, created_time, approve):
         self.name = name
@@ -66,3 +67,15 @@ class Visitor(db.Model):
         self.approve = approve
         self.object = object
         self.created_date = created_time
+
+class Card(db.Model):
+    __tablename__ = "Card"
+
+    id = db.Column(db.Integer, primary_key=True)
+    card_type = db.Column(db.String(50), unique=False)
+    card_status = db.Column(db.String(50), unique=False, nullable=True)
+    visitors = db.relationship('Visitor', backref='card')
+
+    def __init__(self, card_type, card_status):
+        self.card_type = card_type
+        self.card_status = card_status

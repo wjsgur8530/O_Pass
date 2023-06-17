@@ -2,14 +2,6 @@
 {% block content %}
 <html>
   <head>
-    <style>
-      .visitor_object {
-              color: black;
-              border: 1px solid black;
-              border-radius: 25px 25px 25px 25px;
-              padding: 3px 5px;
-            }
-    </style>
   </head>
   <body>
     <!-- Begin Page Content -->
@@ -151,15 +143,18 @@
                 <div class="col border-left-secondary">
                   <div class="input-group">
                     <div class="custom-select" style="overflow: hidden;">
-                      <label for="custom-select-box">
-                      <select name="custom-select-box" id="custom-select-box">
-                        {% for card in cards_element %}
-                          <option value="10">{{card}}</option>
+                      <label for="card_select_box">
+                      <select name="card_select_box" id="card_select_box">
+                        {% for card in card_list %}
+                          {% if card.card_status != "불출" %}
+                          <option value="{{card.card_type}}">{{card.card_type}}</option>
+                          {% else %}
+                          {% endif %}
                         {% endfor %}
                       </select> 카드
                       </label>
                     </div>
-                    <button class="btn btn-secondary" type="button" id="manager_update">불출</button>
+                    <button class="btn btn-secondary" type="button" id="entrance_card">불출</button>
                   </div>
                 </div>
                 <!-- 방문객 퇴실 -->
@@ -178,11 +173,8 @@
                 </div>
                 <div class="col border-left-secondary">
                   <div class="input-group">
-                    <span class="input-group-btn">
-                      <div id="custom-search">
-                        <input type="text" id="search-input" class="form-control" placeholder="Search..."/>
-                      </div>
-                    </span>
+                    <input type="text" id="search-input" class="form-control" placeholder="Search..."/>
+                    <button class="btn btn-secondary" type="button">검색</button>
                   </div>
                 </div>
               </div>
@@ -200,6 +192,7 @@
                       <th scope="col">#</th>
                       <th scope="col">방문 목적</th>
                       <th scope="col" style="width:75px;">이름</th>
+                      <th scope="col">카드No</th>
                       <th scope="col">소속</th>
                       <th scope="col">연락처</th>
                       <th scope="col">담당자</th>
@@ -216,6 +209,7 @@
                       <th scope="col">#</th>
                       <th scope="col">방문 목적</th>
                       <th scope="col">이름</th>
+                      <th scope="col">카드No</th>
                       <th scope="col">소속</th>
                       <th scope="col">연락처</th>
                       <th scope="col">담당자</th>
@@ -237,6 +231,12 @@
                       <td>{{ approve_visitor.id }}</td>
                       <td>{{ approve_visitor.object }}</td>
                       <td>{{ approve_visitor.name }}</td>
+                      <td>
+                        {% if approve_visitor.exit != 1 %}
+                        {{ approve_visitor.card.card_type }}
+                        {% else %}
+                        {% endif %}
+                      </td>
                       <td>{{ approve_visitor.department }}</td>
                       <td>{{ approve_visitor.phone }}</td>
                       <td>{{ approve_visitor.manager }}</td>
@@ -274,7 +274,7 @@
                           alert('퇴실 되었습니다.');
                         },
                         error: function(request, status, error) {
-                          alert('퇴실 오류');
+                          alert('카드를 먼저 불출해주세요.');
                         }
                       })
                     })
@@ -497,7 +497,7 @@
   })
 </script>
 
-<!-- 커스텀 검색 기능 -->
+<!-- 커스텀 셀렉트, 검색 기능 -->
 <script>
   $(document).ready(function() {
     // DataTable 초기화
@@ -532,7 +532,7 @@
   });
 </script>
 
-<!-- 기존 검색 폼 제거 -->
+<!-- 기존 셀렉트, 검색 폼 제거 -->
 <script>
   $(document).ready(function() {
     var search = document.querySelector('#dataTable_filter');
@@ -543,6 +543,31 @@
   });
 </script>
 
+<!-- 체크 박스 카드 불출 스크립트 -->
+<script>
+  $('#entrance_card').click(function(){
+    var checked_list = [];
+    var input_card = document.getElementById('card_select_box');
+    var card = input_card.value
+    $("input[name='check_box']:checked").each(function(){
+      checked_list.push($(this).val());
+    });
+    var postdata = {'checked_datas': checked_list, 'card': card}
+    $.ajax({
+      contentType: 'application/json',
+      type: 'POST',
+      url: 'http://127.0.0.1:5000/api/ajax_index_card_checkbox',
+      data: JSON.stringify(postdata),
+      dataType: 'json',
+      success: function(data) {
+        alert('카드가 불출 되었습니다.');
+      },
+      error: function(request, status, error) {
+        alert('카드가 이미 불출되었거나 카드 불출은 1명씩만 가능합니다.');
+      }
+    })
+  })
+</script>
 
 <!-- 시간 새로고침 js -->
 <!-- <script>
