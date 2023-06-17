@@ -231,7 +231,7 @@
                           $.ajax({
                             contentType: 'application/json',
                             type: 'POST',
-                            url: 'http://127.0.0.1:5000/api/ajax_approve',
+                            url: 'api/ajax_approve',
                             data: JSON.stringify(postdata),
                             dataType: 'json',
                             success: function(data) {
@@ -253,7 +253,7 @@
                             $.ajax({
                               contentType: 'application/json',
                               type: 'POST',
-                              url: 'http://127.0.0.1:5000/api/ajax_deny',
+                              url: 'api/ajax_deny',
                               data: JSON.stringify(postdata),
                               dataType: 'json',
                               success: function(data) {
@@ -342,14 +342,16 @@
     $.ajax({
       contentType: 'application/json',
       type: 'POST',
-      url: 'http://127.0.0.1:5000/api/ajax_visit_approve_checkbox',
+      url: 'api/ajax_visit_approve_checkbox',
       data: JSON.stringify(postdata),
       dataType: 'json',
       success: function(data) {
         alert('승인 되었습니다.');
       },
       error: function(request, status, error) {
-        alert('승인 오류');
+        message = request.responseText;
+        if (message == "No Select")
+          alert('승인할 방문객을 선택해주세요.')
       }
     })
   })
@@ -366,14 +368,16 @@
     $.ajax({
       contentType: 'application/json',
       type: 'POST',
-      url: 'http://127.0.0.1:5000/api/ajax_visit_deny_checkbox',
+      url: 'api/ajax_visit_deny_checkbox',
       data: JSON.stringify(postdata),
       dataType: 'json',
       success: function(data) {
-        alert('승인 되었습니다.');
+        alert('반려 되었습니다.');
       },
       error: function(request, status, error) {
-        alert('승인 오류');
+        message = request.responseText;
+        if (message == "No Select")
+          alert('반려할 방문객을 선택해주세요.')
       }
     })
   })

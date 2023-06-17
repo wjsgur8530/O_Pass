@@ -251,7 +251,7 @@
                         {% endif %}
                       <td>
                         {% if approve_visitor.exit == 0 %}
-                        <button class="btn btn-secondary btn-sm" id="exit_btn{{approve_visitor.id}}" value="{{approve_visitor.id}}">퇴실</button>
+                        <button class="btn btn-secondary btn-sm" type="button" id="exit_btn{{approve_visitor.id}}" value="{{approve_visitor.id}}">퇴실</button>
                         {% else %}
                         {% endif %}
                       </td>
@@ -267,14 +267,16 @@
                       $.ajax({
                         contentType: 'application/json',
                         type: 'POST',
-                        url: 'http://127.0.0.1:5000/api/ajax_exit',
+                        url: 'api/ajax_exit',
                         data: JSON.stringify(postdata),
                         dataType: 'json',
                         success: function(data) {
                           alert('퇴실 되었습니다.');
                         },
                         error: function(request, status, error) {
-                          alert('카드를 먼저 불출해주세요.');
+                          message = request.responseText;
+                          if (message == "Card None")
+                            alert('카드를 먼저 불출해주세요.');
                         }
                       })
                     })
@@ -458,14 +460,20 @@
     $.ajax({
       contentType: 'application/json',
       type: 'POST',
-      url: 'http://127.0.0.1:5000/api/ajax_index_exit_checkbox',
+      url: 'api/ajax_index_exit_checkbox',
       data: JSON.stringify(postdata),
       dataType: 'json',
       success: function(data) {
         alert('퇴실 되었습니다.');
       },
       error: function(request, status, error) {
-        alert('퇴실 오류');
+        message = request.responseText;
+        if (message == "No Select")
+          alert('퇴실할 방문객을 선택해주세요.')
+        if (message == "Exited")
+          alert('이미 퇴실한 방문객입니다.')
+        if (message == "No Card")
+          alert('카드를 먼저 불출해주세요.');
       }
     })
   })
@@ -484,14 +492,20 @@
     $.ajax({
       contentType: 'application/json',
       type: 'POST',
-      url: 'http://127.0.0.1:5000/api/ajax_index_manager_update_checkbox',
+      url: 'api/ajax_index_manager_update_checkbox',
       data: JSON.stringify(postdata),
       dataType: 'json',
       success: function(data) {
         alert('담당자가 수정 되었습니다.');
       },
       error: function(request, status, error) {
-        alert('담당자 수정 오류');
+        message = request.responseText;
+        if (message == "No Select")
+          alert('담당자를 수정할 방문객을 선택해주세요.')
+        if (message == "Exited")
+          alert('퇴실한 방문객은 담당자 수정이 불가합니다.')
+        if (message == "Error")
+          alert('담당자를 입력해주세요.')
       }
     })
   })
@@ -556,14 +570,25 @@
     $.ajax({
       contentType: 'application/json',
       type: 'POST',
-      url: 'http://127.0.0.1:5000/api/ajax_index_card_checkbox',
+      url: 'api/ajax_index_card_checkbox',
       data: JSON.stringify(postdata),
       dataType: 'json',
       success: function(data) {
         alert('카드가 불출 되었습니다.');
       },
       error: function(request, status, error) {
-        alert('카드가 이미 불출되었거나 카드 불출은 1명씩만 가능합니다.');
+        message = request.responseText;
+        if (message == "No Card")
+          alert('카드를 먼저 불출해주세요.');
+
+        if (message == "Multi Check")
+          alert('카드 불출은 단일 선택만 가능합니다.');
+
+        if (message == "Exited")
+          alert('이미 퇴실한 방문객입니다.')
+
+        if (message == "Use Card")
+          alert('이미 카드를 불출했습니다.')
       }
     })
   })

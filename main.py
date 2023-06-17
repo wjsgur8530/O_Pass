@@ -211,7 +211,7 @@ def ajax_exit():
     visitor = Visitor.query.filter_by(id=data['exit_id']).first()
 
     if visitor.card_id is None: # 카드를 안 받은 사람은 퇴실 X
-        return "오류 발생"
+        return "Card None"
 
     if visitor.exit_date == None and visitor.exit == 0:
         visitor.exit_date = datetime.now().strftime('%Y-%m-%d %H-%M-%S')
@@ -219,26 +219,42 @@ def ajax_exit():
         card = Card.query.filter_by(id=visitor.card_id).first()
         card.card_status = "회수"
         db.session.commit()
+
     return jsonify(result = "success")
 
 # index 체크 박스 퇴실 api
 @app.route('/api/ajax_index_exit_checkbox', methods=['POST'])
 def ajax_index_exit_checkbox():
     data = request.get_json()
+    data_length = len(data['checked_datas'])
+
+    if data_length < 1:
+        return "No Select"
+
     for checked_data in data['checked_datas']:
         visitor = Visitor.query.filter_by(id=checked_data).first()
+        if visitor.card_id is None:
+            return "No Card"
+
         if visitor.exit_date == None and visitor.exit == 0:
             visitor.exit_date = datetime.now().strftime('%Y-%m-%d %H-%M-%S')
             visitor.exit = 1
             card = Card.query.filter_by(id=visitor.card_id).first()
             card.card_status = "회수"
             db.session.commit()
+        else:
+            return "Exited"
     return jsonify(result = "success")
 
 # visit 체크 박스 승인 api
 @app.route('/api/ajax_visit_approve_checkbox', methods=['POST'])
 def ajax_visit_approve_checkbox():
     data = request.get_json()
+    data_length = len(data['checked_datas'])
+
+    if data_length < 1:
+        return "No Select"
+
     for checked_data in data['checked_datas']:
         visitor = Visitor.query.filter_by(id=checked_data).first()
         visitor.approve = 1
@@ -250,6 +266,11 @@ def ajax_visit_approve_checkbox():
 @app.route('/api/ajax_visit_deny_checkbox', methods=['POST'])
 def ajax_visit_deny_checkbox():
     data = request.get_json()
+    data_length = len(data['checked_datas'])
+
+    if data_length < 1:
+        return "No Select"
+        
     for checked_data in data['checked_datas']:
         visitor = Visitor.query.filter_by(id=checked_data).first()
         db.session.delete(visitor)
@@ -261,14 +282,20 @@ def ajax_visit_deny_checkbox():
 def ajax_index_manager_update_checkbox():
     data = request.get_json()
     manager = data['manager']
-    print(data['manager'])
-    if manager:
-        for checked_data in data['checked_datas']:
-            visitor = Visitor.query.filter_by(id=checked_data).first()
-            visitor.manager = manager
-            db.session.commit()
-        return jsonify(result = "success")
-    return jsonify(result = "error")
+    data_length = len(data['checked_datas'])
+
+    if data_length < 1:
+        return "No Select"
+    if manager is None or manager == "":
+        return "Error"
+
+    for checked_data in data['checked_datas']:
+        visitor = Visitor.query.filter_by(id=checked_data).first()
+        if visitor.exit == 1:
+            return "Exited"
+        visitor.manager = manager
+        db.session.commit()
+    return jsonify(result = "success")
 
 # index 카드 불출 체크 박스 api
 @app.route('/api/ajax_index_card_checkbox', methods=['POST'])
@@ -277,22 +304,27 @@ def ajax_index_card_checkbox():
     card = data['card']
     data_length = len(data['checked_datas']) # 선택된 체크박스 수
 
-    if card is None or data_length != 1: # 선택한 카드가 없거나 2개 이상 선택됐을 때 오류 발생
-        return "오류 발생"
+    # 선택한 카드가 없거나 2개 이상 선택됐을 때 오류 발생
+    if card is None:
+        return "No Card"
+    if data_length != 1:
+        return "Multi Check"
 
     card_table = Card.query.filter_by(card_type=card).first()
     for checked_data in data['checked_datas']:
         visitor = Visitor.query.filter_by(id=checked_data).first()
-        if visitor.exit != 1 and visitor.card_id == None:
-            visitor.card_id = card_table.id
-            card_table.card_status = "불출"
-            db.session.commit()
-        else:
-            return "오류 발생"
+        if visitor.exit == 1:
+            return "Exited"
+        if visitor.card_id != None:
+            return "Use Card"
+
+        visitor.card_id = card_table.id
+        card_table.card_status = "불출"
+        db.session.commit()
     return jsonify(result = "success")
 
 # DB 카드 생성 로직
-@app.route('/api/create_card', methods=['POST'])
+@app.route('/api/create_card', methods=['GET'])
 def create_card():
     # 출입 카드 DB Content 생성
     categories = ['일반', '공사', '전산']
@@ -348,7 +380,6 @@ def create_card():
     # db.session.commit()
     
     # return '방문자 수 카운트 완료'
-
 
 @app.errorhandler(jinja2.exceptions.TemplateNotFound)
 def template_not_found(e):
