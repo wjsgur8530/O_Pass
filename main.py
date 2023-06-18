@@ -8,9 +8,11 @@ import jinja2.exceptions
 from config import create_app, db
 from flask_login import login_user, login_required, logout_user, current_user
 from flask_login import LoginManager
+from flask_session import Session
 from datetime import datetime, date, time
 import qrcode
 import requests
+import csv
 
 app = create_app()
 bcrypt = Bcrypt(app)
@@ -88,9 +90,17 @@ def register():
             # # 비밀번호 암호화
             hashed_password = bcrypt.generate_password_hash(password1)
 
-            user = User(username, email, hashed_password, department)
+            # 회원가입시 직급 추가
+            with open('info.csv', 'r') as file:
+                reader = csv.reader(file)
+                
+                for row in reader:
+                    if row[0] == username and row[2] == department:
+                        rank=row[1]
+            user = User(username, email, hashed_password, department,rank)
             db.session.add(user)
             db.session.commit()
+            
 
             # 회원가입이 성공적으로 완료됨을 알리는 메시지 표시
             flash("회원가입 완료")
@@ -107,9 +117,12 @@ def login():
         password = request.form['password1']
 
         user = User.query.filter_by(email=email).first()
+        session['id'] =user.id
+        app.logger.debug('디버그 로그 메시지')
         if user:
             if bcrypt.check_password_hash(user.password, password):
                 print('로그인 완료')
+                
                 login_user(user, remember=True)
                 return redirect(url_for('index', user=user.username))
             else: 
@@ -133,6 +146,21 @@ def logout():
 @app.route('/visit', methods=['GET', 'POST'])
 @login_required
 def visitor():
+    #id=session['user_id']
+    user = User.query.get(session['id'])
+    #print(id)
+    #직급에 따라 다른 승인페이지
+    app.logger.debug(session['id'])
+    app.logger.debug(user.rank)
+    #user = User.query.get(id)
+    #flash(user.rank)
+    if user.rank in ['G5', 'G6', 'G7']:
+        url='adminvisitor.html'
+        
+    else:
+        url='visitor.html'
+        
+
     if request.method == 'POST':
         name = request.form['inputName']
         department = request.form['inputDepartment']
@@ -159,7 +187,9 @@ def visitor():
         visitor = Visitor(name, department, phone, manager, device, serial_number, object, created_time, 0)
         db.session.add(visitor)
         db.session.commit()
-        return render_template('visitor.html', department_list=department_list, visitor_info=visitor_info)
+
+        
+        return render_template(url, department_list=department_list, visitor_info=visitor_info)
     else:
         # visitor_info = Visitor.query.all()
         visitor_info = Visitor.query.filter_by(approve=0)
@@ -172,7 +202,7 @@ def visitor():
             '디아이웨어',
             '기타',
         ]
-        return render_template('visitor.html', department_list=department_list, visitor_info=visitor_info)
+        return render_template(url, department_list=department_list, visitor_info=visitor_info)
 
 # 테이블 테스트
 @app.route('/tables_test', methods=['GET', 'POST'])

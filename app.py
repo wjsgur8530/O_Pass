@@ -12,13 +12,14 @@ class User(db.Model):
     email = db.Column(db.String(50), unique=True)
     password = db.Column(db.String(200), unique=False)
     department = db.Column(db.String(50), unique=False)
-    permission = db.Column(db.String(20), unique=False)
+    rank = db.Column(db.String(20), unique=False)
 
-    def __init__(self, username, email, password, department):
+    def __init__(self, username, email, password, department,rank):
         self.username = username
         self.email = email
         self.password = password
         self.department = department
+        self.rank=rank
 
     # Flask-Login integration
     def is_authenticated(self):
