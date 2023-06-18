@@ -18,14 +18,11 @@
         <!-- 현재 시간 -->
         <div class="col-xl-2 col-md-6 mb-4" id="current_time">
           <div class="card border-left-secondary shadow h-100 py-2">
-            <div class="card-body">
+            <div class="card-body ml-2">
               <div class="row no-gutters align-items-center" id="index_timestamp">
                 <div class="col mr-2">
                   <div class="text-xs font-weight-bold text-gray text-uppercase mb-1">{{time[0]}}</div>
                   <div class="h5 mb-0 font-weight-bold text-gray-800">{{time[1]}}</div>
-                </div>
-                <div class="col-auto">
-                  <i class="fas fa-calendar fa-2x text-gray-300"></i>
                 </div>
               </div>
             </div>
@@ -35,14 +32,11 @@
         <!-- 실시간 출입 방문자 -->
         <div class="col-xl-2 col-md-6 mb-4">
           <div class="card border-left-danger shadow h-100 py-2">
-            <div class="card-body">
-              <div class="row no-gutters align-items-center">
+            <div class="card-body ml-2">
+              <div class="row no-gutters align-items-center" id="index_visitor">
                 <div class="col mr-2">
-                  <div class="text-xs font-weight-bold text-danger text-uppercase mb-1">실시간 출입 방문객</div>
-                  <div class="h5 mb-0 font-weight-bold text-gray-800">{{ visitor_count[1] }}명</div>
-                </div>
-                <div class="col-auto">
-                  <i class="fas fa-calendar fa-2x text-gray-300"></i>
+                  <div class="text-xs font-weight-bold text-danger text-uppercase mb-1">실시간 출입 방문객 (1m)</div>
+                  <div class="h5 mb-0 font-weight-bold text-gray-800">{{ visitor_count[0] }}명</div>
                 </div>
               </div>
             </div>
@@ -52,14 +46,11 @@
         <!-- 일간 방문자 -->
         <div class="col-xl-2 col-md-6 mb-4">
           <div class="card border-left-primary shadow h-100 py-2">
-            <div class="card-body">
-              <div class="row no-gutters align-items-center">
+            <div class="card-body ml-2">
+              <div class="row no-gutters align-items-center" id="index_daily_visitor">
                 <div class="col mr-2">
-                  <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">일간 방문자 (Daily)</div>
-                  <div class="h5 mb-0 font-weight-bold text-gray-800">{{ visitor_count[0] }}명</div>
-                </div>
-                <div class="col-auto">
-                  <i class="fas fa-calendar fa-2x text-gray-300"></i>
+                  <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">일간 방문자 (Daily/1m)</div>
+                  <div class="h5 mb-0 font-weight-bold text-gray-800">{{ visitor_count[3] }}명</div>
                 </div>
               </div>
             </div>
@@ -69,14 +60,11 @@
         <!-- 주간 방문자 -->
         <div class="col-xl-2 col-md-6 mb-4">
           <div class="card border-left-success shadow h-100 py-2">
-            <div class="card-body">
-              <div class="row no-gutters align-items-center">
+            <div class="card-body ml-2">
+              <div class="row no-gutters align-items-center" id="index_monthly_visitor">
                 <div class="col mr-2">
-                  <div class="text-xs font-weight-bold text-success text-uppercase mb-1">주간 방문자 (Weekly)</div>
-                  <div class="h5 mb-0 font-weight-bold text-gray-800">{{ visitor_count[0] }}명</div>
-                </div>
-                <div class="col-auto">
-                  <i class="fas fa-calendar fa-2x text-gray-300"></i>
+                  <div class="text-xs font-weight-bold text-success text-uppercase mb-1">월간 방문자 (Month/1m)</div>
+                  <div class="h5 mb-0 font-weight-bold text-gray-800">{{ visitor_count[2] }}명</div>
                 </div>
               </div>
             </div>
@@ -86,14 +74,11 @@
         <!-- 월간 방문자 -->
         <div class="col-xl-2 col-md-6 mb-4">
           <div class="card border-left-info shadow h-100 py-2">
-            <div class="card-body">
-              <div class="row no-gutters align-items-center">
+            <div class="card-body ml-2">
+              <div class="row no-gutters align-items-center" id="index_yearly_visitor">
                 <div class="col mr-2">
-                  <div class="text-xs font-weight-bold text-info text-uppercase mb-1">월간 방문자 (Monthly)</div>
-                  <div class="h5 mb-0 font-weight-bold text-gray-800">{{ visitor_count[0] }}명</div>
-                </div>
-                <div class="col-auto">
-                  <i class="fas fa-calendar fa-2x text-gray-300"></i>
+                  <div class="text-xs font-weight-bold text-info text-uppercase mb-1">연간 방문자 (Annual/1m)</div>
+                  <div class="h5 mb-0 font-weight-bold text-gray-800">{{ visitor_count[1] }}명</div>
                 </div>
               </div>
             </div>
@@ -103,14 +88,11 @@
         <!-- 연간 방문자 -->
         <div class="col-xl-2 col-md-6 mb-4">
           <div class="card border-left-warning shadow h-100 py-2">
-            <div class="card-body">
-              <div class="row no-gutters align-items-center">
+            <div class="card-body ml-2">
+              <div class="row no-gutters align-items-center" id="index_total_visitor">
                 <div class="col mr-2">
-                  <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">연간 방문자 (Annual)</div>
-                  <div class="h5 mb-0 font-weight-bold text-gray-800">{{ visitor_count[0] }}명</div>
-                </div>
-                <div class="col-auto">
-                  <i class="fas fa-calendar fa-2x text-gray-300"></i>
+                  <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">총 방문자 (Total/1m)</div>
+                  <div class="h5 mb-0 font-weight-bold text-gray-800">{{ visitor_count[1] }}명</div>
                 </div>
               </div>
             </div>
@@ -581,6 +563,9 @@
         if (message == "No Card")
           alert('카드를 먼저 불출해주세요.');
 
+        if (message == "No Select")
+          alert('방문객을 선택해주세요.');
+
         if (message == "Multi Check")
           alert('카드 불출은 단일 선택만 가능합니다.');
 
@@ -595,14 +580,49 @@
 </script>
 
 <!-- 시간 새로고침 js -->
-<!-- <script>
-  function autoRefresh_sample_div()
+<script>
+  function autoRefresh_stamptime_div()
   {
     var currentLocation = window.location;
     $("#index_timestamp").load(currentLocation + ' #index_timestamp')
   }
-  setInterval('autoRefresh_sample_div()', 1000); //1초 후 새로고침
-</script> -->
+  setInterval('autoRefresh_stamptime_div()', 1000); //1초 마다 새로고침
+
+  function autoRefresh_visitor_div()
+  {
+    var currentLocation = window.location;
+    $("#index_visitor").load(currentLocation + ' #index_visitor')
+  }
+  setInterval('autoRefresh_visitor_div()', 60000); //1분 마다 새로고침
+
+  function autoRefresh_daily_visitor_div()
+  {
+    var currentLocation = window.location;
+    $("#index_daily_visitor").load(currentLocation + ' #index_daily_visitor')
+  }
+  setInterval('autoRefresh_daily_visitor_div()', 60000); //1분 마다 새로고침
+
+  function autoRefresh_monthly_visitor_div()
+  {
+    var currentLocation = window.location;
+    $("#index_monthly_visitor").load(currentLocation + ' #index_monthly_visitor')
+  }
+  setInterval('autoRefresh_monthly_visitor_div()', 60000); //1분 마다 새로고침
+
+  function autoRefresh_yearly_visitor_div()
+  {
+    var currentLocation = window.location;
+    $("#index_yearly_visitor").load(currentLocation + ' #index_yearly_visitor')
+  }
+  setInterval('autoRefresh_yearly_visitor_div()', 60000); //1분 마다 새로고침
+
+  function autoRefresh_total_visitor_div()
+  {
+    var currentLocation = window.location;
+    $("#index_total_visitor").load(currentLocation + ' #index_total_visitor')
+  }
+  setInterval('autoRefresh_total_visitor_div()', 60000); //1분 마다 새로고침
+</script>
 {% endblock %}
 
 {% block js %}

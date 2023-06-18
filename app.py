@@ -13,6 +13,7 @@ class User(db.Model):
     password = db.Column(db.String(200), unique=False)
     department = db.Column(db.String(50), unique=False)
     permission = db.Column(db.String(20), unique=False)
+    user_info_id = db.relationship('User_log', backref='user_log')
 
     def __init__(self, username, email, password, department):
         self.username = username
@@ -40,6 +41,20 @@ class User(db.Model):
     def __repr__(self):
         return '%r' % self.username
     
+class User_log(db.Model):
+    __tablename__ = "User_log"
+
+    id = db.Column(db.Integer, primary_key=True)
+    ip_address = db.Column(db.String(30), unique=False)
+    login_timestamp = db.Column(db.DateTime, unique=False)
+    logout_timestamp =  db.Column(db.DateTime, unique=False, nullable=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('User.id'))
+
+    def __init__(self, ip_address, login_timestamp, user_id):
+        self.ip_address = ip_address
+        self.login_timestamp = login_timestamp
+        self.user_id = user_id
+
 class Visitor(db.Model):
     __tablename__ = "Visitor"
 
@@ -79,3 +94,28 @@ class Card(db.Model):
     def __init__(self, card_type, card_status):
         self.card_type = card_type
         self.card_status = card_status
+
+class Year(db.Model):
+    __tablename__ = "Year"
+
+    year = db.Column(db.Integer, primary_key=True)
+    count = db.Column(db.Integer, default=0)
+
+class Month(db.Model):
+    __tablename__ = "Month"
+
+    year = db.Column(db.Integer, db.ForeignKey('Year.year'), primary_key=True)
+    month = db.Column(db.Integer, primary_key=True)
+    count = db.Column(db.Integer, default=0)
+
+    __table_args__ = (
+        db.Index('ix_month_id', 'month'),
+    )
+
+class Day(db.Model):
+    __tablename__ = "Day"
+
+    year = db.Column(db.Integer, db.ForeignKey('Year.year'), primary_key=True)
+    month = db.Column(db.Integer, db.ForeignKey('Month.month'), primary_key=True)
+    day = db.Column(db.Integer, primary_key=True)
+    count = db.Column(db.Integer, default=0)

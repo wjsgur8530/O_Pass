@@ -3,7 +3,7 @@ from flask import Flask, flash, session, url_for, render_template, request, redi
 from flask_sqlalchemy import SQLAlchemy
 from werkzeug.security import generate_password_hash, check_password_hash # Password Hash
 from flask_bcrypt import Bcrypt
-from app import User, Visitor, Card
+from app import User, Visitor, Card, User_log, Year, Month, Day
 import jinja2.exceptions
 from config import create_app, db
 from flask_login import login_user, login_required, logout_user, current_user
@@ -43,16 +43,18 @@ def index():
 
     # 승인된 방문객 Sort_Desc
     approve_visitors = Visitor.query.filter_by(approve=1).order_by(Visitor.id.desc())
-    print(approve_visitors.count())
 
     card_list = Card.query.all()
 
+    today = date.today()
+    year = Year.query.filter_by(year=today.year).first() # 연간 방문객
+    month = Month.query.filter_by(year=today.year, month=today.month).first() # 월간 방문객
+    day = Day.query.filter_by(year=today.year, month=today.month, day=today.day).first() # 일간 방문객
+    yearly_visitor = year.count
+    monthly_visitor = month.count
+    daily_visitor = day.count
     visitor_count = []
-    daily_visitor = approve_visitors.count()
-    visitor_count = [
-        daily_visitor, #일간 방문자
-        in_visitor,
-    ]
+    visitor_count = [in_visitor, yearly_visitor, monthly_visitor, daily_visitor]
     
     # print('현재 로그인한 사용자: ' + str(current_user))
     return render_template('index.html', current_user=current_user, approve_visitors=approve_visitors, visitor_count=visitor_count, time=time, card_list=card_list)
@@ -103,6 +105,7 @@ def register():
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
+        current_date = datetime.now()
         email = request.form['email']
         password = request.form['password1']
 
@@ -111,6 +114,10 @@ def login():
             if bcrypt.check_password_hash(user.password, password):
                 print('로그인 완료')
                 login_user(user, remember=True)
+                login_ip_address = request.remote_addr
+                user_log = User_log(request.remote_addr, current_date, user.id)
+                db.session.add(user_log)
+                db.session.commit()
                 return redirect(url_for('index', user=user.username))
             else: 
                 flash('비밀번호가 다릅니다.')
@@ -125,6 +132,15 @@ def login():
 @app.route('/logout')
 @login_required
 def logout():
+    # 현재 시간
+    current_date = datetime.now()
+    # 현재 로그인된 사용자 중 가장 마지막 접속 기록 ID 추출
+    logout_log = User_log.query.filter_by(user_id=current_user.id).order_by(User_log.id.desc()).first()
+    # 마지막 접속 ID의 로그아웃 스탬프 컬럼에 현재 시간 기록
+    logout_log.logout_timestamp = current_date
+    # DB 적용
+    db.session.commit()
+    # 로그아웃 수행
     logout_user()
     print('logout success!')
     return redirect(url_for('login'))
@@ -146,32 +162,21 @@ def visitor():
         # visitor_info = Visitor.query.all()
         visitor_info = Visitor.query.filter_by(approve=0)
 
-        department_list = [
-            'CJ Olivenetworks',
-            'CJ 대한통운',
-            'CJ 올리브영',
-            'CJ CGV',
-            'CJ 프레시웨이',
-            '디아이웨어',
-            '기타',
-        ]
+        # 내방객 등록 - 부서 목록
+        department_list = ['CJ Olivenetworks','CJ 대한통운','CJ 올리브영','CJ CGV','CJ 프레시웨이','디아이웨어','기타',]
+
         # 내방객 등록하기
         visitor = Visitor(name, department, phone, manager, device, serial_number, object, created_time, 0)
         db.session.add(visitor)
         db.session.commit()
         return render_template('visitor.html', department_list=department_list, visitor_info=visitor_info)
     else:
-        # visitor_info = Visitor.query.all()
+        # GET - 승인되지 않은 방문객 정보
         visitor_info = Visitor.query.filter_by(approve=0)
-        department_list = [
-            'CJ Olivenetworks',
-            'CJ 대한통운',
-            'CJ 올리브영',
-            'CJ CGV',
-            'CJ 프레시웨이',
-            '디아이웨어',
-            '기타',
-        ]
+
+        # 내방객 등록 - 부서 목록
+        department_list = ['CJ Olivenetworks','CJ 대한통운','CJ 올리브영','CJ CGV','CJ 프레시웨이','디아이웨어','기타',]
+
         return render_template('visitor.html', department_list=department_list, visitor_info=visitor_info)
 
 # 테이블 테스트
@@ -187,6 +192,37 @@ def ajax_approve():
     data = request.get_json()
     print(data['visitor_id'])
     print(data['approve'])
+
+    today = date.today()
+    year = Year.query.filter_by(year=today.year).first()
+    if not year:
+        year = Year(year=today.year)
+        db.session.add(year)
+
+    month = Month.query.filter_by(year=today.year, month=today.month).first()
+    if not month:
+        month = Month(year=today.year, month=today.month)
+        db.session.add(month)
+        year.count += 1
+
+    day = Day.query.filter_by(year=today.year, month=today.month, day=today.day).first()
+    if not day:
+        day = Day(year=today.year, month=today.month, day=today.day, count=1)
+        db.session.add(day)
+        month.count += 1
+    else:
+        year.count += 1
+        month.count += 1
+        day.count += 1
+
+    # approved_visitors = Visitor.query.filter_by(approve=1).filter(Visitor.created_date >= datetime(today.year, today.month, today.day, 0, 0, 0)).filter(Visitor.created_date < datetime(today.year, today.month, today.day, 23, 59, 59)).all()
+    # count = len(approved_visitors)
+    # day.count += count
+    # month.count += count
+    # year.count += count
+
+    # db.session.commit()
+
     visitor = Visitor.query.filter_by(id=data['visitor_id']).first()
     visitor.approve = 1
     visitor.exit = 0
@@ -270,7 +306,7 @@ def ajax_visit_deny_checkbox():
 
     if data_length < 1:
         return "No Select"
-        
+
     for checked_data in data['checked_datas']:
         visitor = Visitor.query.filter_by(id=checked_data).first()
         db.session.delete(visitor)
@@ -307,6 +343,8 @@ def ajax_index_card_checkbox():
     # 선택한 카드가 없거나 2개 이상 선택됐을 때 오류 발생
     if card is None:
         return "No Card"
+    if data_length < 1:
+        return "No Select"
     if data_length != 1:
         return "Multi Check"
 
@@ -335,10 +373,40 @@ def create_card():
         db.session.commit()
     return "Cretaed Card"
 
-# @app.route('/abc')
-# def count_visitors():
-#     today = datetime.today().date()
-#     print(today)
+@app.route('/abc', methods=['GET'])
+def count_visitors():
+    today = date.today()
+    year = Year.query.filter_by(year=today.year).first()
+    if not year:
+        year = Year(year=today.year)
+        db.session.add(year)
+
+    month = Month.query.filter_by(year=today.year, month=today.month).first()
+    if not month:
+        month = Month(year=today.year, month=today.month)
+        db.session.add(month)
+        # year.count += 1
+
+    day = Day.query.filter_by(year=today.year, month=today.month, day=today.day).first()
+    if not day:
+        day = Day(year=today.year, month=today.month, day=today.day)
+        db.session.add(day)
+        # month.count += 1
+
+    approved_visitors = Visitor.query.filter_by(approve=1).filter(Visitor.created_date >= datetime(today.year, today.month, today.day, 0, 0, 0)).filter(Visitor.created_date < datetime(today.year, today.month, today.day, 23, 59, 59)).all()
+    count = len(approved_visitors)
+    day.count += count
+    month.count += count
+    year.count += count
+
+    db.session.commit()
+
+    # total_visitors = Day.query.filter_by(month_id=today.month, id=today).sum('count')
+    return f'Success'
+
+
+
+
     # # 일간 방문자 수 카운트 및 저장
     # daily_visitors = Visitors.query.filter_by(date=today).first()
     # if daily_visitors:
@@ -379,7 +447,6 @@ def create_card():
     
     # db.session.commit()
     
-    # return '방문자 수 카운트 완료'
 
 @app.errorhandler(jinja2.exceptions.TemplateNotFound)
 def template_not_found(e):
