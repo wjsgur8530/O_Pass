@@ -9,8 +9,7 @@ from config import create_app, db
 from flask_login import login_user, login_required, logout_user, current_user
 from flask_login import LoginManager
 from datetime import datetime, date, time
-import qrcode
-import requests
+import asyncio
 
 app = create_app()
 bcrypt = Bcrypt(app)
@@ -37,24 +36,29 @@ def index():
     current_time = datetime.now().strftime('\n%p %H:%M:%S')
     time = [ current_date, current_time]
 
-    # 실시간 출입 방문객
-    in_visitor = Visitor.query.filter_by(exit=0)
-    in_visitor = in_visitor.count()
 
     # 승인된 방문객 Sort_Desc
     approve_visitors = Visitor.query.filter_by(approve=1).order_by(Visitor.id.desc())
 
     card_list = Card.query.all()
 
-    today = date.today()
-    year = Year.query.filter_by(year=today.year).first() # 연간 방문객
-    month = Month.query.filter_by(year=today.year, month=today.month).first() # 월간 방문객
-    day = Day.query.filter_by(year=today.year, month=today.month, day=today.day).first() # 일간 방문객
-    yearly_visitor = year.count
-    monthly_visitor = month.count
-    daily_visitor = day.count
-    visitor_count = []
-    visitor_count = [in_visitor, yearly_visitor, monthly_visitor, daily_visitor]
+    
+    if approve_visitors:
+        # 실시간 출입 방문객
+        in_visitor = Visitor.query.filter_by(exit=0)
+        in_visitor = in_visitor.count()
+        today = date.today()
+        year = Year.query.filter_by(year=today.year).first() # 연간 방문객
+        month = Month.query.filter_by(year=today.year, month=today.month).first() # 월간 방문객
+        day = Day.query.filter_by(year=today.year, month=today.month, day=today.day).first() # 일간 방문객
+        if year and month and day:
+            yearly_visitor = year.count
+            monthly_visitor = month.count
+            daily_visitor = day.count
+            visitor_count = []
+            visitor_count = [in_visitor, yearly_visitor, monthly_visitor, daily_visitor]
+        else:
+            visitor_count = None
     
     # print('현재 로그인한 사용자: ' + str(current_user))
     return render_template('index.html', current_user=current_user, approve_visitors=approve_visitors, visitor_count=visitor_count, time=time, card_list=card_list)
@@ -193,6 +197,10 @@ def ajax_approve():
     print(data['visitor_id'])
     print(data['approve'])
 
+    visitor = Visitor.query.filter_by(id=data['visitor_id']).first()
+    visitor.approve = 1
+    visitor.exit = 0
+
     today = date.today()
     year = Year.query.filter_by(year=today.year).first()
     if not year:
@@ -215,17 +223,6 @@ def ajax_approve():
         month.count += 1
         day.count += 1
 
-    # approved_visitors = Visitor.query.filter_by(approve=1).filter(Visitor.created_date >= datetime(today.year, today.month, today.day, 0, 0, 0)).filter(Visitor.created_date < datetime(today.year, today.month, today.day, 23, 59, 59)).all()
-    # count = len(approved_visitors)
-    # day.count += count
-    # month.count += count
-    # year.count += count
-
-    # db.session.commit()
-
-    visitor = Visitor.query.filter_by(id=data['visitor_id']).first()
-    visitor.approve = 1
-    visitor.exit = 0
     db.session.commit()
     return jsonify(result = "success")
 
@@ -240,7 +237,7 @@ def ajax_deny():
     db.session.commit()
     return jsonify(result = "success")
 
-# 퇴실 버튼 클릭시 로직 ajax
+# index 퇴실 버튼 클릭시 로직 ajax
 @app.route('/api/ajax_exit', methods=['POST'])
 def ajax_exit():
     data = request.get_json()
@@ -256,7 +253,7 @@ def ajax_exit():
         card.card_status = "회수"
         db.session.commit()
 
-    return jsonify(result = "success")
+    return jsonify(response = "success")
 
 # index 체크 박스 퇴실 api
 @app.route('/api/ajax_index_exit_checkbox', methods=['POST'])
@@ -295,6 +292,29 @@ def ajax_visit_approve_checkbox():
         visitor = Visitor.query.filter_by(id=checked_data).first()
         visitor.approve = 1
         visitor.exit = 0
+
+        today = date.today()
+        year = Year.query.filter_by(year=today.year).first()
+        if not year:
+            year = Year(year=today.year)
+            db.session.add(year)
+
+        month = Month.query.filter_by(year=today.year, month=today.month).first()
+        if not month:
+            month = Month(year=today.year, month=today.month)
+            db.session.add(month)
+            year.count += 1
+
+        day = Day.query.filter_by(year=today.year, month=today.month, day=today.day).first()
+        if not day:
+            day = Day(year=today.year, month=today.month, day=today.day, count=1)
+            db.session.add(day)
+            month.count += 1
+        else:
+            year.count += 1
+            month.count += 1
+            day.count += 1
+
         db.session.commit()
     return jsonify(result = "success")
 
@@ -372,81 +392,6 @@ def create_card():
         db.session.add(card)
         db.session.commit()
     return "Cretaed Card"
-
-@app.route('/abc', methods=['GET'])
-def count_visitors():
-    today = date.today()
-    year = Year.query.filter_by(year=today.year).first()
-    if not year:
-        year = Year(year=today.year)
-        db.session.add(year)
-
-    month = Month.query.filter_by(year=today.year, month=today.month).first()
-    if not month:
-        month = Month(year=today.year, month=today.month)
-        db.session.add(month)
-        # year.count += 1
-
-    day = Day.query.filter_by(year=today.year, month=today.month, day=today.day).first()
-    if not day:
-        day = Day(year=today.year, month=today.month, day=today.day)
-        db.session.add(day)
-        # month.count += 1
-
-    approved_visitors = Visitor.query.filter_by(approve=1).filter(Visitor.created_date >= datetime(today.year, today.month, today.day, 0, 0, 0)).filter(Visitor.created_date < datetime(today.year, today.month, today.day, 23, 59, 59)).all()
-    count = len(approved_visitors)
-    day.count += count
-    month.count += count
-    year.count += count
-
-    db.session.commit()
-
-    # total_visitors = Day.query.filter_by(month_id=today.month, id=today).sum('count')
-    return f'Success'
-
-
-
-
-    # # 일간 방문자 수 카운트 및 저장
-    # daily_visitors = Visitors.query.filter_by(date=today).first()
-    # if daily_visitors:
-    #     daily_visitors.visitors += 1
-    # else:
-    #     daily_visitors = Visitors(date=today, visitors=1)
-    #     db.session.add(daily_visitors)
-    
-    # # 주간 방문자 수 카운트 및 저장
-    # start_of_week = today - timedelta(days=today.weekday())
-    # end_of_week = start_of_week + timedelta(days=6)
-    # weekly_visitors = Visitors.query.filter(Visitors.date.between(start_of_week, end_of_week)).first()
-    # if weekly_visitors:
-    #     weekly_visitors.visitors += 1
-    # else:
-    #     weekly_visitors = Visitors(date=start_of_week, visitors=1)
-    #     db.session.add(weekly_visitors)
-    
-    # # 월간 방문자 수 카운트 및 저장
-    # start_of_month = today.replace(day=1)
-    # end_of_month = start_of_month + timedelta(days=31)  # 최대 31일로 설정 (조정 필요)
-    # monthly_visitors = Visitors.query.filter(Visitors.date.between(start_of_month, end_of_month)).first()
-    # if monthly_visitors:
-    #     monthly_visitors.visitors += 1
-    # else:
-    #     monthly_visitors = Visitors(date=start_of_month, visitors=1)
-    #     db.session.add(monthly_visitors)
-    
-    # # 연간 방문자 수 카운트 및 저장
-    # start_of_year = today.replace(month=1, day=1)
-    # end_of_year = start_of_year.replace(month=12, day=31)
-    # yearly_visitors = Visitors.query.filter(Visitors.date.between(start_of_year, end_of_year)).first()
-    # if yearly_visitors:
-    #     yearly_visitors.visitors += 1
-    # else:
-    #     yearly_visitors = Visitors(date=start_of_year, visitors=1)
-    #     db.session.add(yearly_visitors)
-    
-    # db.session.commit()
-    
 
 @app.errorhandler(jinja2.exceptions.TemplateNotFound)
 def template_not_found(e):
