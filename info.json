@@ -1,0 +1,37 @@
+[
+    {
+        "name": "전혁",
+        "permission": "G3",
+        "department": "Infra TechLab"
+    },
+    {
+        "name": "서병환",
+        "permission": "G6",
+        "department": "Infra TechLab"
+    },
+    {
+        "name": "강현준",
+        "permission": "G3",
+        "department": "Infra N/W"
+    },
+    {
+        "name": "최형준",
+        "permission": "G6",
+        "department": "Infra N/W"
+    },
+    {
+        "name": "백예슬",
+        "permission": "G3",
+        "department": "Infra Ops"
+    },
+    {
+        "name": "박준범",
+        "permission": "G7",
+        "department": "Infra Ops"
+    },
+    {
+        "name": "한강희",
+        "permission": "G7",
+        "department": null
+    }
+]

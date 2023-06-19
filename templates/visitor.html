@@ -195,7 +195,7 @@
                           <th scope="col">시리얼 번호</th>
                           <th scope="col">방문 시각</th>
                           <!-- <th scope="col">승인 여부(일반 구성원)</th> -->
-                          <th scope="col">승인 여부(팀장급)</th>
+                          <th scope="col">승인 여부(팀원)</th>
                         </tr>
                       </tfoot>
                       <tbody>
@@ -215,11 +215,11 @@
                             <td>{{ visitor.device }}</td>
                             <td>{{ visitor.serial_number }}</td>
                             <td>{{ visitor.created_date }}</td>
-                            <!-- <td><button class="btn btn-primary mr-2" id="approve_btn">긴급 승인</button></td> -->
-                            <td>
-                              <button class="btn btn-success mr-2 btn-sm" type="button" id="approve_btn{{visitor.id}}" value="{{visitor.id}}">승인</button>
-                              <button class="btn btn-danger btn-sm" type="button" id="deny_btn{{visitor.id}}" value="{{visitor.id}}">반려</button>
-                            </td>
+                            <td><button class="btn btn-primary mr-2" id="approve_btn">긴급 승인</button></td>
+                            <!--<td>
+                              <button class="btn btn-success mr-2 btn-sm" id="approve_btn{{visitor.id}}" value="{{visitor.id}}">승인</button>
+                              <button class="btn btn-danger btn-sm" id="deny_btn{{visitor.id}}" value="{{visitor.id}}">반려</button>
+                            </td>-->
                           </tr>
                       <script>
                         $('#approve_btn{{visitor.id}}').click(function(){
@@ -235,7 +235,6 @@
                             data: JSON.stringify(postdata),
                             dataType: 'json',
                             success: function(data) {
-                              history.go(0);
                               alert('승인되었습니다.');
                             },
                             error: function(request, status, error) {
@@ -258,7 +257,6 @@
                               data: JSON.stringify(postdata),
                               dataType: 'json',
                               success: function(data) {
-                                history.go(0);
                                 alert('반려되었습니다.');
                               },
                               error: function(request, status, error) {
@@ -348,7 +346,6 @@
       data: JSON.stringify(postdata),
       dataType: 'json',
       success: function(data) {
-        history.go(0);
         alert('승인 되었습니다.');
       },
       error: function(request, status, error) {
@@ -375,7 +372,6 @@
       data: JSON.stringify(postdata),
       dataType: 'json',
       success: function(data) {
-        history.go(0);
         alert('반려 되었습니다.');
       },
       error: function(request, status, error) {

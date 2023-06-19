@@ -11,6 +11,10 @@ from flask_login import LoginManager
 from datetime import datetime, date, time
 import asyncio
 
+import json
+import csv # 추가
+from flask_session import Session #추가
+
 app = create_app()
 bcrypt = Bcrypt(app)
 
@@ -94,7 +98,26 @@ def register():
             # # 비밀번호 암호화
             hashed_password = bcrypt.generate_password_hash(password1)
 
-            user = User(username, email, hashed_password, department)
+            # 회원가입시 직급 추가
+            with open("info.json", "r", encoding='UTF8') as file:
+                json_data = json.load(file)
+                permission = [item["permission"] for item in json_data if item["name"] == username]
+            
+            
+            
+            
+            # with open('info.csv', 'r',encoding='UTF8') as file:
+            #     reader = csv.reader(file)
+                
+            #     for row in reader:
+            #         app.logger.debug(row[0])
+            #         if row[0] == username and row[2] == department:
+            #             permission=row[1]
+            #             break
+            #         else:
+            #             permission=None
+                        
+            user = User(username, email, hashed_password, department, permission)
             db.session.add(user)
             db.session.commit()
 
@@ -114,9 +137,11 @@ def login():
         password = request.form['password1']
 
         user = User.query.filter_by(email=email).first()
+        
         if user:
             if bcrypt.check_password_hash(user.password, password):
                 print('로그인 완료')
+                session['id'] =user.id #추가
                 login_user(user, remember=True)
                 login_ip_address = request.remote_addr
                 user_log = User_log(request.remote_addr, current_date, user.id)
@@ -153,6 +178,18 @@ def logout():
 @app.route('/visit', methods=['GET', 'POST'])
 @login_required
 def visitor():
+    #추가
+    user = User.query.get(session['id'])
+    app.logger.debug(session['id'])
+    app.logger.debug(user.permission)
+    if user.permission in ['G5', 'G6', 'G7']:
+        url='adminvisitor.html'  
+    else:
+        url='visitor.html'
+    
+    
+    
+    
     if request.method == 'POST':
         name = request.form['inputName']
         department = request.form['inputDepartment']
@@ -173,7 +210,7 @@ def visitor():
         visitor = Visitor(name, department, phone, manager, device, serial_number, object, created_time, 0)
         db.session.add(visitor)
         db.session.commit()
-        return render_template('visitor.html', department_list=department_list, visitor_info=visitor_info)
+        return render_template(url, department_list=department_list, visitor_info=visitor_info)
     else:
         # GET - 승인되지 않은 방문객 정보
         visitor_info = Visitor.query.filter_by(approve=0)
@@ -181,7 +218,7 @@ def visitor():
         # 내방객 등록 - 부서 목록
         department_list = ['CJ Olivenetworks','CJ 대한통운','CJ 올리브영','CJ CGV','CJ 프레시웨이','디아이웨어','기타',]
 
-        return render_template('visitor.html', department_list=department_list, visitor_info=visitor_info)
+        return render_template(url, department_list=department_list, visitor_info=visitor_info)
 
 # 테이블 테스트
 @app.route('/tables_test', methods=['GET', 'POST'])

@@ -15,11 +15,12 @@ class User(db.Model):
     permission = db.Column(db.String(20), unique=False)
     user_info_id = db.relationship('User_log', backref='user_log')
 
-    def __init__(self, username, email, password, department):
+    def __init__(self, username, email, password, department, permission):
         self.username = username
         self.email = email
         self.password = password
         self.department = department
+        self.permission = permission
 
     # Flask-Login integration
     def is_authenticated(self):
