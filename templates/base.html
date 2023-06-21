@@ -70,13 +70,6 @@
           <span>Dashboard</span></a>
       </li>
 
-      <!-- Nav Item - Charts -->
-      <li class="nav-item">
-        <a class="nav-link" href="charts">
-          <i class="fas fa-fw fa-chart-area"></i>
-          <span>Charts</span></a>
-      </li>
-
       <li class="nav-item">
         <a class="nav-link" href="visit">
           <i class="fas fa-fw fa-user"></i>
@@ -88,11 +81,26 @@
 
       <!-- Heading -->
       <div class="sidebar-heading">
+        Visualization
+      </div>
+      
+      <!-- Nav Item - Charts -->
+      <li class="nav-item">
+        <a class="nav-link" href="charts">
+          <i class="fas fa-fw fa-chart-area"></i>
+          <span>Charts</span></a>
+      </li>
+
+      <!-- Divider -->
+      <hr class="sidebar-divider">
+
+      <!-- Heading -->
+      <div class="sidebar-heading">
         Interface
       </div>
 
       <!-- Nav Item - Pages Collapse Menu -->
-      <li class="nav-item">
+      <!-- <li class="nav-item">
         <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseTwo" aria-expanded="true" aria-controls="collapseTwo">
           <i class="fas fa-fw fa-cog"></i>
           <span>Components</span>
@@ -104,10 +112,10 @@
             <a class="collapse-item" href="cards">Cards</a>
           </div>
         </div>
-      </li>
+      </li> -->
 
       <!-- Nav Item - Utilities Collapse Menu -->
-      <li class="nav-item">
+      <!-- <li class="nav-item">
         <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseUtilities" aria-expanded="true" aria-controls="collapseUtilities">
           <i class="fas fa-fw fa-wrench"></i>
           <span>Utilities</span>
@@ -121,35 +129,46 @@
             <a class="collapse-item" href="utilities-other">Other</a>
           </div>
         </div>
+      </li> -->
+
+      <!-- Nav Item - Pages Collapse Menu -->
+      <li class="nav-item">
+        <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseManagements" aria-expanded="true" aria-controls="collapseTwo">
+          <i class="fas fa-fw fa-cog"></i>
+          <span>Management</span>
+        </a>
+        <div id="collapseManagements" class="collapse" aria-labelledby="headingTwo" data-parent="#accordionSidebar">
+          <div class="bg-white py-2 collapse-inner rounded">
+            <h6 class="collapse-header">Custom Managements:</h6>
+            <a class="collapse-item" href="manage_visitors">Visitors</a>
+            <a class="collapse-item" href="manage_cards">Cards</a>
+            <a class="collapse-item" href="manage_logs">Log</a>
+          </div>
+        </div>
       </li>
 
-      <!-- Divider -->
-      <hr class="sidebar-divider">
-
+      {% if current_user.is_authenticated %}
+      {% else %}
       <!-- Heading -->
       <div class="sidebar-heading">
         Addons
       </div>
-
-      <!-- Nav Item - Pages Collapse Menu -->
-      <li class="nav-item">
-        <a class="nav-link" href="#" data-toggle="collapse" data-target="#collapsePages" aria-expanded="true" aria-controls="collapsePages">
-          <i class="fas fa-fw fa-folder"></i>
-          <span>Pages</span>
-        </a>
-        <div id="collapsePages" class="collapse" aria-labelledby="headingPages" data-parent="#accordionSidebar">
-          <div class="bg-white py-2 collapse-inner rounded">
-            <h6 class="collapse-header">Login Screens:</h6>
-            <a class="collapse-item" href="login">Login</a>
-            <a class="collapse-item" href="register">Register</a>
-            <a class="collapse-item" href="forgot-password">Forgot Password</a>
-            <div class="collapse-divider"></div>
-            <h6 class="collapse-header">Other Pages:</h6>
-            <a class="collapse-item" href="404">404 Page</a>
-            <a class="collapse-item" href="blank">Blank Page</a>
+        <!-- Nav Item - Pages Collapse Menu -->
+        <li class="nav-item">
+          <a class="nav-link" href="#" data-toggle="collapse" data-target="#collapsePages" aria-expanded="true" aria-controls="collapsePages">
+            <i class="fas fa-fw fa-folder"></i>
+            <span>Pages</span>
+          </a>
+          <div id="collapsePages" class="collapse" aria-labelledby="headingPages" data-parent="#accordionSidebar">
+            <div class="bg-white py-2 collapse-inner rounded">
+              <h6 class="collapse-header">Login Screens:</h6>
+              <a class="collapse-item" href="login">Login</a>
+              <a class="collapse-item" href="register">Register</a>
+              <a class="collapse-item" href="forgot-password">Forgot Password</a>
+            </div>
           </div>
-        </div>
-      </li>
+        </li>
+      {% endif %}
 
       <!-- Nav Item - Tables -->
       <!-- <li class="nav-item">
@@ -335,7 +354,8 @@
             <li class="nav-item dropdown no-arrow">
               <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                 {% if current_user.is_authenticated %}
-                <span class="mr-2 d-none d-lg-inline text-gray-600 small">{{ current_user }}님</span>
+                <span class="d-none d-lg-inline small" style="padding: 5px 10px; border-radius: 15px 0 0 15px; background: #343a40; color: white;">{{ current_user.rank }}</span>
+                <span class="mr-2 d-none d-lg-inline small" style="padding: 5px 10px; border-radius: 0 15px 15px 0; background: #f8f9fa; color: #343a40;">{{ current_user.username }}님</span>
                 {% else %}
                 <span class="mr-2 d-none d-lg-inline text-gray-600 small">로그인 해주세요.</span>
                 {% endif %}
@@ -419,7 +439,7 @@
         <div class="modal-body">현재 세션을 종료할 준비가 되었으면 아래에서 "로그아웃"을 선택하십시오.</div>
         <div class="modal-footer">
           <button class="btn btn-secondary" type="button" data-dismiss="modal">취소</button>
-          <a class="btn btn-primary" href="/logout">Logout</a>
+          <a class="btn btn-primary" href="/logout">로그아웃</a>
         </div>
       </div>
     </div>

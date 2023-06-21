@@ -1,0 +1,238 @@
+{% extends "base.html" %} {% block title %}Sample{% endblock %} 
+{% block content %}
+<body>
+    <!-- Begin Page Content -->
+    <div class="container-fluid">
+      
+      <div class="row">
+        <!-- Earnings (Monthly) Card Example -->
+        <div class="col-xl-3 col-md-6 mb-4">
+          <div class="card border-left-primary shadow h-100 py-2">
+            <div class="card-body ml-2">
+              <div class="row no-gutters align-items-center">
+                <div class="col mr-2">
+                  <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">총 출입 카드 수</div>
+                  <div class="h5 mb-0 font-weight-bold text-gray-800">{{ total_card[7] }} / {{ total_card[6] }}</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Earnings (Annual) Card Example -->
+        <div class="col-xl-3 col-md-6 mb-4">
+          <div class="card border-left-success shadow h-100 py-2">
+            <div class="card-body ml-2">
+              <div class="row no-gutters align-items-center">
+                <div class="col mr-2">
+                  <div class="text-xs font-weight-bold text-success text-uppercase mb-1">일반 출입 카드 수</div>
+                  <div class="h5 mb-0 font-weight-bold text-gray-800">{{ total_card[11] }} / {{ total_card[8] }}</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Earnings (Annual) Card Example -->
+        <div class="col-xl-3 col-md-6 mb-4">
+          <div class="card border-left-info shadow h-100 py-2">
+            <div class="card-body ml-2">
+              <div class="row no-gutters align-items-center">
+                <div class="col mr-2">
+                  <div class="text-xs font-weight-bold text-info text-uppercase mb-1">공사 출입 카드 수</div>
+                  <div class="h5 mb-0 font-weight-bold text-gray-800">{{ total_card[12] }} / {{ total_card[9] }}</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Pending Requests Card Example -->
+        <div class="col-xl-3 col-md-6 mb-4">
+          <div class="card border-left-warning shadow h-100 py-2">
+            <div class="card-body ml-2">
+              <div class="row no-gutters align-items-center">
+                <div class="col mr-2">
+                  <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">전산 출입 카드 수</div>
+                  <div class="h5 mb-0 font-weight-bold text-gray-800">{{ total_card[13] }} / {{ total_card[10] }}</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card mb-4">
+        <div class="card-header">
+          <h6 class="m-0 font-weight-bold text-primary">출입 카드 생성 (Max 99)</h6>
+        </div>
+        <div class="card-body">
+          <!-- Page Heading -->
+          <div class="d-sm-flex align-items-center justify-content-between" id="popup">
+            <div class="input-group col-xl-10">
+              <select name="select_card_type" id="select_card_type" class="form-check-label">
+                <option value="일반">일반</option>
+                <option value="공사">공사</option>
+                <option value="전산">전산</option>
+              </select>
+              <input type="number" class="form-control col-xl-2" style="text-align: center; color: gray;" id="add_card_value" min="1" max="99" maxlength="2" value="1">
+              <button class="btn btn-primary" id="add_card">추가</button>
+            </div>
+            <div id="btnWrap">
+                <button class="d-none d-sm-inline-block btn btn-sm btn-primary shadow-sm" id="popupBtn"><i class="fas fa-plus fa-sm text-white-50"></i> 기본 카드 생성</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="row">
+
+        <div class="col-lg-6">
+
+          <!-- Default Card Example -->
+          <div class="card mb-4">
+            <div class="card-header">
+              <h6 class="m-0 font-weight-bold text-black">일반 출입 카드</h6>
+            </div>
+            <div class="card-body">
+              {% for card in total_card[14] %}
+                {% if '일반' in card.card_type %}
+                  <button class="btn btn-secondary btn-sm mb-2">{{ card.card_type }}</button>
+                {% endif %}
+              {% endfor %}
+            </div>
+          </div>
+
+          <!-- Default Card Example -->
+          <div class="card mb-4">
+            <div class="card-header">
+              <h6 class="m-0 font-weight-bold text-black">공사 출입 카드</h6>
+            </div>
+            <div class="card-body">
+              {% for card in total_card[14] %}
+                {% if '공사' in card.card_type %}
+                  <button class="btn btn-secondary btn-sm mb-2">{{ card.card_type }}</button>
+                {% endif %}
+              {% endfor %}
+            </div>
+          </div>
+
+          <!-- Default Card Example -->
+          <div class="card mb-4">
+            <div class="card-header">
+              <h6 class="m-0 font-weight-bold text-black">전산 출입 카드</h6>
+            </div>
+            <div class="card-body">
+              {% for card in total_card[14] %}
+                {% if '전산' in card.card_type %}
+                  <button class="btn btn-secondary btn-sm mb-2">{{ card.card_type }}</button>
+                {% endif %}
+              {% endfor %}
+            </div>
+          </div>
+
+        </div>
+
+        <div class="col-lg-6">
+
+          <!-- Default Card Example -->
+          <div class="card mb-4">
+            <div class="card-header">
+              <h6 class="m-0 font-weight-bold text-black">불출 일반 출입 카드</h6>
+            </div>
+            <div class="card-body">
+              {% for visitor in total_card[15] %}
+                {% if '일반' in visitor.card.card_type and visitor.card.card_status == '불출' %}
+                  <button class="btn btn-secondary btn-sm mb-2">{{ visitor.card.card_type }} - {{ visitor.name }}님</button>
+                {% endif %}
+              {% endfor %}
+            </div>
+          </div>
+
+          <!-- Default Card Example -->
+          <div class="card mb-4">
+            <div class="card-header">
+              <h6 class="m-0 font-weight-bold text-black">불출 공사 출입 카드</h6>
+            </div>
+            <div class="card-body">
+              {% for visitor in total_card[15] %}
+                {% if '공사' in visitor.card.card_type and visitor.card.card_status == '불출' %}
+                  <button class="btn btn-secondary btn-sm mb-2">{{ visitor.card.card_type }} - {{ visitor.name }}님</button>
+                {% endif %}
+              {% endfor %}
+            </div>
+          </div>
+
+          <!-- Default Card Example -->
+          <div class="card mb-4">
+            <div class="card-header">
+              <h6 class="m-0 font-weight-bold text-black">불출 전산 출입 카드</h6>
+            </div>
+            <div class="card-body">
+              {% for visitor in total_card[15] %}
+                {% if '전산' in visitor.card.card_type and visitor.card.card_status == '불출' %}
+                  <button class="btn btn-secondary btn-sm mb-2">{{ visitor.card.card_type }} - {{ visitor.name }}님</button>
+                {% endif %}
+              {% endfor %}
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+
+    </div>
+    <!-- /.container-fluid -->
+
+  </div>
+  <!-- End of Main Content -->
+</body>
+
+<!-- 출입 카드 생성 -->
+<script>
+  $('#add_card').click(function(){
+    var add_card_value = $('#add_card_value').val();
+    var select_card_type = $('#select_card_type').val();
+    var postdata = {
+      'add_card_value': add_card_value,
+      'select_card_type': select_card_type
+    };
+    $.ajax({
+      contentType: 'application/json',
+      type: 'POST',
+      url: 'api/ajax_add_card',
+      data: JSON.stringify(postdata),
+      dataType: 'json',
+      success: function(response) {
+        alert('카드가 추가되었습니다.');
+        history.go(0);
+      },
+      error: function(request, status, error) {
+        message = request.responseText;
+        if (message == "Card None")
+          alert('카드 추가 오류.');
+      }
+    })
+  })
+</script>
+<!-- 최댓값 제한 -->
+<script>
+  function validateInput() {
+      var inputElement = document.getElementById("add_card_value");
+      var inputValue = parseInt(inputElement.value);
+      var maxValue = 30;
+  
+      if (inputValue > maxValue || isNaN(inputValue)) {
+          inputElement.value = maxValue;
+      }
+  }
+  $('input[type=number][maxlength]').on('input', function(ev) {
+    var $this = $(this);
+    var maxlength = $this.attr('maxlength');
+    var value = $this.val();
+    if (value && value.length >= maxlength) {
+        $this.val(value.substr(0, maxlength));
+    }
+});
+</script>
+{% endblock %}

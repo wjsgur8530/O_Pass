@@ -2,15 +2,114 @@
 {% block content %}
 <html>
   <head>
+    <style>
+      * {
+        padding:0;
+        margin:0;
+        box-sizing: border-box;
+      }
+  
+      #modalWrap {
+        position: fixed; /* Stay in place */
+        z-index: 10; /* Sit on top */
+        padding-top: 100px; /* Location of the box */
+        left: 0;
+        top: 0;
+        width: 100%; /* Full width */
+        height: 100%; /* Full height */
+        overflow: auto; /* Enable scroll if needed */
+        background-color: rgba(0,0,0,0.4); /* Black w/ opacity */
+      }
+  
+      #modalBody {
+        width: 800px;
+        height: 600px;
+        padding: 30px 30px;
+        margin: 0 auto;
+        border: 1px solid #777;
+        background-color: #fff;
+      }
+  
+      #closeBtn {
+        float:right;
+        font-weight: bold;
+        color: #777;
+        font-size:25px;
+        cursor: pointer;
+      }
+    </style>
   </head>
   <body>
     <!-- Begin Page Content -->
     <div class="container-fluid" id="refresh_div">
       
-      <!-- Page Heading
-      <div class="d-sm-flex align-items-center justify-content-between mb-4">
-        <a href="#" class="d-none d-sm-inline-block btn btn-sm btn-primary shadow-sm"><i class="fas fa-download fa-sm text-white-50"></i> Generate Report</a>
-      </div> -->
+      <!-- 팝업 닫기 -->
+      <div id="modalWrap" style="display: none;">
+        <div id="modalContent">
+            <div id="modalBody">
+                <!-- 팝업 닫기 -->
+            <span id="closeBtn">&times;</span> 
+                <!-- 팝업 내용 -->
+            <h3 style="text-align:center">내방객 정보 수정하기</h3>
+            <form class="row g-3" method="post" action="/manage_visitors" enctype="multipart/form-data">
+                <div class="col" style="display: none;">
+                  <label for="inputUpdateNumber" class="form-label">#</label>
+                  <input type="text" class="form-control" id="inputUpdateNumber" name="inputUpdateNumber">
+                </div>
+                <div class="col-md-6">
+                  <label for="inputName" class="form-label">이름</label>
+                  <input type="text" class="form-control" id="inputName" name="inputName">
+                </div>
+                <div class="col-md-6">
+                  <label for="inputDepartment" class="form-label">소속</label>
+                  <select class="form-select" id="inputDepartment" name="inputDepartment">
+                    <option value="{{department_list[0]}}">{{department_list[0]}}</option>
+                    <option value="{{department_list[1]}}">{{department_list[1]}}</option>
+                    <option value="{{department_list[2]}}">{{department_list[2]}}</option>
+                    <option value="{{department_list[3]}}">{{department_list[3]}}</option>
+                    <option value="{{department_list[4]}}">{{department_list[4]}}</option>
+                    <option value="{{department_list[5]}}">{{department_list[5]}}</option>
+                    <option value="{{department_list[6]}}">{{department_list[6]}}</option>
+                  </select>
+                </div>
+                <div class="col-md-12">
+                  <label for="inputObject" class="form-label">방문 목적</label>
+                  <select class="form-select" id="inputObject" name="inputObject">
+                    <option value="업무 협의">업무 협의</option>
+                    <option value="업무 요청">업무 요청</option>
+                    <option value="단순 방문">단순 방문</option>
+                    <option value="장비 반입">장비 반입</option>
+                    <option value="단순 방문">단순 방문</option>
+                    <option value="기타">기타</option>
+                  </select>
+              </div>
+                <div class="col-12">
+                  <label for="inputPhoneNumber" class="form-label">연락처</label>
+                  <input type="text" class="form-control" id="inputPhoneNumber" placeholder="" name="inputPhoneNumber">
+                </div>
+                <div class="col-12">
+                  <label for="inputManager" class="form-label">담당자</label>
+                  <input type="text" class="form-control" id="inputManager" placeholder="" name="inputManager">
+                </div>
+                <div class="col-12">
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="gridCheck" value="1" name="inputDevice" onchange="toggleInputs()">
+                        <label class="form-check-label" for="gridCheck">
+                        장비 반입 여부
+                        </label>
+                    </div>
+                </div>
+                <div class="col-md-12">
+                  <label for="inputRemarks" class="form-label">비고</label>
+                  <input type="text" class="form-control" id="inputRemarks" disabled="true" name="inputRemarks">
+                </div>
+                <div class="col-12">
+                  <button type="submit" class="btn btn-success">수정하기</button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
 
       <!-- Content Row -->
       <div class="row">
@@ -184,6 +283,7 @@
                       <th scope="col">방문 시각</th>
                       <th scope="col">퇴실 시각</th>
                       <th scope="col"></th>
+                      <th scope="col"></th>
                     </tr>
                   </thead>
                   <tfoot>
@@ -200,6 +300,7 @@
                       <th scope="col">비고</th>
                       <th scope="col">방문 시각</th>
                       <th scope="col">퇴실 시각</th>
+                      <th scope="col"></th>
                       <th scope="col"></th>
                     </tr>
                   </tfoot>
@@ -243,6 +344,13 @@
                         {% else %}
                         {% endif %}
                       </td>
+                      <td>
+                        {% if approve_visitor.exit == 0 %}
+                        <button class="btn btn-success btn-sm mr-1" type="button" id="update_btn{{approve_visitor.id}}" value="{{approve_visitor.id}}">수정</button>
+                        <button class="btn btn-danger btn-sm" type="button" data-toggle="modal" data-target="#deleteModal">삭제</button>
+                        {% else %}
+                        {% endif %}
+                      </td>
                     </tr>
                     <!-- 퇴실 스크립트 -->
                   <script>
@@ -266,8 +374,114 @@
                           message = request.responseText;
                           if (message == "Card None")
                             alert('카드를 먼저 불출해주세요.');
-                          if (message == "Exit Error")
-                            alert('퇴실 오류가 발생했습니다.');
+                        }
+                      })
+                    })
+                  </script>
+                  <script>
+                      function handleSuccess(response) {
+                        var inputRemarks = document.getElementById('inputRemarks');
+                        var update_id = response.response[0];
+                        var name = response.response[1];
+                        var department = response.response[2];
+                        var object = response.response[3];
+                        var phone = response.response[4];
+                        var manager = response.response[5];
+                        var device = response.response[6];
+                        var remarks = response.response[7];
+
+                        document.getElementById("inputUpdateNumber").value = update_id;
+                        document.getElementById("inputName").value = name;
+                        document.getElementById("inputDepartment").value = department;
+                        document.getElementById("inputObject").value = object;
+                        document.getElementById("inputPhoneNumber").value = phone;
+                        document.getElementById("inputManager").value = manager;
+
+                        if (device == true) {
+                          document.getElementById('gridCheck').checked = true;
+                          inputRemarks.disabled = false;
+                          document.getElementById("inputRemarks").value = remarks;
+                          document.getElementById("inputDevice").value = true;
+                        } else {
+                          document.getElementById('gridCheck').checked = false;
+                          inputRemarks.disabled = true;
+                          document.getElementById("inputRemarks").value = null;
+                          document.getElementById("inputDevice").value = false;
+                        }
+                      }
+                      $(document).ready(function() {
+                        $('#update_btn{{approve_visitor.id}}').click(function() {
+                            const modal = document.getElementById('modalWrap');
+                            const closeBtn = document.getElementById('closeBtn');
+                          
+                            closeBtn.onclick = function() {
+                                modal.style.display = 'none';
+                            }
+                          
+                            window.onclick = function(event) {
+                                if (event.target == modal) {
+                                    modal.style.display = 'none';
+                                }
+                            }
+                            var update_btn = $('#update_btn{{approve_visitor.id}}').val();
+                            var postdata = {
+                              'update_btn': update_btn,
+                            };
+                            $.ajax({
+                              contentType: 'application/json',
+                              type: 'POST',
+                              url: 'api/ajax_update_manage_visit',
+                              data: JSON.stringify(postdata),
+                              dataType: 'json',
+                              success: function(response) {
+                                modal.style.display = 'block';
+                                handleSuccess(response);
+                              },
+                              error: function(request, status, error) {
+                                message = request.responseText;
+                                if (message == "Use Card")
+                                  alert('방문객이 카드를 소지하고 있어 수정 기능이 제한됩니다.');
+                              }
+                            })
+                        });
+                    });
+                  </script>
+                  <!-- visitor 삭제 Modal-->
+                  <div class="modal fade" id="deleteModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+                    <div class="modal-dialog" role="document">
+                      <div class="modal-content">
+                        <div class="modal-header">
+                          <h5 class="modal-title" id="exampleModalLabel">Warning! Ready to Delete?</h5>
+                          <button class="close" type="button" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">×</span>
+                          </button>
+                        </div>
+                        <div class="modal-body">삭제하면 방문객에 대한 데이터가 사라지고 복구할 수 없습니다. 정말 삭제하시려면 "삭제"를 선택하십시오.</div>
+                        <div class="modal-footer">
+                          <button class="btn btn-secondary" type="button" data-dismiss="modal">취소</button>
+                          <button class="btn btn-danger" type="button" data-dismiss="modal" id="delete_btn{{approve_visitor.id}}" value="{{approve_visitor.id}}">삭제</button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <script>
+                    $('#delete_btn{{approve_visitor.id}}').click(function(){
+                      var delete_btn = $('#delete_btn{{approve_visitor.id}}').val();
+                      var postdata = {
+                        'delete_btn': delete_btn,
+                      };
+                      $.ajax({
+                        contentType: 'application/json',
+                        type: 'POST',
+                        url: 'api/ajax_delete_manage_visit',
+                        data: JSON.stringify(postdata),
+                        dataType: 'json',
+                        success: function(response) {
+                          alert('삭제 되었습니다.');
+                          history.go(0);
+                        },
+                        error: function(request, status, error) {
+                          alert('삭제 오류');
                         }
                       })
                     })
@@ -287,6 +501,7 @@
 
   </body>
 </html>
+
 <!-- 체크박스 전체 선택/해제 스크립트 -->
 <script type="text/javascript">
   $(document).ready(function() {
@@ -455,7 +670,6 @@
     })
   })
 </script>
-
 <!-- 체크 박스 카드 회수 스크립트 -->
 <script>
   $('#recall_card').click(function(){
@@ -485,6 +699,20 @@
       }
     })
   })
+</script>
+
+<!-- 인풋 창 disabled/abled -->
+<script>
+  function toggleInputs() {
+      var checkbox = document.getElementById('gridCheck');
+      var inputRemarks = document.getElementById('inputRemarks');
+
+      if (checkbox.checked) {
+        inputRemarks.disabled = false;
+      } else {
+        inputRemarks.disabled = true;
+      }
+  }
 </script>
 
 <!-- 시간 새로고침 js -->

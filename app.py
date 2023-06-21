@@ -12,14 +12,15 @@ class User(db.Model):
     email = db.Column(db.String(50), unique=True)
     password = db.Column(db.String(200), unique=False)
     department = db.Column(db.String(50), unique=False)
-    permission = db.Column(db.String(20), unique=False)
+    rank = db.Column(db.String(20), unique=False)
     user_info_id = db.relationship('User_log', backref='user_log')
 
-    def __init__(self, username, email, password, department):
+    def __init__(self, username, email, password, department, rank):
         self.username = username
         self.email = email
         self.password = password
         self.department = department
+        self.rank = rank
 
     # Flask-Login integration
     def is_authenticated(self):
@@ -63,25 +64,34 @@ class Visitor(db.Model):
     department = db.Column(db.String(30), unique=False)
     phone = db.Column(db.String(30), unique=False)
     manager = db.Column(db.String(30), unique=False)
-    device = db.Column(db.String(50), unique=False, nullable=True)
-    serial_number = db.Column(db.String(50), unique=False, nullable=True)
+    device = db.Column(db.Boolean(), unique=False)
+    remarks = db.Column(db.String(50), unique=False, nullable=True)
     object = db.Column(db.String(50), unique=False)
     created_date = db.Column(db.DateTime, unique=False)
     exit_date = db.Column(db.DateTime, unique=False, nullable=True)
     exit = db.Column(db.Boolean(), unique=False, nullable=True)
     approve = db.Column(db.Boolean(), unique=False)
+    location = db.Column(db.String(50), unique=False, nullable=True)
     card_id = db.Column(db.Integer, db.ForeignKey('Card.id'))
+    visitor_log = db.relationship('Visitor_log', backref='visitor_log')
 
-    def __init__(self, name, department, phone, manager, device, serial_number, object, created_time, approve):
+    def __init__(self, name, department, phone, manager, device, remarks, object, created_time, approve):
         self.name = name
         self.department = department
         self.phone = phone
         self.manager = manager
         self.device = device
-        self.serial_number = serial_number
+        self.remarks = remarks
         self.approve = approve
         self.object = object
         self.created_date = created_time
+
+class Visitor_log(db.model):
+    __tablename__ = "Visitor_log"
+    
+    visitor_id = db.Column(db.Integer, db.ForeignKey('Visitor.id'), primary_key=True)
+    approve_log = db.Column(db.Integer, unique=False, nullable=True)
+    exit_log = db.Column(db.Integer, unique=False, nullable=True)
 
 class Card(db.Model):
     __tablename__ = "Card"
