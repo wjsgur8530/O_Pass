@@ -3,7 +3,7 @@ from flask import Flask, flash, session, url_for, render_template, request, redi
 from flask_sqlalchemy import SQLAlchemy
 from werkzeug.security import generate_password_hash, check_password_hash # Password Hash
 from flask_bcrypt import Bcrypt
-from app import User, Visitor, Card, User_log, Year, Month, Day
+from app import User, Visitor, Card, User_log, Visitor_log, Year, Month, Day
 import jinja2.exceptions
 from config import create_app, db
 from flask_login import login_user, login_required, logout_user, current_user
@@ -191,7 +191,8 @@ def manage_cards():
 @app.route('/manage_logs', methods=['GET', 'POST'])
 def manage_logs():
     user_log = User_log.query.all()
-
+    visitor_log = Visitor_log.query.filter_by(visitor_id=1).first()
+    print(visitor_log)
     return render_template('manage_logs.html', user_log=user_log)
 
 @app.route('/<pagename>')

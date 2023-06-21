@@ -72,8 +72,9 @@ class Visitor(db.Model):
     exit = db.Column(db.Boolean(), unique=False, nullable=True)
     approve = db.Column(db.Boolean(), unique=False)
     location = db.Column(db.String(50), unique=False, nullable=True)
+    approve_log = db.Column(db.Integer, unique=False, nullable=True)
+    exit_log = db.Column(db.Integer, unique=False, nullable=True)
     card_id = db.Column(db.Integer, db.ForeignKey('Card.id'))
-    visitor_log = db.relationship('Visitor_log', backref='visitor_log')
 
     def __init__(self, name, department, phone, manager, device, remarks, object, created_time, approve):
         self.name = name
@@ -85,13 +86,6 @@ class Visitor(db.Model):
         self.approve = approve
         self.object = object
         self.created_date = created_time
-
-class Visitor_log(db.model):
-    __tablename__ = "Visitor_log"
-    
-    visitor_id = db.Column(db.Integer, db.ForeignKey('Visitor.id'), primary_key=True)
-    approve_log = db.Column(db.Integer, unique=False, nullable=True)
-    exit_log = db.Column(db.Integer, unique=False, nullable=True)
 
 class Card(db.Model):
     __tablename__ = "Card"
