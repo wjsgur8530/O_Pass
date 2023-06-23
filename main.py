@@ -3,14 +3,14 @@ from flask import Flask, flash, session, url_for, render_template, request, redi
 from flask_sqlalchemy import SQLAlchemy
 from werkzeug.security import generate_password_hash, check_password_hash # Password Hash
 from flask_bcrypt import Bcrypt
-from app import User, Visitor, Card, User_log, Visitor_log, Year, Month, Day
+from app import User, Visitor, Card, User_log, Year, Month, Day
 import jinja2.exceptions
 from config import create_app, db
 from flask_login import login_user, login_required, logout_user, current_user
 from flask_login import LoginManager
 from datetime import datetime, date, time
 import asyncio
-
+import mysql.connector
 app = create_app()
 bcrypt = Bcrypt(app)
 
@@ -82,8 +82,10 @@ def manage_visitors():
         department = request.form['inputDepartment']
         phone = request.form['inputPhoneNumber']
         manager = request.form['inputManager']
+        location = request.form['inputLocation']
         device = request.form.get('inputDevice')
         remarks = request.form.get('inputRemarks')
+        object = request.form.get('inputObject')
         # print(update_id)
 
         update_visitor = Visitor.query.filter_by(id=update_id).first()
@@ -96,6 +98,8 @@ def manage_visitors():
         else:
             update_visitor.device = False
         update_visitor.remarks = remarks
+        update_visitor.location = location
+        update_visitor.object = object
         db.session.commit()
         return redirect('manage_visitors')
     else:
@@ -145,6 +149,35 @@ def manage_visitors():
         department_list = ['CJ Olivenetworks','CJ 대한통운','CJ 올리브영','CJ CGV','CJ 프레시웨이','디아이웨어','기타',]
         return render_template('visitor_update.html', current_user=current_user, approve_visitors=approve_visitors, visitor_count=visitor_count, time=time, card_list=card_list, department_list=department_list)
 
+# visit 수정 api
+@app.route('/visit_update', methods=['GET', 'POST'])
+def visit_update():
+    if request.method == 'POST':
+        update_id = request.form['inputUpdateNumber']
+        name = request.form['inputUpdateName']
+        department = request.form['inputUpdateDepartment']
+        phone = request.form['inputUpdatePhoneNumber']
+        manager = request.form['inputUpdateManager']
+        location = request.form['inputUpdateLocation']
+        device = request.form.get('inputUpdateDevice')
+        remarks = request.form.get('inputUpdateRemarks')
+        object = request.form.get('inputUpdateObject')
+
+        update_visitor = Visitor.query.filter_by(id=update_id).first()
+        update_visitor.name = name
+        update_visitor.department = department
+        update_visitor.phone = phone
+        update_visitor.manager = manager
+        if device == '1':
+            update_visitor.device = True
+        else:
+            update_visitor.device = False
+        update_visitor.remarks = remarks
+        update_visitor.location = location
+        update_visitor.object = object
+        db.session.commit()
+        return redirect('visit')
+
 # 카드 관리 페이지
 @app.route('/manage_cards', methods=['GET', 'POST'])
 def manage_cards():
@@ -191,8 +224,7 @@ def manage_cards():
 @app.route('/manage_logs', methods=['GET', 'POST'])
 def manage_logs():
     user_log = User_log.query.all()
-    visitor_log = Visitor_log.query.filter_by(visitor_id=1).first()
-    print(visitor_log)
+    visitors = Visitor.query.all()
     return render_template('manage_logs.html', user_log=user_log)
 
 @app.route('/<pagename>')
@@ -290,6 +322,7 @@ def visitor():
         department = request.form['inputDepartment']
         object = request.form['inputObject']
         phone = request.form['inputPhoneNumber']
+        location = request.form['inputLocation']
         manager = request.form['inputManager']
         created_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         device = request.form.get('inputDevice')
@@ -302,7 +335,7 @@ def visitor():
             remarks = None
 
         # 내방객 등록하기
-        visitor = Visitor(name, department, phone, manager, device, remarks, object, created_time, 0)
+        visitor = Visitor(name, department, phone, location, manager, device, remarks, object, created_time, 0)
         db.session.add(visitor)
         db.session.commit()
         return redirect(url_for('visitor'))
@@ -320,6 +353,7 @@ def visitor():
 @login_required
 def table_test():
     approve_visitors = Visitor.query.filter_by(approve=1)
+    
     return render_template('tables_test.html', approve_visitors=approve_visitors)
 
 # 승인 버튼 클릭시 로직 ajax
@@ -332,29 +366,35 @@ def ajax_approve():
     visitor = Visitor.query.filter_by(id=data['visitor_id']).first()
     visitor.approve = 1
     visitor.exit = 0
+    visitor.approve_log = current_user.id
 
     today = date.today()
     year = Year.query.filter_by(year=today.year).first()
     if not year:
-        year = Year(year=today.year)
+        year = Year(year=today.year, count=1)
         db.session.add(year)
 
     month = Month.query.filter_by(year=today.year, month=today.month).first()
     if not month:
-        month = Month(year=today.year, month=today.month)
+        month = Month(year=today.year, month=today.month, count=1)
         db.session.add(month)
-        year.count += 1
 
     day = Day.query.filter_by(year=today.year, month=today.month, day=today.day).first()
     if not day:
         day = Day(year=today.year, month=today.month, day=today.day, count=1)
         db.session.add(day)
-        year.count += 1
-        month.count += 1
+
     else:
         year.count += 1
         month.count += 1
         day.count += 1
+
+    if visitor.device == 0:
+        device = "미반입"
+    else:
+        device = "반입"
+
+    register_send_sms(visitor.name, visitor.created_date, visitor.object, visitor.location, visitor.manager, visitor.phone, device)
 
     db.session.commit()
     return jsonify(result = "success")
@@ -384,21 +424,18 @@ def ajax_emergency_approve():
     today = date.today()
     year = Year.query.filter_by(year=today.year).first()
     if not year:
-        year = Year(year=today.year)
+        year = Year(year=today.year, count=1)
         db.session.add(year)
 
     month = Month.query.filter_by(year=today.year, month=today.month).first()
     if not month:
-        month = Month(year=today.year, month=today.month)
+        month = Month(year=today.year, month=today.month, count=1)
         db.session.add(month)
-        year.count += 1
 
     day = Day.query.filter_by(year=today.year, month=today.month, day=today.day).first()
     if not day:
         day = Day(year=today.year, month=today.month, day=today.day, count=1)
         db.session.add(day)
-        year.count += 1
-        month.count += 1
     else:
         year.count += 1
         month.count += 1
@@ -421,6 +458,7 @@ def ajax_exit():
         visitor.exit = 1
         visitor.card.card_status = "회수"
         visitor.card_id = None
+        visitor.exit_log = current_user.id
         db.session.commit()
     else:
         return "Exit Error"
@@ -448,6 +486,7 @@ def ajax_index_exit_checkbox():
             visitor.exit = 1
             visitor.card.card_status = "회수"
             visitor.card_id = None
+            visitor.exit_log = current_user.id
             db.session.commit()
         else:
             return "Exited"
@@ -466,29 +505,34 @@ def ajax_visit_approve_checkbox():
         visitor = Visitor.query.filter_by(id=checked_data).first()
         visitor.approve = 1
         visitor.exit = 0
+        visitor.approve_log = current_user.id
 
         today = date.today()
         year = Year.query.filter_by(year=today.year).first()
         if not year:
-            year = Year(year=today.year)
+            year = Year(year=today.year, count=1)
             db.session.add(year)
 
         month = Month.query.filter_by(year=today.year, month=today.month).first()
         if not month:
-            month = Month(year=today.year, month=today.month)
+            month = Month(year=today.year, month=today.month, count=1)
             db.session.add(month)
-            year.count += 1
 
         day = Day.query.filter_by(year=today.year, month=today.month, day=today.day).first()
         if not day:
             day = Day(year=today.year, month=today.month, day=today.day, count=1)
             db.session.add(day)
-            month.count += 1
         else:
             year.count += 1
             month.count += 1
             day.count += 1
 
+        if visitor.device == 0:
+            device = "미반입"
+        else:
+            device = "반입"
+
+        register_send_sms(visitor.name, visitor.created_date, visitor.object, visitor.location, visitor.manager, visitor.phone, device)
         db.session.commit()
     return jsonify(result = "success")
 
@@ -649,7 +693,7 @@ def ajax_update_manage_visit():
     if update_visitor.card_id != None:
         return "Use Card"
     else:
-        update_visitor_info = [update_visitor.id, update_visitor.name, update_visitor.department, update_visitor.object, update_visitor.phone, update_visitor.manager, update_visitor.device, update_visitor.remarks]
+        update_visitor_info = [update_visitor.id, update_visitor.name, update_visitor.department, update_visitor.object, update_visitor.phone, update_visitor.manager, update_visitor.device, update_visitor.remarks, update_visitor.location]
         return jsonify(response=update_visitor_info)
 
 # manage visit 삭제 api
@@ -658,9 +702,48 @@ def ajax_delete_manage_visit():
     data = request.get_json()
     visitor = data['delete_btn']
     delete_visitor = Visitor.query.filter_by(id=visitor).first()
+    if delete_visitor.card_id != None:
+        return "Use Card"
     db.session.delete(delete_visitor)
     db.session.commit()
     return jsonify()
+
+# manage qr 재전송 api
+@app.route('/api/ajax_manage_qrcode_send', methods=['POST'])
+def ajax_manage_qrcode_send():
+    data = request.get_json()
+    qrcode_id = data['qrcode_btn']
+    print(qrcode_id)
+    qrcode_visitor = Visitor.query.filter_by(id=qrcode_id).first()
+    print(qrcode_visitor.phone)
+    if qrcode_visitor.card_id:
+        return "Use Card"
+    send_sms(qrcode_visitor.name, qrcode_visitor.created_date, qrcode_visitor.object, qrcode_visitor.location, qrcode_visitor.manager, qrcode_visitor.phone)
+    return jsonify()
+
+# SMS 문자 메세지 보내기
+def send_sms(name, date, object, location, manager, phone_num):
+    cursor = app.mysql_conn.cursor()  # 커서 생성
+    # insert_query = "INSERT INTO sms_msg (REQDATE, STATUS, TYPE, PHONE, CALLBACK, MSG) VALUES (%s, %s, %s, %s, %s, %s)"
+    insert_query = "INSERT INTO mms_msg (REQDATE, STATUS, TYPE, PHONE, CALLBACK, SUBJECT, MSG, FILE_CNT) VALUES (%s, %s, %s, %s, %s, %s, %s, %s)"
+    msg = '안녕하세요. ' + name + '님\n' + '송도 IDC 센터에 방문하신 것을 환영합니다.\n-방문시간: ' + str(date) + '\n-방문목적: ' + object + '\n-작업위치: ' + location + '\n-담당자: ' + manager + '\n-url: '
+
+    insert_data = (datetime.now(), '1', '0', phone_num, '01057320071', '내방객 시스템 승인', msg, '1')  # 삽입할 데이터를 튜플로 정의
+    cursor.execute(insert_query, insert_data)  # 쿼리 실행 및 데이터 전달
+    app.mysql_conn.commit()  # 변경 사항 커밋
+    cursor.close()  # 커서 닫기
+
+# SMS 문자 메세지 보내기
+def register_send_sms(name, date, object, location, manager, phone_num, device):
+    cursor = app.mysql_conn.cursor()  # 커서 생성
+    # insert_query = "INSERT INTO sms_msg (REQDATE, STATUS, TYPE, PHONE, CALLBACK, MSG) VALUES (%s, %s, %s, %s, %s, %s)"
+    insert_query = "INSERT INTO mms_msg (REQDATE, STATUS, TYPE, PHONE, CALLBACK, SUBJECT, MSG, FILE_CNT) VALUES (%s, %s, %s, %s, %s, %s, %s, %s)"
+    msg = '안녕하세요. ' + name + '님\n' + '송도 IDC 센터에 방문하신 것을 환영합니다.\n-등록시간: ' + str(date) + '\n-방문위치: 인천광역시 연수구 하모니로177번길 20' + '\n-방문목적: ' + object + '\n-장비반입: ' + device + '\n-작업위치: ' + location + '\n-담당자: ' + manager + '\n-url: '
+
+    insert_data = (datetime.now(), '1', '0', phone_num, '01057320071', '[내방객 시스템 사전 등록 승인]', msg, '1')  # 삽입할 데이터를 튜플로 정의
+    cursor.execute(insert_query, insert_data)  # 쿼리 실행 및 데이터 전달
+    app.mysql_conn.commit()  # 변경 사항 커밋
+    cursor.close()  # 커서 닫기
 
 @app.errorhandler(jinja2.exceptions.TemplateNotFound)
 def template_not_found(e):
@@ -670,6 +753,22 @@ def template_not_found(e):
 def not_found(e):
     return render_template('404.html')
 
+# MySQL 데이터베이스에 연결하는 함수
+def connect_to_database():
+    app.config['DB_HOST'] = 'localhost'
+    app.config['DB_USER'] = 'root'
+    app.config['DB_PASSWORD'] = '1q2w3e4r'
+    app.config['DB_DATABASE'] = 'o_pass'
+    app.config['DB_PORT'] = '3307'
+    app.mysql_conn = mysql.connector.connect(
+        host=app.config['DB_HOST'],
+        user=app.config['DB_USER'],
+        password=app.config['DB_PASSWORD'],
+        database=app.config['DB_DATABASE'],
+        port=app.config['DB_PORT']
+    )
+
 if __name__ == '__main__':
+    connect_to_database()
     # csrf.init_app(app) # CSRF Config
     app.run(debug=True)

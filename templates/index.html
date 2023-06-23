@@ -179,11 +179,12 @@
                       <th scope="col">소속</th>
                       <th scope="col">연락처</th>
                       <th scope="col">담당자</th>
+                      <th scope="col">작업 위치</th>
                       <th scope="col">장비 반입</th>
                       <th scope="col">비고</th>
                       <th scope="col">방문 시각</th>
                       <th scope="col">퇴실 시각</th>
-                      <th scope="col"></th>
+                      <th scope="col">#</th>
                     </tr>
                   </thead>
                   <tfoot>
@@ -196,11 +197,12 @@
                       <th scope="col">소속</th>
                       <th scope="col">연락처</th>
                       <th scope="col">담당자</th>
+                      <th scope="col">작업 위치</th>
                       <th scope="col">장비 반입</th>
                       <th scope="col">비고</th>
                       <th scope="col">방문 시각</th>
                       <th scope="col">퇴실 시각</th>
-                      <th scope="col"></th>
+                      <th scope="col">#</th>
                     </tr>
                   </tfoot>
                   <tbody id="table_tbody">
@@ -223,6 +225,11 @@
                       <td>{{ approve_visitor.department }}</td>
                       <td>{{ approve_visitor.phone }}</td>
                       <td>{{ approve_visitor.manager }}</td>
+                      {% if approve_visitor.location != None %}
+                      <td>{{ approve_visitor.location }}</td>
+                      {% else %}
+                      <td>X</td>
+                      {% endif %}
                       {% if approve_visitor.device == 1 %}
                       <td>O</td>
                       <td>{{ approve_visitor.remarks }}</td>
@@ -240,7 +247,6 @@
                       <td>
                         {% if approve_visitor.exit == 0 %}
                         <button class="btn btn-secondary btn-sm" type="button" id="exit_btn{{approve_visitor.id}}" value="{{approve_visitor.id}}">퇴실</button>
-                        {% else %}
                         {% endif %}
                       </td>
                     </tr>

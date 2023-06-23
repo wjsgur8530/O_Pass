@@ -83,9 +83,13 @@
                     <option value="기타">기타</option>
                   </select>
               </div>
-                <div class="col-12">
+                <div class="col-6">
                   <label for="inputPhoneNumber" class="form-label">연락처</label>
-                  <input type="text" class="form-control" id="inputPhoneNumber" placeholder="" name="inputPhoneNumber">
+                  <input type="text" class="form-control" id="inputPhoneNumber" placeholder="(-)를 빼고 입력해주세요." name="inputPhoneNumber">
+                </div>
+                <div class="col-6">
+                  <label for="inputLocation" class="form-label">작업 위치</label>
+                  <input type="text" class="form-control" id="inputLocation" placeholder="etc. 4층 전산실" name="inputLocation">
                 </div>
                 <div class="col-12">
                   <label for="inputManager" class="form-label">담당자</label>
@@ -278,12 +282,14 @@
                       <th scope="col">소속</th>
                       <th scope="col">연락처</th>
                       <th scope="col">담당자</th>
+                      <th scope="col">작업 위치</th>
                       <th scope="col">장비 반입</th>
                       <th scope="col">비고</th>
                       <th scope="col">방문 시각</th>
                       <th scope="col">퇴실 시각</th>
-                      <th scope="col"></th>
-                      <th scope="col"></th>
+                      <th scope="col">#</th>
+                      <th scope="col">#</th>
+                      <th scope="col">#</th>
                     </tr>
                   </thead>
                   <tfoot>
@@ -296,12 +302,14 @@
                       <th scope="col">소속</th>
                       <th scope="col">연락처</th>
                       <th scope="col">담당자</th>
+                      <th scope="col">작업 위치</th>
                       <th scope="col">장비 반입</th>
                       <th scope="col">비고</th>
                       <th scope="col">방문 시각</th>
                       <th scope="col">퇴실 시각</th>
-                      <th scope="col"></th>
-                      <th scope="col"></th>
+                      <th scope="col">#</th>
+                      <th scope="col">#</th>
+                      <th scope="col">#</th>
                     </tr>
                   </tfoot>
                   <tbody id="table_tbody">
@@ -324,6 +332,11 @@
                       <td>{{ approve_visitor.department }}</td>
                       <td>{{ approve_visitor.phone }}</td>
                       <td>{{ approve_visitor.manager }}</td>
+                      {% if approve_visitor.location != None %}
+                      <td>{{ approve_visitor.location }}</td>
+                      {% else %}
+                      <td>X</td>
+                      {% endif %}
                       {% if approve_visitor.device == 1 %}
                       <td>O</td>
                       <td>{{ approve_visitor.remarks }}</td>
@@ -341,7 +354,11 @@
                       <td>
                         {% if approve_visitor.exit == 0 %}
                         <button class="btn btn-secondary btn-sm" type="button" id="exit_btn{{approve_visitor.id}}" value="{{approve_visitor.id}}">퇴실</button>
-                        {% else %}
+                        {% endif %}
+                      </td>
+                      <td>
+                        {% if approve_visitor.exit == 0 %}
+                        <button class="btn btn-primary btn-sm" type="button" id="qrcode_btn{{approve_visitor.id}}" value="{{approve_visitor.id}}">QR 재전송</button>
                         {% endif %}
                       </td>
                       <td>
@@ -352,7 +369,7 @@
                         {% endif %}
                       </td>
                     </tr>
-                    <!-- 퇴실 스크립트 -->
+                  <!-- 퇴실 스크립트 -->
                   <script>
                     $('#exit_btn{{approve_visitor.id}}').click(function(){
                       var exit_btn = $('#exit_btn{{approve_visitor.id}}').val();
@@ -378,6 +395,49 @@
                       })
                     })
                   </script>
+                   <!-- QR 재전송 스크립트 -->
+                   <script>
+                    $('#qrcode_btn{{approve_visitor.id}}').click(function(){
+                      var qrcode_btn = $('#qrcode_btn{{approve_visitor.id}}').val();
+                      var postdata = {
+                        'qrcode_btn': qrcode_btn,
+                      };
+                      $.ajax({
+                        contentType: 'application/json',
+                        type: 'POST',
+                        url: 'api/ajax_manage_qrcode_send',
+                        data: JSON.stringify(postdata),
+                        dataType: 'json',
+                        success: function(response) {
+                          alert('QR 코드가 재전송 되었습니다.');
+                          history.go(0);
+                        },
+                        error: function(request, status, error) {
+                          message = request.responseText;
+                          if (message == "Use Card")
+                            alert('이미 카드를 받은 방문객입니다.')
+                        }
+                      })
+                    })
+                  </script>
+                  <script>
+                    // 버튼 요소를 가져옵니다.
+                    const button = document.getElementById("qrcode_btn{{approve_visitor.id}}");
+                  
+                    // 버튼을 클릭할 때마다 QR 재전송을 처리하는 함수를 정의합니다.
+                    function handleQRCodeResend() {
+                      // 버튼을 비활성화합니다.
+                      button.disabled = true;
+                  
+                      // 1분(60초) 후에 버튼을 다시 활성화합니다.
+                      setTimeout(() => {
+                        button.disabled = false;
+                      }, 60000); // 60000밀리초 = 60초
+                    }
+                  
+                    // 버튼 클릭 이벤트에 QR 재전송 처리 함수를 연결합니다.
+                    button.addEventListener("click", handleQRCodeResend);
+                  </script>
                   <script>
                       function handleSuccess(response) {
                         var inputRemarks = document.getElementById('inputRemarks');
@@ -389,6 +449,7 @@
                         var manager = response.response[5];
                         var device = response.response[6];
                         var remarks = response.response[7];
+                        var location = response.response[8];
 
                         document.getElementById("inputUpdateNumber").value = update_id;
                         document.getElementById("inputName").value = name;
@@ -396,6 +457,7 @@
                         document.getElementById("inputObject").value = object;
                         document.getElementById("inputPhoneNumber").value = phone;
                         document.getElementById("inputManager").value = manager;
+                        document.getElementById("inputLocation").value = location;
 
                         if (device == true) {
                           document.getElementById('gridCheck').checked = true;
@@ -481,7 +543,9 @@
                           history.go(0);
                         },
                         error: function(request, status, error) {
-                          alert('삭제 오류');
+                          message = request.responseText;
+                          if (message == "Use Card")
+                            alert('방문객이 카드를 소지하고 있어 삭제 기능이 제한됩니다.');
                         }
                       })
                     })

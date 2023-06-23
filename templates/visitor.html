@@ -9,7 +9,7 @@
               box-sizing: border-box;
             }
         
-            #modalWrap {
+            #modalWrap, #modalWrapUpdate {
               position: fixed; /* Stay in place */
               z-index: 10; /* Sit on top */
               padding-top: 100px; /* Location of the box */
@@ -21,7 +21,7 @@
               background-color: rgba(0,0,0,0.4); /* Black w/ opacity */
             }
         
-            #modalBody {
+            #modalBody, #modalBodyUpdate {
               width: 800px;
               height: 600px;
               padding: 30px 30px;
@@ -30,7 +30,7 @@
               background-color: #fff;
             }
         
-            #closeBtn {
+            #closeBtn, #closeBtnUpdate {
               float:right;
               font-weight: bold;
               color: #777;
@@ -79,9 +79,13 @@
                         <option value="기타">기타</option>
                       </select>
                   </div>
-                    <div class="col-12">
+                    <div class="col-6">
                       <label for="inputPhoneNumber" class="form-label">연락처</label>
-                      <input type="text" class="form-control" id="inputPhoneNumber" placeholder="" name="inputPhoneNumber">
+                      <input type="text" class="form-control" id="inputPhoneNumber" placeholder="(-)를 빼고 입력해주세요." name="inputPhoneNumber">
+                    </div>
+                    <div class="col-6">
+                      <label for="inputLocation" class="form-label">작업 위치</label>
+                      <input type="text" class="form-control" id="inputLocation" placeholder="etc. 4층 전산실" name="inputLocation">
                     </div>
                     <div class="col-12">
                       <label for="inputManager" class="form-label">담당자</label>
@@ -106,6 +110,78 @@
                 </div>
             </div>
             </div>
+
+            <!-- 팝업 닫기 -->
+            <div id="modalWrapUpdate" style="display: none;">
+              <div id="modalContentUpdate">
+                  <div id="modalBodyUpdate">
+                      <!-- 팝업 닫기 -->
+                  <span id="closeBtnUpdate">&times;</span> 
+                      <!-- 팝업 내용 -->
+                  <h3 style="text-align:center">내방객 수정하기</h3>
+                  <form class="row g-3" method="post" action="/visit_update" enctype="multipart/form-data">
+                      <div class="col-xl-1" style="display: none;"> 
+                        <label for="inputUpdateNumber" class="form-label">#</label>
+                        <input type="text" class="form-control" id="inputUpdateNumber" name="inputUpdateNumber">
+                      </div>
+                      <div class="col-md-6">
+                        <label for="inputUpdateName" class="form-label">이름</label>
+                        <input type="text" class="form-control" id="inputUpdateName" name="inputUpdateName">
+                      </div>
+                      <div class="col-md-6">
+                          <label for="inputUpdateDepartment" class="form-label">소속</label>
+                          <select class="form-select" id="inputUpdateDepartment" name="inputUpdateDepartment">
+                            <option value="{{department_list[0]}}">{{department_list[0]}}</option>
+                            <option value="{{department_list[1]}}">{{department_list[1]}}</option>
+                            <option value="{{department_list[2]}}">{{department_list[2]}}</option>
+                            <option value="{{department_list[3]}}">{{department_list[3]}}</option>
+                            <option value="{{department_list[4]}}">{{department_list[4]}}</option>
+                            <option value="{{department_list[5]}}">{{department_list[5]}}</option>
+                            <option value="{{department_list[6]}}">{{department_list[6]}}</option>
+                          </select>
+                      </div>
+                      <div class="col-md-12">
+                        <label for="inputUpdateObject" class="form-label">방문 목적</label>
+                        <select class="form-select" id="inputUpdateObject" name="inputUpdateObject">
+                          <option value="업무 협의">업무 협의</option>
+                          <option value="업무 요청">업무 요청</option>
+                          <option value="단순 방문">단순 방문</option>
+                          <option value="장비 반입">장비 반입</option>
+                          <option value="단순 방문">단순 방문</option>
+                          <option value="기타">기타</option>
+                        </select>
+                    </div>
+                      <div class="col-6">
+                        <label for="inputUpdatePhoneNumber" class="form-label">연락처</label>
+                        <input type="text" class="form-control" id="inputUpdatePhoneNumber" placeholder="(-)를 빼고 입력해주세요." name="inputUpdatePhoneNumber">
+                      </div>
+                      <div class="col-6">
+                        <label for="inputUpdateLocation" class="form-label">작업 위치</label>
+                        <input type="text" class="form-control" id="inputUpdateLocation" placeholder="etc. 4층 전산실" name="inputUpdateLocation">
+                      </div>
+                      <div class="col-12">
+                        <label for="inputUpdateManager" class="form-label">담당자</label>
+                        <input type="text" class="form-control" id="inputUpdateManager" placeholder="" name="inputUpdateManager">
+                      </div>
+                      <div class="col-12">
+                          <div class="form-check">
+                              <input class="form-check-input" type="checkbox" id="gridCheck" value="1" name="inputUpdateDevice" onchange="toggleInputs()">
+                              <label class="form-check-label" for="gridCheck">
+                              장비 반입 여부
+                              </label>
+                          </div>
+                      </div>
+                      <div class="col-md-12">
+                        <label for="inputUpdateRemarks" class="form-label">비고</label>
+                        <input type="text" class="form-control" id="inputUpdateRemarks" disabled="true" name="inputUpdateRemarks">
+                      </div>
+                      <div class="col-12">
+                        <button type="submit" class="btn btn-success">수정하기</button>
+                      </div>
+                    </form>
+                  </div>
+              </div>
+              </div>
 
           <!-- Page Heading -->
           <div class="d-sm-flex align-items-center justify-content-end mb-4" id="popup">
@@ -174,10 +250,12 @@
                           <th scope="col">소속</th>
                           <th scope="col">연락처</th>
                           <th scope="col">담당자</th>
+                          <th scope="col">작업 위치</th>
                           <th scope="col">장비 반입</th>
                           <th scope="col">비고</th>
                           <th scope="col">방문 시각</th>
                           <th scope="col">승인 여부</th>
+                          <th scope="col">#</th>
                         </tr>
                       </thead>
                       <tfoot>
@@ -189,10 +267,12 @@
                           <th scope="col">소속</th>
                           <th scope="col">연락처</th>
                           <th scope="col">담당자</th>
+                          <th scope="col">작업 위치</th>
                           <th scope="col">장비 반입</th>
                           <th scope="col">비고</th>
                           <th scope="col">방문 시각</th>
                           <th scope="col">승인 여부</th>
+                          <th scope="col">#</th>
                         </tr>
                       </tfoot>
                       <tbody>
@@ -209,6 +289,7 @@
                             <td>{{ visitor.department }}</td>
                             <td>{{ visitor.phone }}</td>
                             <td>{{ visitor.manager }}</td>
+                            <td>{{ visitor.location }}</td>
                             {% if visitor.device == 1 %}
                             <td>O</td>
                             <td>{{ visitor.remarks }}</td>
@@ -225,6 +306,9 @@
                               {% else %}
                               <button class="btn btn-primary btn-sm" type="button" id="emergency_btn{{visitor.id}}" value="{{visitor.id}}">긴급 승인</button>
                               {% endif %}
+                            </td>
+                            <td>
+                              <button class="btn btn-success mr-2 btn-sm" type="button" id="update_btn{{visitor.id}}" value="{{visitor.id}}">수정</button>
                             </td>
                           </tr>
                       <script>
@@ -296,6 +380,76 @@
                               })
                             })
                             </script>
+                            <script>
+                              function handleSuccess(response) {
+                                var inputRemarks = document.getElementById('inputRemarks');
+                                var update_id = response.response[0];
+                                var name = response.response[1];
+                                var department = response.response[2];
+                                var object = response.response[3];
+                                var phone = response.response[4];
+                                var manager = response.response[5];
+                                var device = response.response[6];
+                                var remarks = response.response[7];
+                                var location = response.response[8];
+        
+                                document.getElementById("inputUpdateNumber").value = update_id;
+                                document.getElementById("inputUpdateName").value = name;
+                                document.getElementById("inputUpdateDepartment").value = department;
+                                document.getElementById("inputUpdateObject").value = object;
+                                document.getElementById("inputUpdatePhoneNumber").value = phone;
+                                document.getElementById("inputUpdateManager").value = manager;
+                                document.getElementById("inputUpdateLocation").value = location;
+        
+                                if (device == true) {
+                                  document.getElementById('gridCheck').checked = true;
+                                  inputRemarks.disabled = false;
+                                  document.getElementById("inputUpdateRemarks").value = remarks;
+                                  document.getElementById("inputUpdateDevice").value = true;
+                                } else {
+                                  document.getElementById('gridCheck').checked = false;
+                                  inputRemarks.disabled = true;
+                                  document.getElementById("inputUpdateRemarks").value = null;
+                                  document.getElementById("inputUpdateDevice").value = false;
+                                }
+                              }
+                              $(document).ready(function() {
+                                $('#update_btn{{visitor.id}}').click(function() {
+                                    const modal = document.getElementById('modalWrapUpdate');
+                                    const closeBtn = document.getElementById('closeBtnUpdate');
+                                  
+                                    closeBtn.onclick = function() {
+                                        modal.style.display = 'none';
+                                    }
+                                  
+                                    window.onclick = function(event) {
+                                        if (event.target == modal) {
+                                            modal.style.display = 'none';
+                                        }
+                                    }
+                                    var update_btn = $('#update_btn{{visitor.id}}').val();
+                                    var postdata = {
+                                      'update_btn': update_btn,
+                                    };
+                                    $.ajax({
+                                      contentType: 'application/json',
+                                      type: 'POST',
+                                      url: 'api/ajax_update_manage_visit',
+                                      data: JSON.stringify(postdata),
+                                      dataType: 'json',
+                                      success: function(response) {
+                                        modal.style.display = 'block';
+                                        handleSuccess(response);
+                                      },
+                                      error: function(request, status, error) {
+                                        message = request.responseText;
+                                        if (message == "Use Card")
+                                          alert('방문객이 카드를 소지하고 있어 수정 기능이 제한됩니다.');
+                                      }
+                                    })
+                                });
+                            });
+                          </script>
                       {% endfor %}
                     </tbody>
                     </table>

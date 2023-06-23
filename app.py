@@ -60,10 +60,10 @@ class Visitor(db.Model):
     __tablename__ = "Visitor"
 
     id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(30), unique=False)
+    name = db.Column(db.String(30), unique=False, nullable=False)
     department = db.Column(db.String(30), unique=False)
-    phone = db.Column(db.String(30), unique=False)
-    manager = db.Column(db.String(30), unique=False)
+    phone = db.Column(db.String(30), unique=False, nullable=False)
+    manager = db.Column(db.String(30), unique=False, nullable=False)
     device = db.Column(db.Boolean(), unique=False)
     remarks = db.Column(db.String(50), unique=False, nullable=True)
     object = db.Column(db.String(50), unique=False)
@@ -72,14 +72,14 @@ class Visitor(db.Model):
     exit = db.Column(db.Boolean(), unique=False, nullable=True)
     approve = db.Column(db.Boolean(), unique=False)
     location = db.Column(db.String(50), unique=False, nullable=True)
-    approve_log = db.Column(db.Integer, unique=False, nullable=True)
-    exit_log = db.Column(db.Integer, unique=False, nullable=True)
+    registry = db.Column(db.String(50), unique=False, nullable=True)
     card_id = db.Column(db.Integer, db.ForeignKey('Card.id'))
 
-    def __init__(self, name, department, phone, manager, device, remarks, object, created_time, approve):
+    def __init__(self, name, department, phone, location, manager, device, remarks, object, created_time, approve):
         self.name = name
         self.department = department
         self.phone = phone
+        self.location = location
         self.manager = manager
         self.device = device
         self.remarks = remarks

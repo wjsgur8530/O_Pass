@@ -8,7 +8,7 @@ migrate = Migrate()
 
 def create_app():
     app = Flask(__name__)
-    app.config["SQLALCHEMY_DATABASE_URI"] = "mysql://root:1q2w3e4r@localhost:3306/o_pass"
+    app.config["SQLALCHEMY_DATABASE_URI"] = "mysql://root:1q2w3e4r@localhost:3307/o_pass"
     app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
     app.secret_key = 'acjkehrjkawekvhjkawtejk'
 
