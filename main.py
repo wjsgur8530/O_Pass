@@ -3,14 +3,17 @@ from flask import Flask, flash, session, url_for, render_template, request, redi
 from flask_sqlalchemy import SQLAlchemy
 from werkzeug.security import generate_password_hash, check_password_hash # Password Hash
 from flask_bcrypt import Bcrypt
-from app import User, Visitor, Card, User_log, Year, Month, Day
+from app import User, Visitor, Card, User_log, Year, Month, Day, Department
 import jinja2.exceptions
 from config import create_app, db
 from flask_login import login_user, login_required, logout_user, current_user
 from flask_login import LoginManager
 from datetime import datetime, date, time
-import asyncio
+import qrcode
 import mysql.connector
+import openpyxl
+from openpyxl.styles import Alignment
+from openpyxl.utils import get_column_letter
 app = create_app()
 bcrypt = Bcrypt(app)
 
@@ -145,9 +148,29 @@ def manage_visitors():
             else:
                 visitor_count = [in_visitor, 0, 0, 0]
 
-        # 내방객 수정 - 부서 목록
-        department_list = ['CJ Olivenetworks','CJ 대한통운','CJ 올리브영','CJ CGV','CJ 프레시웨이','디아이웨어','기타',]
-        return render_template('visitor_update.html', current_user=current_user, approve_visitors=approve_visitors, visitor_count=visitor_count, time=time, card_list=card_list, department_list=department_list)
+        # 내방객 등록 - 부서 목록
+        department_lists = Department.query.order_by(Department.id.asc())
+        print(department_lists)
+        return render_template('visitor_update.html', current_user=current_user, approve_visitors=approve_visitors, visitor_count=visitor_count, time=time, card_list=card_list, department_lists=department_lists)
+
+# department 부서 관리 페이지
+@app.route('/departments', methods=['GET', 'POST'])
+def manage_departments():
+    if request.method == 'POST':
+        department_type = request.form['select_department_type']
+        department_name = request.form['add_department_name_value']
+        department = Department(department_type, department_name)
+        db.session.add(department)
+        db.session.commit()
+        return redirect('departments')
+    else:
+        departments = Department.query.all()
+        department_subsidiary = Department.query.filter_by(department_type="계열사").count()
+        department_partner = Department.query.filter_by(department_type="협력사").count()
+        department_bp = Department.query.filter_by(department_type="BP").count()
+        department_etc = Department.query.filter_by(department_type="기타").count()
+        department_counts = [department_subsidiary, department_partner, department_bp, department_etc]
+        return render_template('manage_department.html', departments=departments, department_counts=department_counts)
 
 # visit 수정 api
 @app.route('/visit_update', methods=['GET', 'POST'])
@@ -335,7 +358,7 @@ def visitor():
             remarks = None
 
         # 내방객 등록하기
-        visitor = Visitor(name, department, phone, location, manager, device, remarks, object, created_time, 0)
+        visitor = Visitor(name, department, phone, location, manager, device, remarks, object, created_time, 0, "사전 등록")
         db.session.add(visitor)
         db.session.commit()
         return redirect(url_for('visitor'))
@@ -344,9 +367,9 @@ def visitor():
         visitor_info = Visitor.query.filter_by(approve=0)
 
         # 내방객 등록 - 부서 목록
-        department_list = ['CJ Olivenetworks','CJ 대한통운','CJ 올리브영','CJ CGV','CJ 프레시웨이','디아이웨어','기타',]
-
-        return render_template('visitor.html', department_list=department_list, visitor_info=visitor_info)
+        department_lists = Department.query.order_by(Department.id.asc())
+        print(department_lists)
+        return render_template('visitor.html', department_lists=department_lists, visitor_info=visitor_info)
 
 # 테이블 테스트
 @app.route('/tables_test', methods=['GET', 'POST'])
@@ -394,7 +417,11 @@ def ajax_approve():
     else:
         device = "반입"
 
-    register_send_sms(visitor.name, visitor.created_date, visitor.object, visitor.location, visitor.manager, visitor.phone, device)
+    if visitor.registry == "사전 등록":
+        #register_send_sms(visitor.name, visitor.created_date, visitor.object, visitor.location, visitor.manager, visitor.phone, device)
+        image_send_sms_previous(visitor.name, visitor.created_date, visitor.object, visitor.location, visitor.manager, visitor.phone, device)
+    else:
+        image_send_sms_current(visitor.name, visitor.created_date, visitor.object, visitor.location, visitor.manager, visitor.phone, device)
 
     db.session.commit()
     return jsonify(result = "success")
@@ -721,29 +748,92 @@ def ajax_manage_qrcode_send():
     send_sms(qrcode_visitor.name, qrcode_visitor.created_date, qrcode_visitor.object, qrcode_visitor.location, qrcode_visitor.manager, qrcode_visitor.phone)
     return jsonify()
 
-# SMS 문자 메세지 보내기
+# 부서 삭제 api
+@app.route('/api/ajax_department_delete', methods=['POST'])
+def ajax_department_delete():
+    data = request.get_json()
+    print(data['delete_id'])
+    delete_id = data['delete_id']
+    department = Department.query.filter_by(id=delete_id).first()
+    db.session.delete(department)
+    db.session.commit()
+    return jsonify()
+
+# SMS-TEXT 문자 메세지 보내기 - 현장 등록 완료
 def send_sms(name, date, object, location, manager, phone_num):
     cursor = app.mysql_conn.cursor()  # 커서 생성
     # insert_query = "INSERT INTO sms_msg (REQDATE, STATUS, TYPE, PHONE, CALLBACK, MSG) VALUES (%s, %s, %s, %s, %s, %s)"
     insert_query = "INSERT INTO mms_msg (REQDATE, STATUS, TYPE, PHONE, CALLBACK, SUBJECT, MSG, FILE_CNT) VALUES (%s, %s, %s, %s, %s, %s, %s, %s)"
-    msg = '안녕하세요. ' + name + '님\n' + '송도 IDC 센터에 방문하신 것을 환영합니다.\n-방문시간: ' + str(date) + '\n-방문목적: ' + object + '\n-작업위치: ' + location + '\n-담당자: ' + manager + '\n-url: '
+    msg = '안녕하세요. ' + name + '님\n' + '송도 IDC 센터에 방문하신 것을 환영합니다.\n-방문시간: ' + str(date) + '\n-방문목적: ' + object + '\n-작업위치: ' + location + '\n-담당자: ' + manager
 
-    insert_data = (datetime.now(), '1', '0', phone_num, '01057320071', '내방객 시스템 승인', msg, '1')  # 삽입할 데이터를 튜플로 정의
+    insert_data = (datetime.now(), '1', '0', phone_num, '01057320071', '[내방객 출입 관리 시스템 현장 등록 완료]', msg, '1')  # 삽입할 데이터를 튜플로 정의
     cursor.execute(insert_query, insert_data)  # 쿼리 실행 및 데이터 전달
     app.mysql_conn.commit()  # 변경 사항 커밋
     cursor.close()  # 커서 닫기
 
-# SMS 문자 메세지 보내기
-def register_send_sms(name, date, object, location, manager, phone_num, device):
+# MMS-IMAGE TEST SMS 문자 메세지 보내기 - 현장 등록 승인
+def image_send_sms_current(name, date, object, location, manager, phone_num, device):
     cursor = app.mysql_conn.cursor()  # 커서 생성
-    # insert_query = "INSERT INTO sms_msg (REQDATE, STATUS, TYPE, PHONE, CALLBACK, MSG) VALUES (%s, %s, %s, %s, %s, %s)"
     insert_query = "INSERT INTO mms_msg (REQDATE, STATUS, TYPE, PHONE, CALLBACK, SUBJECT, MSG, FILE_CNT) VALUES (%s, %s, %s, %s, %s, %s, %s, %s)"
-    msg = '안녕하세요. ' + name + '님\n' + '송도 IDC 센터에 방문하신 것을 환영합니다.\n-등록시간: ' + str(date) + '\n-방문위치: 인천광역시 연수구 하모니로177번길 20' + '\n-방문목적: ' + object + '\n-장비반입: ' + device + '\n-작업위치: ' + location + '\n-담당자: ' + manager + '\n-url: '
+    msg =  name + '님 ' + '안녕하세요.\n' + '송도 IDC 센터에 방문하신 것을 환영합니다.\n-등록시간: ' + str(date) + '\n-방문위치: 인천광역시 연수구 하모니로177번길 20' + '\n-방문목적: ' + object + '\n-장비반입: ' + device + '\n-작업위치: ' + location + '\n-담당자: ' + manager + '\n-QR Code◀ '
 
-    insert_data = (datetime.now(), '1', '0', phone_num, '01057320071', '[내방객 시스템 사전 등록 승인]', msg, '1')  # 삽입할 데이터를 튜플로 정의
+    insert_data = (datetime.now(), '1', '0', phone_num, '01057320071', '[내방객 출입 관리 시스템 현장 등록 승인]', msg, '2', 'I', 'D://CJAgent//qr_img.jpg')  # 삽입할 데이터를 튜플로 정의
     cursor.execute(insert_query, insert_data)  # 쿼리 실행 및 데이터 전달
     app.mysql_conn.commit()  # 변경 사항 커밋
     cursor.close()  # 커서 닫기
+
+# MMS-IMAGE TEST SMS 문자 메세지 보내기 - 사전 등록 승인
+def image_send_sms_previous(name, date, object, location, manager, phone_num, device):
+    cursor = app.mysql_conn.cursor()  # 커서 생성
+    insert_query = "INSERT INTO mms_msg (REQDATE, STATUS, TYPE, PHONE, CALLBACK, SUBJECT, MSG, FILE_CNT, FILE_TYPE1, FILE_PATH1) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)"
+    msg = name + '님 ' + '안녕하세요.\n' + '송도 IDC 센터에 방문하신 것을 환영합니다.\n-등록시간: ' + str(date) + '\n-방문위치: 인천광역시 연수구 하모니로177번길 20' + '\n-방문목적: ' + object + '\n-장비반입: ' + device + '\n-작업위치: ' + location + '\n-담당자: ' + manager + '\n-QR Code◀ '
+
+    insert_data = (datetime.now(), '1', '0', phone_num, '01057320071', '[내방객 출입 관리 시스템 사전 등록 승인]', msg, '2', 'I', 'D://CJAgent//qr_img.jpg')  # 삽입할 데이터를 튜플로 정의
+    cursor.execute(insert_query, insert_data)  # 쿼리 실행 및 데이터 전달
+    app.mysql_conn.commit()  # 변경 사항 커밋
+    cursor.close()  # 커서 닫기
+
+@app.route('/api/ajax_excel_download', methods=['GET', 'POST'])
+def ajax_excel_download():
+    data = request.get_json()
+    print(data)
+    start_date = data['start_date_val']
+    end_date = data['end_date_val']
+    workbook = openpyxl.Workbook()
+    sheet = workbook.active
+
+    headers = [
+        '번호', '입실일시', '퇴실일시', '출입목적', '요청인소속', '출입요청인', '전화번호', 
+        '작업위치', '작업내용', '장비반입', '담당자', 'SR 요청번호', '비고'
+    ]
+
+    # 헤더 쓰기
+    for col_num, header in enumerate(headers, 1):
+        col_letter = get_column_letter(col_num)
+        cell = sheet[col_letter + '5']
+        cell.value = header
+        cell.alignment = Alignment(horizontal='center', vertical='center')
+        sheet.column_dimensions[col_letter].width = 20
+
+    # 데이터 쓰기
+    exited_visitors = Visitor.query.filter_by(exit=1)
+    for row_num, exited_visitor in enumerate(exited_visitors, 6):
+        row = (
+            exited_visitor.id, exited_visitor.created_date, exited_visitor.exit_date,
+            exited_visitor.object, exited_visitor.department, exited_visitor.name,
+            exited_visitor.phone, exited_visitor.location, "",
+            exited_visitor.device, exited_visitor.manager,
+            "", exited_visitor.remarks
+        )
+        sheet.append(row)
+
+        for col_num, _ in enumerate(row, 1):
+            col_letter = get_column_letter(col_num)
+            cell = sheet[col_letter + str(row_num)]
+            cell.alignment = Alignment(horizontal='center', vertical='center')
+
+    workbook.save(start_date + '-' + end_date + ' 내방객 출입점검 일지1.xlsx')
+    return jsonify(result="success")
 
 @app.errorhandler(jinja2.exceptions.TemplateNotFound)
 def template_not_found(e):

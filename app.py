@@ -75,7 +75,7 @@ class Visitor(db.Model):
     registry = db.Column(db.String(50), unique=False, nullable=True)
     card_id = db.Column(db.Integer, db.ForeignKey('Card.id'))
 
-    def __init__(self, name, department, phone, location, manager, device, remarks, object, created_time, approve):
+    def __init__(self, name, department, phone, location, manager, device, remarks, object, created_time, approve, registry):
         self.name = name
         self.department = department
         self.phone = phone
@@ -86,17 +86,20 @@ class Visitor(db.Model):
         self.approve = approve
         self.object = object
         self.created_date = created_time
+        self.registry = registry
 
 class Card(db.Model):
     __tablename__ = "Card"
 
     id = db.Column(db.Integer, primary_key=True)
     card_type = db.Column(db.String(50), unique=False)
+    card_num = db.Column(db.String(50), unique=False, nullable=True)
     card_status = db.Column(db.String(50), unique=False, nullable=True)
     visitors = db.relationship('Visitor', backref='card')
 
-    def __init__(self, card_type, card_status):
+    def __init__(self, card_type, card_num, card_status):
         self.card_type = card_type
+        self.card_num = card_num
         self.card_status = card_status
 
 class Year(db.Model):
@@ -123,3 +126,14 @@ class Day(db.Model):
     month = db.Column(db.Integer, db.ForeignKey('Month.month'), primary_key=True)
     day = db.Column(db.Integer, primary_key=True)
     count = db.Column(db.Integer, default=0)
+
+class Department(db.Model):
+    __tablename__ = "Department"
+
+    id = db.Column(db.Integer, primary_key=True)
+    department_type = db.Column(db.String(50), unique=False)
+    department_name = db.Column(db.String(50), unique=True)
+
+    def __init__(self, department_type, department_name):
+        self.department_type = department_type
+        self.department_name = department_name

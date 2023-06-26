@@ -59,13 +59,9 @@
                     <div class="col-md-6">
                         <label for="inputDepartment" class="form-label">소속</label>
                         <select class="form-select" id="inputDepartment" name="inputDepartment">
-                          <option value="{{department_list[0]}}">{{department_list[0]}}</option>
-                          <option value="{{department_list[1]}}">{{department_list[1]}}</option>
-                          <option value="{{department_list[2]}}">{{department_list[2]}}</option>
-                          <option value="{{department_list[3]}}">{{department_list[3]}}</option>
-                          <option value="{{department_list[4]}}">{{department_list[4]}}</option>
-                          <option value="{{department_list[5]}}">{{department_list[5]}}</option>
-                          <option value="{{department_list[6]}}">{{department_list[6]}}</option>
+                          {% for department_list in department_lists %}
+                            <option value="{{department_list.department_name}}">{{department_list.department_name}}</option>
+                          {% endfor %}
                         </select>
                     </div>
                     <div class="col-md-12">
@@ -131,13 +127,9 @@
                       <div class="col-md-6">
                           <label for="inputUpdateDepartment" class="form-label">소속</label>
                           <select class="form-select" id="inputUpdateDepartment" name="inputUpdateDepartment">
-                            <option value="{{department_list[0]}}">{{department_list[0]}}</option>
-                            <option value="{{department_list[1]}}">{{department_list[1]}}</option>
-                            <option value="{{department_list[2]}}">{{department_list[2]}}</option>
-                            <option value="{{department_list[3]}}">{{department_list[3]}}</option>
-                            <option value="{{department_list[4]}}">{{department_list[4]}}</option>
-                            <option value="{{department_list[5]}}">{{department_list[5]}}</option>
-                            <option value="{{department_list[6]}}">{{department_list[6]}}</option>
+                            {% for department_list in department_lists %}
+                              <option value="{{department_list.department_name}}">{{department_list.department_name}}</option>
+                            {% endfor %}
                           </select>
                       </div>
                       <div class="col-md-12">
@@ -245,6 +237,7 @@
                             </div>
                           </th>
                           <th scope="col">#</th>
+                          <th scope="col">#</th>
                           <th scope="col">방문 목적</th>
                           <th scope="col">이름</th>
                           <th scope="col">소속</th>
@@ -260,6 +253,7 @@
                       </thead>
                       <tfoot>
                         <tr>
+                          <th scope="col">#</th>
                           <th scope="col">#</th>
                           <th scope="col">#</th>
                           <th scope="col">방문 목적</th>
@@ -284,6 +278,7 @@
                               </div>
                             </td>
                             <th scope="row">{{ visitor.id }}</th>
+                            <td>{{ visitor.registry }}</td>
                             <td><span class="visitor_object">{{ visitor.object }}</span></td>
                             <td>{{ visitor.name }}</td>
                             <td>{{ visitor.department }}</td>

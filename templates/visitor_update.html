@@ -63,13 +63,9 @@
                 <div class="col-md-6">
                   <label for="inputDepartment" class="form-label">소속</label>
                   <select class="form-select" id="inputDepartment" name="inputDepartment">
-                    <option value="{{department_list[0]}}">{{department_list[0]}}</option>
-                    <option value="{{department_list[1]}}">{{department_list[1]}}</option>
-                    <option value="{{department_list[2]}}">{{department_list[2]}}</option>
-                    <option value="{{department_list[3]}}">{{department_list[3]}}</option>
-                    <option value="{{department_list[4]}}">{{department_list[4]}}</option>
-                    <option value="{{department_list[5]}}">{{department_list[5]}}</option>
-                    <option value="{{department_list[6]}}">{{department_list[6]}}</option>
+                    {% for department_list in department_lists %}
+                      <option value="{{department_list.department_name}}">{{department_list.department_name}}</option>
+                    {% endfor %}
                   </select>
                 </div>
                 <div class="col-md-12">
@@ -203,6 +199,14 @@
         </div>
       </div>
 
+      <!-- Page Heading -->
+      <div class="d-sm-flex align-items-center justify-content-end mb-4" id="popup">
+        <div id="btnWrap">
+          <input type="date" name="start_date" id="start_date"> -
+          <input type="date" name="end_date" id="end_date">
+          <button class="d-none d-sm-inline-block btn btn-sm btn-success shadow-sm" type="button" id="excel_download_btn" name="excel_download_btn"><i class="fas fa-plus fa-sm text-white-50"></i> 엑셀 다운로드</button>
+        </div>
+      </div>
       <!-- Content Row -->
 
       <div class="row">
@@ -822,6 +826,30 @@
     $("#index_total_visitor").load(currentLocation + ' #index_total_visitor')
   }
   setInterval('autoRefresh_total_visitor_div()', 60000); //1분 마다 새로고침
+</script>
+
+<!-- Excel Download 스크립트 -->
+<script>
+  $('#excel_download_btn').click(function(){
+    var start_date = document.getElementById("start_date");
+    var end_date = document.getElementById("end_date");
+    var start_date_val = start_date.value
+    var end_date_val = end_date.value
+    var postdata = {'start_date_val': start_date_val, 'end_date_val': end_date_val}
+    $.ajax({
+      contentType: 'application/json',
+      type: 'POST',
+      url: '/api/ajax_excel_download',
+      data: JSON.stringify(postdata),
+      dataType: 'json',
+      success: function(data) {
+        alert('성공')
+      },
+      error: function(request, status, error) {
+        alert('실패')
+      }
+    })
+  })
 </script>
 {% endblock %}
 
