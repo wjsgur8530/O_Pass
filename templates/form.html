@@ -1,0 +1,96 @@
+{% extends "base.html" %} {% block title %}Sample{% endblock %} 
+{% block content %}
+<html>
+    <body>
+        <div class="container-fluid">
+            <div class="card o-hidden border-0 shadow-lg my-5">
+                <div class="card-body p-10">
+                    <div style="margin: auto auto;">
+                        <h3 class="p-3"><b><img class="img-profile rounded-circle" src="static/img/CJ_logo.svg.png" style="width:70px; height: 70px;"> 송도 IDC 출입 관리 시스템 - [현장 등록]</b></h3>
+                        <h4 class="p-3"><b><i class="fas fa-check fa-sm text-success"></i> CJ 송도 IDC에 방문하신 것을 진심으로 환영합니다.</b></h4>
+                        <h5 class="p-3"><b><i class="fas fa-fw fa-edit"></i> 개인정보 수집 동의서 (필수)</b></h5>
+                        <textarea name="" id="" cols="30" rows="30" class="form-control">
+※ 개인정보 수집 이용동의 안내 
+
+1. 수집 및 이용 목적
+
+CJ올리브네트웍스(이하 ‘회사’라 칭함)는 CJ송도 IDC 출입에 관하여 필요한 개인정보등 필수 사항을 수집하고 있으며, 수집한 개인정보를 다음의 목적을 위해 활용합니다.
+
+
+
+2. 수집하는 개인정보의 항목
+
+회사는 CJ송도 IDC 출입 신청, 상주등에 대하여 아래와 같이 개인정보를 수집하고 있습니다.
+
+- 수집항목 : 이름, 소속, 전화번호, 이메일 주소, 생년월일
+
+- 수집방법 : 출입등록 시스템을 통한 온라인 입력
+
+
+
+3. 보유 및 기간
+
+수집되는 개인정보에 대하여 CJ송도 IDC의 출입사유가 발생된 이후 보존을 실시 합니다.
+
+단, 정보주체의 기록 삭제 요청시 즉시 삭제를 실시할 수 있습니다.
+
+- 보존항목 : 이름, 소속, 전화번호, 이메일 주소, 생년월일
+
+- 보존근거 : 정보주체의 동의
+
+- 보존기간 : 1년
+
+
+
+4. 동의를 거부할 권리 및 동의 거부에 따른 불이익
+
+CJ송도 IDC 출입에 있어 보다 원할한 업무 제공을 위하여 개인정보를 수집하고 있으며, 이를 원하지 않을 경우 회사는 수집하지 않으며 미 동의시 CJ송도 IDC의 출입이 제한될 수 있습니다.
+                        </textarea>
+                        <h6 class="mt-3 text-center">개인정보 수집ㆍ이용에 동의 합니다.</h6>
+                        <div class="mt-3 mb-4 text-center">
+                            <div class="form-check form-check-inline">
+                                <input class="form-check-input" type="radio" name="secureRadio" id="secureRadio1" value="option1">
+                                <label class="form-check-label" for="secureRadio1">예</label>
+                            </div>
+                            <div class="form-check form-check-inline">
+                                <input class="form-check-input" type="radio" name="secureRadio" id="secureRadio2" value="option2">
+                                <label class="form-check-label" for="secureRadio2">아니요</label>
+                            </div>
+                        </div>
+                        <div class="text-right mt-5 mb-4">
+                            <button class="btn btn-primary btn-lg form-control" id="nextButton" onclick="location.href='form-input'">다음</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </body>
+</html>
+
+<script>
+    $(document).ready(function() {
+        // 페이지 로드 시 "다음" 버튼을 숨김
+        $('#nextButton').hide();
+
+        // 예 체크박스 클릭 시 다음 버튼 표시
+        $('#secureRadio1').click(function() {
+            if ($(this).is(':checked')) {
+                $('#nextButton').show();
+            } else {
+                $('#nextButton').hide();
+            }
+        });
+    });
+</script>
+
+<script>
+    // 아니요 체크박스 클릭 시 다음 버튼 숨김
+    $('#secureRadio2').click(function() {
+        if ($(this).is(':checked')) {
+            $('#nextButton').hide();
+        } else {
+            $('#nextButton').show();
+        }
+    });
+</script>
+{% endblock %}

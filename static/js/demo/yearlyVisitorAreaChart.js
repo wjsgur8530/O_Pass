@@ -3,19 +3,19 @@ Chart.defaults.global.defaultFontFamily = 'Nunito', '-apple-system,system-ui,Bli
 Chart.defaults.global.defaultFontColor = '#858796';
 
 // Calculate labels for the days
-function generateDayLabels() {
+function generateYearlyLabels() {
   var labels = [];
-  var [what_day, what_month, day_count] = generateDailyData();
-  for (var i = 0; i < what_day.length; i++) {
-    var label = what_month[i] + '월 ' + what_day[i] + '일';
+  var [what_year, yearly_count] = generateYearlyData();
+  for (var i = 0; i < what_year.length; i++) {
+    var label = what_year[i] + '년';
     labels.push(label);
   }
   return labels;
 }
 
-var ctx = document.getElementById("dailyVisitorAreaChart");
-var [what_day, what_month, day_count] = generateDailyData();
-var labels = generateDayLabels();
+var ctx = document.getElementById("yearlyVisitorAreaChart");
+var [what_year, yearly_count] = generateYearlyData();
+var labels = generateYearlyLabels();
 
 var myLineChart = new Chart(ctx, {
   type: 'line',
@@ -24,17 +24,17 @@ var myLineChart = new Chart(ctx, {
     datasets: [{
       label: "방문자 수",
       lineTension: 0.3,
-      backgroundColor: "rgba(78, 115, 223, 0.05)",
-      borderColor: "rgba(78, 115, 223, 1)",
+      backgroundColor: "rgba(13, 202, 240, 0.05)",
+      borderColor: "rgba(13, 202, 240, 1)",
       pointRadius: 3,
-      pointBackgroundColor: "rgba(78, 115, 223, 1)",
-      pointBorderColor: "rgba(78, 115, 223, 1)",
+      pointBackgroundColor: "rgba(13, 202, 240, 1)",
+      pointBorderColor: "rgba(13, 202, 240, 1)",
       pointHoverRadius: 3,
-      pointHoverBackgroundColor: "rgba(78, 115, 223, 1)",
-      pointHoverBorderColor: "rgba(78, 115, 223, 1)",
+      pointHoverBackgroundColor: "rgba(13, 202, 240, 1)",
+      pointHoverBorderColor: "rgba(13, 202, 240, 1)",
       pointHitRadius: 10,
       pointBorderWidth: 2,
-      data: day_count
+      data: yearly_count
     }],
   },
   options: {

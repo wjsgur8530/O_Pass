@@ -1,5 +1,12 @@
 {% extends "base.html" %} {% block title %}Sample{% endblock %} 
 {% block content %}
+{%with messages = get_flashed_messages()%}
+  {%if messages %}
+    <script type="text/javascript">
+      alert("{{messages[-1]}}");
+    </script>
+  {%endif%}
+{%endwith%}
 <body>
     <!-- Begin Page Content -->
     <div class="container-fluid">
@@ -70,7 +77,7 @@
           <div class="d-sm-flex align-items-center justify-content-between" id="popup">
             <form method="POST">
             <div class="input-group">
-              <select name="select_department_type" id="select_department_type" class="form-check-label">
+              <select name="select_department_type" id="select_department_type" class="form-select">
                 <option value="계열사">계열사</option>
                 <option value="협력사">협력사</option>
                 <option value="BP">BP</option>
@@ -81,7 +88,46 @@
             </div>
             </form>
             <div id="btnWrap">
-                <button class="d-none d-sm-inline-block btn btn-sm btn-primary shadow-sm" id="popupBtn"><i class="fas fa-plus fa-sm text-white-50"></i> 기본 부서 생성</button>
+                <button class="d-none d-sm-inline-block btn btn-sm btn-primary shadow-sm" id="department_basic_create" data-toggle="modal" data-target="#createModal"><i class="fas fa-plus fa-sm text-white-50"></i> 기본 부서 생성</button>
+                <button class="d-none d-sm-inline-block btn btn-sm btn-primary shadow-sm" id="department_reset" data-toggle="modal" data-target="#resetModal"><i class="fas fa-plus fa-sm text-white-50"></i> 부서 초기화</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 기본 부서 생성 Modal-->
+      <div class="modal fade" id="createModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h5 class="modal-title" id="exampleModalLabel">Ready to Create?</h5>
+              <button class="close" type="button" data-dismiss="modal" aria-label="Close">
+                <span aria-hidden="true">×</span>
+              </button>
+            </div>
+            <div class="modal-body">기본 부서를 생성하겠습니까? <br> 정말 생성 하시려면 "생성"을 선택하십시오.</div>
+            <div class="modal-footer">
+              <button class="btn btn-secondary" type="button" data-dismiss="modal">취소</button>
+              <button class="btn btn-primary" type="button" data-dismiss="modal" id="department_create_btn">생성</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 부서 초기화 Modal-->
+      <div class="modal fade" id="resetModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h5 class="modal-title" id="exampleModalLabel">Warning! Ready to Reset?</h5>
+              <button class="close" type="button" data-dismiss="modal" aria-label="Close">
+                <span aria-hidden="true">×</span>
+              </button>
+            </div>
+            <div class="modal-body">초기화하면 부서 데이터가 사라지고 복구할 수 없습니다. 정말 초기화 하시려면 "리셋"을 선택하십시오.</div>
+            <div class="modal-footer">
+              <button class="btn btn-secondary" type="button" data-dismiss="modal">취소</button>
+              <button class="btn btn-primary" type="button" data-dismiss="modal" id="department_reset_btn">리셋</button>
             </div>
           </div>
         </div>
@@ -137,4 +183,45 @@
   </div>
   <!-- End of Main Content -->
 </body>
+<!-- 기본 부서 생성 -->
+<script>
+  $('#department_create_btn').click(function(){
+    var postdata = {};
+    $.ajax({
+      contentType: 'application/json',
+      type: 'POST',
+      url: 'api/ajax_department_basic_create',
+      data: JSON.stringify(postdata),
+      dataType: 'json',
+      success: function(response) {
+        alert('기본 부서가 생성 되었습니다.');
+        history.go(0);
+      },
+      error: function(request, status, error) {
+        alert('기본 부서 생성 실패.');
+      }
+    })
+  })
+</script>
+
+<!-- 부서 초기화 -->
+<script>
+  $('#department_reset_btn').click(function(){
+    var postdata = {};
+    $.ajax({
+      contentType: 'application/json',
+      type: 'POST',
+      url: 'api/ajax_department_reset',
+      data: JSON.stringify(postdata),
+      dataType: 'json',
+      success: function(response) {
+        alert('부서가 초기화 되었습니다.');
+        history.go(0);
+      },
+      error: function(request, status, error) {
+        alert('부서 초기화 실패.');
+      }
+    })
+  })
+</script>
 {% endblock %}

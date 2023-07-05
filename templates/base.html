@@ -22,7 +22,13 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bacasime+Antique&display=swap" rel="stylesheet">
   <!-- Noto Sans 사용법: font-family: 'Noto Sans KR', sans-serif; -->
+
+  <!-- 새로운 favicon 지정 -->
+  <link rel="icon" type="static/img/CJ_logo.svg.png" href="static/img/CJ_logo.svg.png">
 
   <!-- ajax, comman.js 호출 -->
   <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
@@ -44,8 +50,8 @@
   <div id="wrapper">
 
     <!-- Sidebar -->
-    <ul class="navbar-nav sidebar sidebar-dark accordion" id="accordionSidebar" style="background-color: #343a40;">
-
+    <ul class="navbar-nav sidebar sidebar-dark accordion toggled" id="accordionSidebar" style="background-color: #343a40;">
+      
       <!-- Sidebar - Brand -->
       <a class="sidebar-brand d-flex align-items-center justify-content-center" href="index">
         <div class="sidebar-brand-icon">
@@ -96,6 +102,22 @@
 
       <!-- Heading -->
       <div class="sidebar-heading">
+        Components
+      </div>
+      
+      <!-- Nav Item - Charts -->
+      <li class="nav-item">
+        <a class="nav-link" href="form">
+          <i class="fas fa-fw fa-edit"></i>
+          <span>Form</span></a>
+      </li>
+
+
+      <!-- Divider -->
+      <hr class="sidebar-divider">
+
+      <!-- Heading -->
+      <div class="sidebar-heading">
         Interface
       </div>
 
@@ -140,14 +162,16 @@
         <div id="collapseManagements" class="collapse" aria-labelledby="headingTwo" data-parent="#accordionSidebar">
           <div class="bg-white py-2 collapse-inner rounded">
             <h6 class="collapse-header">Custom Managements:</h6>
-            <a class="collapse-item" href="manage_visitors">Visitors</a>
+            <a class="collapse-item" href="manage_visitors">Visitors - Desk</a>
+            <a class="collapse-item" href="rack_visitors">Visitors - Rack</a>
             <a class="collapse-item" href="departments">Department</a>
             <a class="collapse-item" href="manage_cards">Cards</a>
+            <a class="collapse-item" href="manage_rack_keys">Rack Keys</a>
             <a class="collapse-item" href="manage_logs">Log</a>
           </div>
         </div>
       </li>
-
+      
       {% if current_user.is_authenticated %}
       {% else %}
       <!-- Heading -->
@@ -244,14 +268,11 @@
               </div>
             </li>
 
-            <!-- Nav Item - Alerts -->
-            <li class="nav-item dropdown no-arrow mx-1">
+            <!-- <li class="nav-item dropdown no-arrow mx-1">
               <a class="nav-link dropdown-toggle" href="#" id="alertsDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                 <i class="fas fa-bell fa-fw"></i>
-                <!-- Counter - Alerts -->
                 <span class="badge badge-danger badge-counter">3+</span>
               </a>
-              <!-- Dropdown - Alerts -->
               <div class="dropdown-list dropdown-menu dropdown-menu-right shadow animated--grow-in" aria-labelledby="alertsDropdown">
                 <h6 class="dropdown-header">
                   Alerts Center
@@ -293,14 +314,11 @@
               </div>
             </li>
 
-            <!-- Nav Item - Messages -->
             <li class="nav-item dropdown no-arrow mx-1">
               <a class="nav-link dropdown-toggle" href="#" id="messagesDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                 <i class="fas fa-envelope fa-fw"></i>
-                <!-- Counter - Messages -->
                 <span class="badge badge-danger badge-counter">7</span>
               </a>
-              <!-- Dropdown - Messages -->
               <div class="dropdown-list dropdown-menu dropdown-menu-right shadow animated--grow-in" aria-labelledby="messagesDropdown">
                 <h6 class="dropdown-header">
                   Message Center
@@ -347,7 +365,7 @@
                 </a>
                 <a class="dropdown-item text-center small text-gray-500" href="#">Read More Messages</a>
               </div>
-            </li>
+            </li> -->
 
             <div class="topbar-divider d-none d-sm-block"></div>
 
@@ -360,24 +378,24 @@
                 {% else %}
                 <span class="mr-2 d-none d-lg-inline text-gray-600 small">로그인 해주세요.</span>
                 {% endif %}
-                <img class="img-profile rounded-circle" src="https://source.unsplash.com/QAB-WJcbgJk/60x60">
+                <img class="img-profile rounded-circle" src="static/img/CJ_logo.svg.png">
               </a>
               <!-- Dropdown - User Information -->
               <div class="dropdown-menu dropdown-menu-right shadow animated--grow-in" aria-labelledby="userDropdown">
-                <a class="dropdown-item" href="#">
+                <a class="dropdown-item" href="/profile">
                   <i class="fas fa-user fa-sm fa-fw mr-2 text-gray-400"></i>
                   Profile
                 </a>
-                <a class="dropdown-item" href="#">
+                <a class="dropdown-item" href="/authenticated">
                   <i class="fas fa-cogs fa-sm fa-fw mr-2 text-gray-400"></i>
                   Settings
                 </a>
-                <a class="dropdown-item" href="#">
+                <!-- <a class="dropdown-item" href="/#">
                   <i class="fas fa-list fa-sm fa-fw mr-2 text-gray-400"></i>
                   Activity Log
-                </a>
+                </a> -->
                 <div class="dropdown-divider"></div>
-                <a class="dropdown-item" href="#" data-toggle="modal" data-target="#logoutModal">
+                <a class="dropdown-item" href="/#" data-toggle="modal" data-target="#logoutModal">
                   <i class="fas fa-sign-out-alt fa-sm fa-fw mr-2 text-gray-400"></i>
                   Logout
                 </a>
@@ -410,7 +428,7 @@
       <footer class="sticky-footer bg-white">
         <div class="container my-auto">
           <div class="copyright text-center my-auto">
-            <span>Copyright &copy; Your Website 2020</span>
+            <span>Copyright &copy; CJ Olivenetworks 2023</span>
           </div>
         </div>
       </footer>
@@ -460,3 +478,17 @@
 </body>
 
 </html>
+
+<!-- <script>
+  document.getElementById("accordionSidebar").style.display = "none";
+
+  // Call this function from which button it will be open.
+  function sidebar_open() {
+    document.getElementById("accordionSidebar").style.display = "block";
+  }
+
+  // Same as open, close button.
+  function sidebar_close() {
+    document.getElementById("accordionSidebar").style.display = "none";
+  }
+</script> -->

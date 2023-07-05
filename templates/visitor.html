@@ -50,13 +50,17 @@
                     <!-- 팝업 닫기 -->
                 <span id="closeBtn">&times;</span> 
                     <!-- 팝업 내용 -->
-                <h3 style="text-align:center">내방객 등록하기</h3>
+                <h3 class="heading_title" style="text-align:center">내방객 등록하기</h3>
                 <form class="row g-3" method="post" action="/visit" enctype="multipart/form-data">
                     <div class="col-md-6">
                       <label for="inputName" class="form-label">이름</label>
                       <input type="text" class="form-control" id="inputName" name="inputName">
                     </div>
-                    <div class="col-md-6">
+                    <div class="col-6">
+                      <label for="inputPhoneNumber" class="form-label">연락처</label>
+                      <input type="text" class="form-control" id="inputPhoneNumber" placeholder="(-)를 빼고 입력해주세요." name="inputPhoneNumber">
+                    </div>
+                    <div class="col-md-4">
                         <label for="inputDepartment" class="form-label">소속</label>
                         <select class="form-select" id="inputDepartment" name="inputDepartment">
                           {% for department_list in department_lists %}
@@ -64,7 +68,7 @@
                           {% endfor %}
                         </select>
                     </div>
-                    <div class="col-md-12">
+                    <div class="col-4">
                       <label for="inputObject" class="form-label">방문 목적</label>
                       <select class="form-select" id="inputObject" name="inputObject">
                         <option value="업무 협의">업무 협의</option>
@@ -74,26 +78,46 @@
                         <option value="단순 방문">단순 방문</option>
                         <option value="기타">기타</option>
                       </select>
-                  </div>
-                    <div class="col-6">
-                      <label for="inputPhoneNumber" class="form-label">연락처</label>
-                      <input type="text" class="form-control" id="inputPhoneNumber" placeholder="(-)를 빼고 입력해주세요." name="inputPhoneNumber">
                     </div>
-                    <div class="col-6">
-                      <label for="inputLocation" class="form-label">작업 위치</label>
-                      <input type="text" class="form-control" id="inputLocation" placeholder="etc. 4층 전산실" name="inputLocation">
-                    </div>
-                    <div class="col-12">
+                    <div class="col-4">
                       <label for="inputManager" class="form-label">담당자</label>
                       <input type="text" class="form-control" id="inputManager" placeholder="" name="inputManager">
                     </div>
+                    <div class="col-12" style="display:flex;">
+                      <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="gridCheck_2" value="1" name="inputWork" onchange="toggleInputs_work()">
+                        <label class="form-check-label" for="gridCheck_2">
+                        작업 여부
+                        </label>
+                      </div>
+                      <div class="form-check ml-2">
+                        <input class="form-check-input" type="checkbox" id="gridCheck" value="1" name="inputDevice" onchange="toggleInputs()">
+                        <label class="form-check-label" for="gridCheck">
+                        장비 반입 여부
+                        </label>
+                      </div>
+                    </div>
+                    <div class="col-3">
+                      <label for="inputLocation" class="form-label">작업 위치</label>
+                      <input type="text" class="form-control" id="inputLocation" placeholder="etc. 4층 전산실" disabled="true" name="inputLocation">
+                    </div>
+                    <div class="col-5">
+                      <label for="inputCompany" class="form-label">작업 요청 회사</label>
+                      <div class="input-group">
+                      <select class="form-select col-xl-5" id="inputCompany" name="inputCompany" disabled="true">
+                        <option value="계열사">계열사</option>
+                        <option value="대외고객사">대외고객사</option>
+                      </select>
+                      <input type="text" class="form-control" id="inputCompanyName" disabled="true" name="inputCompanyName">
+                      </div>
+                    </div>
+                    <div class="col-4">
+                      <label for="inputDetailLocation" class="form-label">상세 작업 위치</label>
+                      <input type="text" class="form-control" id="inputDetailLocation" placeholder="etc. Rack 번호" disabled="true" name="inputDetailLocation">
+                    </div>
                     <div class="col-12">
-                        <div class="form-check">
-                            <input class="form-check-input" type="checkbox" id="gridCheck" value="1" name="inputDevice" onchange="toggleInputs()">
-                            <label class="form-check-label" for="gridCheck">
-                            장비 반입 여부
-                            </label>
-                        </div>
+                      <label for="inputContent" class="form-label">작업 내용</label>
+                      <input type="text" class="form-control" id="inputContent" disabled="true" name="inputContent">
                     </div>
                     <div class="col-md-12">
                       <label for="inputRemarks" class="form-label">비고</label>
@@ -124,7 +148,11 @@
                         <label for="inputUpdateName" class="form-label">이름</label>
                         <input type="text" class="form-control" id="inputUpdateName" name="inputUpdateName">
                       </div>
-                      <div class="col-md-6">
+                      <div class="col-6">
+                        <label for="inputUpdatePhoneNumber" class="form-label">연락처</label>
+                        <input type="text" class="form-control" id="inputUpdatePhoneNumber" placeholder="(-)를 빼고 입력해주세요." name="inputUpdatePhoneNumber">
+                      </div>
+                      <div class="col-md-4">
                           <label for="inputUpdateDepartment" class="form-label">소속</label>
                           <select class="form-select" id="inputUpdateDepartment" name="inputUpdateDepartment">
                             {% for department_list in department_lists %}
@@ -132,7 +160,7 @@
                             {% endfor %}
                           </select>
                       </div>
-                      <div class="col-md-12">
+                      <div class="col-md-4">
                         <label for="inputUpdateObject" class="form-label">방문 목적</label>
                         <select class="form-select" id="inputUpdateObject" name="inputUpdateObject">
                           <option value="업무 협의">업무 협의</option>
@@ -142,26 +170,46 @@
                           <option value="단순 방문">단순 방문</option>
                           <option value="기타">기타</option>
                         </select>
-                    </div>
-                      <div class="col-6">
-                        <label for="inputUpdatePhoneNumber" class="form-label">연락처</label>
-                        <input type="text" class="form-control" id="inputUpdatePhoneNumber" placeholder="(-)를 빼고 입력해주세요." name="inputUpdatePhoneNumber">
                       </div>
-                      <div class="col-6">
-                        <label for="inputUpdateLocation" class="form-label">작업 위치</label>
-                        <input type="text" class="form-control" id="inputUpdateLocation" placeholder="etc. 4층 전산실" name="inputUpdateLocation">
-                      </div>
-                      <div class="col-12">
+                      <div class="col-4">
                         <label for="inputUpdateManager" class="form-label">담당자</label>
                         <input type="text" class="form-control" id="inputUpdateManager" placeholder="" name="inputUpdateManager">
                       </div>
+                      <div class="col-12" style="display:flex;">
+                        <div class="form-check">
+                          <input class="form-check-input" type="checkbox" id="gridCheck_4" value="1" name="inputUpdateWork" onchange="toggleUpdateInputs_work()">
+                          <label class="form-check-label" for="gridCheck_4">
+                          작업 여부
+                          </label>
+                        </div>
+                        <div class="form-check ml-2">
+                          <input class="form-check-input" type="checkbox" id="gridCheck_3" value="1" name="inputUpdateDevice" onchange="toggleUpdateInputs()">
+                          <label class="form-check-label" for="gridCheck_3">
+                          장비 반입 여부
+                          </label>
+                        </div>
+                      </div>
+                      <div class="col-3">
+                        <label for="inputUpdateLocation" class="form-label">작업 위치</label>
+                        <input type="text" class="form-control" id="inputUpdateLocation" placeholder="etc. 4층 전산실" disabled="true" name="inputUpdateLocation">
+                      </div>
+                      <div class="col-5">
+                        <label for="inputUpdateCompany" class="form-label">작업 요청 회사</label>
+                        <div class="input-group">
+                        <select class="form-select col-xl-5" id="inputUpdateCompany" name="inputUpdateCompany" disabled="true">
+                          <option value="계열사">계열사</option>
+                          <option value="대외고객사">대외고객사</option>
+                        </select>
+                        <input type="text" class="form-control" id="inputUpdateCompanyName" disabled="true" name="inputUpdateCompanyName">
+                        </div>
+                      </div>
+                      <div class="col-4">
+                        <label for="inputUpdateDetailLocation" class="form-label">상세 작업 위치</label>
+                        <input type="text" class="form-control" id="inputUpdateDetailLocation" placeholder="etc. Rack 번호" disabled="true" name="inputUpdateDetailLocation">
+                      </div>
                       <div class="col-12">
-                          <div class="form-check">
-                              <input class="form-check-input" type="checkbox" id="gridCheck" value="1" name="inputUpdateDevice" onchange="toggleInputs()">
-                              <label class="form-check-label" for="gridCheck">
-                              장비 반입 여부
-                              </label>
-                          </div>
+                        <label for="inputUpdateContent" class="form-label">작업 내용</label>
+                        <input type="text" class="form-control" id="inputUpdateContent" disabled="true" name="inputUpdateContent">
                       </div>
                       <div class="col-md-12">
                         <label for="inputUpdateRemarks" class="form-label">비고</label>
@@ -178,7 +226,9 @@
           <!-- Page Heading -->
           <div class="d-sm-flex align-items-center justify-content-end mb-4" id="popup">
             <div id="btnWrap">
-                <button class="d-none d-sm-inline-block btn btn-sm btn-primary shadow-sm" id="popupBtn"><i class="fas fa-plus fa-sm text-white-50"></i> 내방객 등록</button>
+              <button type="button" class="btn btn-success btn-sm" id="approve_checkbox"><i class="fas fa-check fa-sm text-white-50"></i> 승인(체크 선택 승인)</button>
+              <button type="button" class="btn btn-danger btn-sm" id="deny_checkbox"><i class="fas fa-ban fa-sm text-white-50"></i> 반려(체크 선택 반려)</button>
+              <button class="d-none d-sm-inline-block btn btn-sm btn-primary shadow-sm" id="popupBtn"><i class="fas fa-plus fa-sm text-white-50"></i> 내방객 등록</button>
             </div>
           </div>
         
@@ -192,8 +242,8 @@
               <div class="card shadow mb-4">
                 <div class="card-header py-3">
                   <div class="row">
-                    <div class="col border-left-secondary">
-                      <div class="custom-select" id="custom-select" style="overflow: hidden;">
+                    <div class="col">
+                      <div class="custom-select col-xl-6" id="custom-select" style="overflow: hidden;">
                         <label for="custom-select-box">
                         <select name="custom-select-box" id="custom-select-box">
                           <option value="10">10</option>
@@ -204,22 +254,8 @@
                         </label>
                       </div>
                     </div>
-                    <div class="col border-left-secondary">
-                      <div class="input-group">
-                        <span class="input-group-btn" style="width: 100%;">
-                          {% if current_user.rank in ['G6', 'G7'] %}
-                          <!-- 체크 박스 전체 승인 버튼 -->
-                          <button type="button" class="btn btn-success" id="approve_checkbox">승인(체크 선택 승인)</button>
-                          <!-- 체크 박스 전체 반려 버튼 -->
-                          <button type="button" class="btn btn-danger" id="deny_checkbox">반려(체크 선택 반려)</button>
-                          {% else %}
-                          <button type="button" class="form-control btn btn-primary" id="emergency_approve_checkbox" style="width: 100%;">긴급 승인(체크 선택 후 승인)</button>
-                          {% endif %}
-                        </span>
-                      </div>
-                    </div>
-                    <div class="col border-left-secondary">
-                      <div class="input-group">
+                    <div class="col">
+                      <div class="input-group float-right col-xl-6">
                         <input type="text" id="search-input" class="form-control" placeholder="Search..."/>
                         <button class="btn btn-secondary" type="button">검색</button>
                       </div>
@@ -243,10 +279,15 @@
                           <th scope="col">소속</th>
                           <th scope="col">연락처</th>
                           <th scope="col">담당자</th>
+                          <th scope="col">작업</th>
                           <th scope="col">작업 위치</th>
+                          <th scope="col">세부 위치</th>
+                          <th scope="col">요청 회사</th>
+                          <th scope="col">회사명</th>
+                          <th scope="col">작업 내용</th>
                           <th scope="col">장비 반입</th>
                           <th scope="col">비고</th>
-                          <th scope="col">방문 시각</th>
+                          <th scope="col">등록 시각</th>
                           <th scope="col">승인 여부</th>
                           <th scope="col">#</th>
                         </tr>
@@ -261,10 +302,15 @@
                           <th scope="col">소속</th>
                           <th scope="col">연락처</th>
                           <th scope="col">담당자</th>
+                          <th scope="col">작업</th>
                           <th scope="col">작업 위치</th>
+                          <th scope="col">세부 위치</th>
+                          <th scope="col">요청 회사</th>
+                          <th scope="col">회사명</th>
+                          <th scope="col">작업 내용</th>
                           <th scope="col">장비 반입</th>
                           <th scope="col">비고</th>
-                          <th scope="col">방문 시각</th>
+                          <th scope="col">등록 시각</th>
                           <th scope="col">승인 여부</th>
                           <th scope="col">#</th>
                         </tr>
@@ -284,7 +330,21 @@
                             <td>{{ visitor.department }}</td>
                             <td>{{ visitor.phone }}</td>
                             <td>{{ visitor.manager }}</td>
+                            {% if visitor.work == 1 %}
+                            <td>O</td>
                             <td>{{ visitor.location }}</td>
+                            <td>{{ visitor.detail_location }}</td>
+                            <td>{{ visitor.company_type }}</td>
+                            <td>{{ visitor.company }}</td>
+                            <td>{{ visitor.work_content }}</td>
+                            {% else %}
+                            <td>X</td>
+                            <td></td>
+                            <td></td>
+                            <td></td>
+                            <td></td>
+                            <td></td>
+                            {% endif %}
                             {% if visitor.device == 1 %}
                             <td>O</td>
                             <td>{{ visitor.remarks }}</td>
@@ -295,12 +355,8 @@
                             <td>{{ visitor.created_date }}</td>
                             <!-- <td><button class="btn btn-primary mr-2" id="approve_btn">긴급 승인</button></td> -->
                             <td>
-                              {% if current_user.rank in ['G6', 'G7'] %}
                               <button class="btn btn-success mr-2 btn-sm" type="button" id="approve_btn{{visitor.id}}" value="{{visitor.id}}">승인</button>
                               <button class="btn btn-danger btn-sm" type="button" id="deny_btn{{visitor.id}}" value="{{visitor.id}}">반려</button>
-                              {% else %}
-                              <button class="btn btn-primary btn-sm" type="button" id="emergency_btn{{visitor.id}}" value="{{visitor.id}}">긴급 승인</button>
-                              {% endif %}
                             </td>
                             <td>
                               <button class="btn btn-success mr-2 btn-sm" type="button" id="update_btn{{visitor.id}}" value="{{visitor.id}}">수정</button>
@@ -377,7 +433,13 @@
                             </script>
                             <script>
                               function handleSuccess(response) {
-                                var inputRemarks = document.getElementById('inputRemarks');
+                                var inputRemarks = document.getElementById('inputUpdateRemarks');
+                                var inputLocation = document.getElementById('inputUpdateLocation');
+                                var inputDetailLocation = document.getElementById('inputUpdateDetailLocation');
+                                var inputCompanyType = document.getElementById('inputUpdateCompany');
+                                var inputCompanyName = document.getElementById('inputUpdateCompanyName');
+                                var inputContent = document.getElementById('inputUpdateContent');
+
                                 var update_id = response.response[0];
                                 var name = response.response[1];
                                 var department = response.response[2];
@@ -387,22 +449,51 @@
                                 var device = response.response[6];
                                 var remarks = response.response[7];
                                 var location = response.response[8];
-        
+                                var work = response.response[9];
+                                var company_type = response.response[10];
+                                var company = response.response[11];
+                                var work_content = response.response[12];
+                                var detail_location = response.response[13];
+                                
                                 document.getElementById("inputUpdateNumber").value = update_id;
                                 document.getElementById("inputUpdateName").value = name;
                                 document.getElementById("inputUpdateDepartment").value = department;
                                 document.getElementById("inputUpdateObject").value = object;
                                 document.getElementById("inputUpdatePhoneNumber").value = phone;
                                 document.getElementById("inputUpdateManager").value = manager;
-                                document.getElementById("inputUpdateLocation").value = location;
-        
+                                
+                                if (work == true) {
+                                  document.getElementById('gridCheck_4').checked = true;
+                                  document.getElementById("inputUpdateLocation").value = location;
+                                  document.getElementById('inputUpdateDetailLocation').value = detail_location;
+                                  document.getElementById('inputUpdateCompany').value = company_type;
+                                  document.getElementById('inputUpdateCompanyName').value = company;
+                                  document.getElementById('inputUpdateContent').value = work_content;
+                                  inputLocation.disabled = false;
+                                  inputDetailLocation.disabled = false;
+                                  inputCompanyType.disabled = false;
+                                  inputCompanyName.disabled = false;
+                                  inputContent.disabled = false;
+                                } else {
+                                  document.getElementById('gridCheck_4').checked = false;
+                                  document.getElementById("inputUpdateLocation").value = null;
+                                  document.getElementById('inputUpdateDetailLocation').value = null;
+                                  document.getElementById('inputUpdateCompany').value = null;
+                                  document.getElementById('inputUpdateCompanyName').value = null;
+                                  document.getElementById('inputUpdateContent').value = null;
+                                  inputLocation.disabled = true;
+                                  inputDetailLocation.disabled = true;
+                                  inputCompanyType.disabled = true;
+                                  inputCompanyName.disabled = true;
+                                  inputContent.disabled = true;
+                                }
                                 if (device == true) {
-                                  document.getElementById('gridCheck').checked = true;
+                                  document.getElementById('gridCheck_3').checked = true;
                                   inputRemarks.disabled = false;
                                   document.getElementById("inputUpdateRemarks").value = remarks;
                                   document.getElementById("inputUpdateDevice").value = true;
                                 } else {
-                                  document.getElementById('gridCheck').checked = false;
+                                  document.getElementById('gridCheck_3').checked = false;
                                   inputRemarks.disabled = true;
                                   document.getElementById("inputUpdateRemarks").value = null;
                                   document.getElementById("inputUpdateDevice").value = false;
@@ -488,6 +579,69 @@
           inputRemarks.disabled = true;
         }
     }
+</script>
+
+<script>
+  function toggleUpdateInputs() {
+      var checkbox = document.getElementById('gridCheck_3');
+      var inputRemarks = document.getElementById('inputUpdateRemarks');
+
+      if (checkbox.checked) {
+        inputRemarks.disabled = false;
+      } else {
+        inputRemarks.disabled = true;
+      }
+  }
+</script>
+
+<script>
+  function toggleInputs_work() {
+      var checkbox = document.getElementById('gridCheck_2');
+      var inputLocation = document.getElementById('inputLocation');
+      var inputDetailLocation = document.getElementById('inputDetailLocation');
+      var inputCompany = document.getElementById('inputCompany');
+      var inputCompanyName = document.getElementById('inputCompanyName');
+      var inputContent = document.getElementById('inputContent');
+
+      if (checkbox.checked) {
+        inputLocation.disabled = false;
+        inputDetailLocation.disabled = false;
+        inputCompany.disabled = false;
+        inputCompanyName.disabled = false;
+        inputContent.disabled = false;
+      } else {
+        inputLocation.disabled = true;
+        inputDetailLocation.disabled = true;
+        inputCompany.disabled = true;
+        inputCompanyName.disabled = true;
+        inputContent.disabled = true;
+      }
+  }
+</script>
+
+<script>
+  function toggleUpdateInputs_work() {
+      var checkbox = document.getElementById('gridCheck_4');
+      var inputLocation = document.getElementById('inputUpdateLocation');
+      var inputDetailLocation = document.getElementById('inputUpdateDetailLocation')
+      var inputCompany = document.getElementById('inputUpdateCompany');
+      var inputCompanyName = document.getElementById('inputUpdateCompanyName');
+      var inputContent = document.getElementById('inputUpdateContent');
+
+      if (checkbox.checked) {
+        inputLocation.disabled = false;
+        inputDetailLocation.disabled = false;
+        inputCompany.disabled = false;
+        inputCompanyName.disabled = false;
+        inputContent.disabled = false;
+      } else {
+        inputLocation.disabled = true;
+        inputDetailLocation.disabled = true;
+        inputCompany.disabled = true;
+        inputCompanyName.disabled = true;
+        inputContent.disabled = true;
+      }
+  }
 </script>
 
 <!-- 체크박스 전체 선택/해제 스크립트 -->
