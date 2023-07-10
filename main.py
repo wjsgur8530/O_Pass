@@ -21,6 +21,7 @@ from openpyxl.styles import Alignment
 from openpyxl.utils import get_column_letter
 import re
 from flask.helpers import get_flashed_messages
+from db_connector import db_connector, account_list
 app = create_app()
 bcrypt = Bcrypt(app)
 
@@ -90,7 +91,7 @@ def index():
 
 
 #===================================================================================
-
+admin_email, admin_password, admin2_email, admin2_password = account_list()
 @app.route('/admin', methods=['GET', 'POST'])
 def admin_page():
     if request.method == 'POST':
@@ -99,11 +100,12 @@ def admin_page():
             flash('이미 관리자 계정이 존재합니다.')
             return redirect('admin')
         username = '관리자'
-        email = 'admin@cj.net'
-        hashed_password = bcrypt.generate_password_hash('cjcloud1!')
+        email = admin_email
+        hashed_password = bcrypt.generate_password_hash(admin_password)
         admin = User(username, email, hashed_password, 'Admin', 'M')
         db.session.add(admin)
         db.session.commit()
+        flash("관리자 계정이 생성되었습니다.")
         return redirect('login')
     return render_template('admin.html')
 
@@ -115,11 +117,12 @@ def admin2_page():
             flash('이미 상황실 계정이 존재합니다.')
             return redirect('admin')
         username = '상황실'
-        email = 'admin2@cj.net'
-        hashed_password = bcrypt.generate_password_hash('cjcloud2@')
+        email = admin2_email
+        hashed_password = bcrypt.generate_password_hash(admin2_password)
         admin = User(username, email, hashed_password, 'Admin', 'S')
         db.session.add(admin)
         db.session.commit()
+        flash("상황실 계정이 생성되었습니다.")
         return redirect('login')
 
 #===================================================================================
@@ -523,7 +526,6 @@ def login():
 
         user = User.query.filter_by(email=email).first()
         if user:
-            #==============현준============================
             if user.login_blocked_until and user.login_blocked_until > datetime.now():
                 # 로그인이 제한된 경우
                 block_remaining = (user.login_blocked_until - datetime.now()).seconds // 60
@@ -567,7 +569,6 @@ def login():
                 # flash('비밀번호가 다릅니다.')
                 db.session.commit()
                 return render_template('login.html', login_attempts=user.login_attempts)
-                #==============현준============================
         else:
             flash('해당 이메일 정보가 없습니다.')
             return render_template('login.html')
@@ -1645,11 +1646,12 @@ def not_found(e):
 
 # MySQL 데이터베이스에 연결하는 함수
 def connect_to_database():
-    app.config['DB_HOST'] = 'localhost'
-    app.config['DB_USER'] = 'root'
-    app.config['DB_PASSWORD'] = '1q2w3e4r'
-    app.config['DB_DATABASE'] = 'o_pass'
-    app.config['DB_PORT'] = '3307'
+    db_user, db_password, db_host, db_port, db_name = db_connector()
+    app.config['DB_HOST'] = db_host
+    app.config['DB_USER'] = db_user
+    app.config['DB_PASSWORD'] = db_password
+    app.config['DB_DATABASE'] = db_name
+    app.config['DB_PORT'] = db_port
     app.mysql_conn = mysql.connector.connect(
         host=app.config['DB_HOST'],
         user=app.config['DB_USER'],
