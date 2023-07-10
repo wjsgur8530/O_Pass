@@ -11,6 +11,9 @@ def create_app():
     app.config["SQLALCHEMY_DATABASE_URI"] = "mysql://root:1q2w3e4r@localhost:3307/o_pass"
     app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
     app.secret_key = 'acjkehrjkawekvhjkawtejk'
+    #==============현준============================
+    app.config['JSON_AS_ASCII'] = False
+    #==============현준============================
 
     # # Login
     # login_manager = LoginManager()
