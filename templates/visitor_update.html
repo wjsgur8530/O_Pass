@@ -8,7 +8,9 @@
         margin:0;
         box-sizing: border-box;
       }
-  
+      .btn_group {
+        font-size: 1rem;
+      }
       #modalWrap {
         position: fixed; /* Stay in place */
         z-index: 10; /* Sit on top */
@@ -215,7 +217,7 @@
               <div class="row no-gutters align-items-center" id="index_total_visitor">
                 <div class="col mr-2">
                   <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">총 방문자 (Total/1m)</div>
-                  <div class="h5 mb-0 font-weight-bold text-gray-800">{% if total_visitors %}{{ total_visitors }}명{% endif %}</div>
+                  <div class="h5 mb-0 font-weight-bold text-gray-800">{% if total_visitors %}{{ total_visitors }}명 {% else %} 0명 {% endif %}</div>
                 </div>
               </div>
             </div>
@@ -365,7 +367,7 @@
                       {% endif %}
                       </td>
                       <td>{{ approve_visitor.department }}</td>
-                      <td>{{ approve_visitor.phone }}</td>
+                      <td>{{ approve_visitor.phone[:3] }}-****-{{ approve_visitor.phone[7:11] }}</td>
                       <td>{{ approve_visitor.manager }}</td>
                       {% if approve_visitor.work == 1 %}
                       <td>O</td>
@@ -412,8 +414,10 @@
                       </td>
                       <td>
                         {% if approve_visitor.exit == 0 %}
-                        <button class="btn btn-success btn-sm mr-1" type="button" id="update_btn{{approve_visitor.id}}" value="{{approve_visitor.id}}">수정</button>
-                        <button class="btn btn-danger btn-sm" type="button" data-toggle="modal" data-target="#deleteModal">삭제</button>
+                        <div class="btn-group">
+                          <button class="btn_group btn btn-success btn-sm mr-1" type="button" id="update_btn{{approve_visitor.id}}" value="{{approve_visitor.id}}">수정</button>
+                          <button class="btn_group btn btn-danger btn-sm" type="button" data-toggle="modal" data-target="#deleteModal">삭제</button>
+                        </div>
                         {% else %}
                         {% endif %}
                       </td>

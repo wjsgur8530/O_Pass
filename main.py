@@ -19,6 +19,8 @@ from datetime import datetime, timedelta
 from tabulate import tabulate
 from openpyxl.styles import Alignment
 from openpyxl.utils import get_column_letter
+import re
+from flask.helpers import get_flashed_messages
 app = create_app()
 bcrypt = Bcrypt(app)
 
@@ -89,8 +91,44 @@ def index():
 
 #===================================================================================
 
+@app.route('/admin', methods=['GET', 'POST'])
+def admin_page():
+    if request.method == 'POST':
+        admin = User.query.filter_by(username='관리자').first()
+        if admin:
+            flash('이미 관리자 계정이 존재합니다.')
+            return redirect('admin')
+        username = '관리자'
+        email = 'admin@cj.net'
+        hashed_password = bcrypt.generate_password_hash('cjcloud1!')
+        admin = User(username, email, hashed_password, 'Admin', 'M')
+        db.session.add(admin)
+        db.session.commit()
+        return redirect('login')
+    return render_template('admin.html')
+
+@app.route('/admin_2', methods=['GET', 'POST'])
+def admin2_page():
+    if request.method == 'POST':
+        admin = User.query.filter_by(username='상황실').first()
+        if admin:
+            flash('이미 상황실 계정이 존재합니다.')
+            return redirect('admin')
+        username = '상황실'
+        email = 'admin2@cj.net'
+        hashed_password = bcrypt.generate_password_hash('cjcloud2@')
+        admin = User(username, email, hashed_password, 'Admin', 'S')
+        db.session.add(admin)
+        db.session.commit()
+        return redirect('login')
+
+#===================================================================================
+
+#===================================================================================
+
 # 차트 관리 페이지
 @app.route('/charts', methods=['GET', 'POST'])
+@login_required
 def visualization_chart():
     today = date.today()
     total_visitors = db.session.query(func.sum(Year.count)).scalar() # 총 방문객
@@ -153,6 +191,7 @@ def visualization_chart():
 
 # 방문객 관리 페이지
 @app.route('/manage_visitors', methods=['GET', 'POST'])
+@login_required
 def manage_visitors():
     if request.method == 'POST':
         update_id = request.form['inputUpdateNumber']
@@ -237,6 +276,7 @@ def manage_visitors():
 
 # 부서 관리 페이지
 @app.route('/departments', methods=['GET', 'POST'])
+@login_required
 def manage_departments():
     if request.method == 'POST':
         department_type = request.form['select_department_type']
@@ -260,6 +300,7 @@ def manage_departments():
 
 # 부서 삭제 api
 @app.route('/api/ajax_department_delete', methods=['POST'])
+@login_required
 def ajax_department_delete():
     data = request.get_json()
     print(data['delete_id'])
@@ -271,6 +312,7 @@ def ajax_department_delete():
 
 # 기본 부서 생성
 @app.route('/api/ajax_department_basic_create', methods=['POST'])
+@login_required
 def ajax_department_basic_create():
     # 출입 카드 DB Content 생성
     categories = ['CJ 올리브네트웍스', 'CJ(주)', 'CJ CGV', 'CJ 올리브영', 'CJ 프레시웨이', 'CJ 대한통운', 'CJ ENM', '디아이웨어']
@@ -282,6 +324,7 @@ def ajax_department_basic_create():
 
 # 부서 초기화 api
 @app.route('/api/ajax_department_reset', methods=['POST'])
+@login_required
 def ajax_department_reset():
     # 부서 테이블 초기화
     db.session.query(Department).delete()
@@ -295,6 +338,7 @@ def ajax_department_reset():
 
 # 방문객 수정 api
 @app.route('/visit_update', methods=['GET', 'POST'])
+@login_required
 def visit_update():
     if request.method == 'POST':
         update_id = request.form['inputUpdateNumber']
@@ -331,6 +375,7 @@ def visit_update():
 
 # 카드 관리 페이지
 @app.route('/manage_cards', methods=['GET', 'POST'])
+@login_required
 def manage_cards():
     if request.method == 'POST':
         pass
@@ -360,6 +405,7 @@ def manage_cards():
 
 # 랙키 관리 페이지
 @app.route('/manage_rack_keys', methods=['GET', 'POST'])
+@login_required
 def manage_rack_keys():
     if request.method == 'POST':
         pass
@@ -389,6 +435,7 @@ def manage_rack_keys():
 
 # 로그 관리 페이지
 @app.route('/manage_logs', methods=['GET', 'POST'])
+@login_required
 def manage_logs():
     user_log = User_log.query.all()
     visitors = Visitor.query.all()
@@ -420,13 +467,21 @@ def register():
         if user:
             flash("이미 가입된 이메일입니다.")
         elif len(email) < 5 :
-            flash("이메일은 5자 이상입니다.")
+            flash("이메일은 5자 이상이어야 합니다.")
+        elif len(email) > 30 :
+            flash("이메일은 30자 이하여야 합니다.")
         elif len(username) < 2:
-            flash("이름은 2자 이상입니다.")
+            flash("이름은 2자 이상이어야 합니다.")
+        elif len(username) > 10:
+            flash("이름은 10자 이하여야 합니다.")
         elif password1 != password2 :
             flash("비밀번호와 비밀번호재입력이 서로 다릅니다.")
         elif len(password1) < 7:
-            flash("비밀번호가 너무 짧습니다.")
+            flash("비밀번호는 8자 이상이어야 합니다.")
+        elif len(password1) > 14:  # 비밀번호 길이 제한 추가
+            flash("비밀번호는 14자 이하여야 합니다.")
+        elif not re.search(r'[A-Z]', password1) or not re.search(r'[a-z]', password1) or not re.search(r'\d', password1) or not re.search(r'[!@#$%^&*(),.?":{}|<>]', password1):
+            flash("비밀번호는 대문자, 숫자, 특수문자가 포함되어야 합니다.")
         else:
             # # 비밀번호 암호화
             hashed_password = bcrypt.generate_password_hash(password1)
@@ -442,6 +497,22 @@ def register():
     # GET 요청인 경우 회원가입 양식을 표시
     return render_template('register.html')
 
+# 6개월 이상된 비밀번호 변경권고 코드 
+def check_password_change(user):
+    if user.password_changed_at:
+        delta = datetime.now() - user.password_changed_at
+        print("비밀번호 변경 시간:", user.password_changed_at)
+        print("현재 시간:", datetime.now())
+        if delta > timedelta(minutes=1):  # 6개월 이상 경과한 경우
+            print("비밀번호 변경이 필요합니다.")
+            print("현재 초과시간:", delta)
+            flash("마지막 비밀번호 변경일로부터 6개월이 경과하였습니다. 비밀번호를 변경해주세요.")
+            print("알림 메시지:", get_flashed_messages())
+
+LOGIN_BLOCK_DURATION = 10 # 로그인 제한 기간 (분)
+MAX_LOGIN_ATTEMPTS = 5 # 로그인 실패 허용 횟수
+
+
 # 로그인 기능
 @app.route('/login', methods=['GET', 'POST'])
 def login():
@@ -452,16 +523,51 @@ def login():
 
         user = User.query.filter_by(email=email).first()
         if user:
+            #==============현준============================
+            if user.login_blocked_until and user.login_blocked_until > datetime.now():
+                # 로그인이 제한된 경우
+                block_remaining = (user.login_blocked_until - datetime.now()).seconds // 60
+                flash('일시적으로 로그인이 제한되었습니다. 잠시 후 다시 시도해주세요. (제한 시간: {}분 남음)'.format(block_remaining))
+                return render_template('login.html')
+            
             if bcrypt.check_password_hash(user.password, password):
+                # 로그인 성공
+                
+                
+                user.login_attempts = 0  # 로그인 시도 횟수 초기화
+                user.login_blocked_until = None  # 로그인 제한 해제
                 print('로그인 완료')
+                
+                #flash('마지막 비밀번호 변경일로부터 1분이 경과하였습니다. 비밀번호를 변경해주세요.')
+
                 login_user(user, remember=True)
                 user_log = User_log(request.remote_addr, current_date, user.id)
+                
+                
                 db.session.add(user_log)
                 db.session.commit()
+
+                check_password_change(user) # 비밀번호 변경 주기 체크
+                
+
                 return redirect(url_for('index', user=user.username))
-            else: 
-                flash('비밀번호가 다릅니다.')
-                return render_template('login.html')
+                #return render_template('index.html', user=user.username)
+
+            
+            else:
+                # 로그인 실패
+                user.login_attempts += 1  # 로그인 시도 횟수 증가
+                if user.login_attempts >= MAX_LOGIN_ATTEMPTS:
+                    # 일정 횟수 이상 실패 시 로그인 제한
+                    user.login_blocked_until = datetime.now() + timedelta(minutes=LOGIN_BLOCK_DURATION)
+                    block_remaining = LOGIN_BLOCK_DURATION
+                    flash('로그인 횟수 제한까지 {}번 남았습니다. 잠시 후 다시 시도해주세요. (제한 시간: {}분)'.format(MAX_LOGIN_ATTEMPTS - user.login_attempts, block_remaining))
+                else:
+                    flash('비밀번호가 다릅니다. 로그인 횟수 제한까지 {}번 남았습니다.'.format(MAX_LOGIN_ATTEMPTS - user.login_attempts)) 
+                # flash('비밀번호가 다릅니다.')
+                db.session.commit()
+                return render_template('login.html', login_attempts=user.login_attempts)
+                #==============현준============================
         else:
             flash('해당 이메일 정보가 없습니다.')
             return render_template('login.html')
@@ -542,6 +648,7 @@ def visitor():
 
 # 승인 버튼 클릭시 로직 ajax
 @app.route('/api/ajax_approve', methods=['POST'])
+@login_required
 def ajax_approve():
     data = request.get_json()
     print(data['visitor_id'])
@@ -603,6 +710,7 @@ def ajax_approve():
 
 # 반려 버튼 클릭시 로직 ajax
 @app.route('/api/ajax_deny', methods=['POST'])
+@login_required
 def ajax_deny():
     data = request.get_json()
     print(data['visitor_id'])
@@ -653,6 +761,7 @@ def ajax_deny():
 
 # 내방객 관리 페이지 -  퇴실 버튼 클릭시 로직 ajax
 @app.route('/api/ajax_exit', methods=['POST'])
+@login_required
 def ajax_exit():
     data = request.get_json()
     visitor = Visitor.query.filter_by(id=data['exit_id']).first()
@@ -677,6 +786,7 @@ def ajax_exit():
 
 # 내방객 관리 페이지 - 체크 박스 퇴실 api
 @app.route('/api/ajax_index_exit_checkbox', methods=['POST'])
+@login_required
 def ajax_index_exit_checkbox():
     data = request.get_json()
     data_length = len(data['checked_datas'])
@@ -707,6 +817,7 @@ def ajax_index_exit_checkbox():
 
 # 내방객 등록 페이지 - 체크 박스 승인 api
 @app.route('/api/ajax_visit_approve_checkbox', methods=['POST'])
+@login_required
 def ajax_visit_approve_checkbox():
     data = request.get_json()
     data_length = len(data['checked_datas'])
@@ -771,6 +882,7 @@ def ajax_visit_approve_checkbox():
 
 # 내방객 등록 페이지 - 체크 박스 반려 api
 @app.route('/api/ajax_visit_deny_checkbox', methods=['POST'])
+@login_required
 def ajax_visit_deny_checkbox():
     data = request.get_json()
     data_length = len(data['checked_datas'])
@@ -825,6 +937,7 @@ def ajax_visit_deny_checkbox():
 
 # 방문객 관리 페이지 - 담당자 업데이트 체크 박스 api
 @app.route('/api/ajax_index_manager_update_checkbox', methods=['POST'])
+@login_required
 def ajax_index_manager_update_checkbox():
     data = request.get_json()
     manager = data['manager']
@@ -845,6 +958,7 @@ def ajax_index_manager_update_checkbox():
 
 # 방문객 관리 페이지 - 비고 업데이트 체크 박스 api
 @app.route('/api/ajax_remarks_update_checkbox', methods=['POST'])
+@login_required
 def ajax_remarks_update_checkbox():
     data = request.get_json()
     remarks = data['remarks']
@@ -865,6 +979,7 @@ def ajax_remarks_update_checkbox():
 
 # 상황실 방문객 관리 페이지 - 세부 작업 위치 업데이트 체크 박스 api
 @app.route('/api/ajax_detail_location_update_checkbox', methods=['POST'])
+@login_required
 def ajax_detail_location_update_checkbox():
     data = request.get_json()
     detail_location = data['detail_location']
@@ -885,6 +1000,7 @@ def ajax_detail_location_update_checkbox():
 
 # 내방객 관리 페이지 - 카드 불출 체크 박스 api
 @app.route('/api/ajax_index_card_checkbox', methods=['POST'])
+@login_required
 def ajax_index_card_checkbox():
     data = request.get_json()
     card = data['card'].split(' ')
@@ -914,6 +1030,7 @@ def ajax_index_card_checkbox():
 
 # 내방객 관리 페이지 - 카드 회수 체크 박스 api
 @app.route('/api/ajax_update_visit_recall_card_checkbox', methods=['POST'])
+@login_required
 def ajax_update_visit_recall_card_checkbox():
     data = request.get_json()
     checked_datas = data['checked_datas']
@@ -937,6 +1054,7 @@ def ajax_update_visit_recall_card_checkbox():
 
 # 내방객 등록, 내방객 관리 페이지 - 방문객 수정 api
 @app.route('/api/ajax_update_manage_visit', methods=['POST'])
+@login_required
 def ajax_update_manage_visit():
     data = request.get_json()
     visitor = data['update_btn']
@@ -950,6 +1068,7 @@ def ajax_update_manage_visit():
 
 # 내방객 관리 페이지 - 방문객 삭제 api
 @app.route('/api/ajax_delete_manage_visit', methods=['POST'])
+@login_required
 def ajax_delete_manage_visit():
     data = request.get_json()
     visitor = data['delete_btn']
@@ -966,20 +1085,9 @@ def ajax_delete_manage_visit():
 
 #===================================================================================
 
-# SMS-TEXT 문자 메세지 보내기 - 현장 등록 완료
-def send_sms(name, date, object, location, manager, phone_num):
-    cursor = app.mysql_conn.cursor()  # 커서 생성
-    # insert_query = "INSERT INTO sms_msg (REQDATE, STATUS, TYPE, PHONE, CALLBACK, MSG) VALUES (%s, %s, %s, %s, %s, %s)"
-    insert_query = "INSERT INTO mms_msg (REQDATE, STATUS, TYPE, PHONE, CALLBACK, SUBJECT, MSG, FILE_CNT) VALUES (%s, %s, %s, %s, %s, %s, %s, %s)"
-    msg = '안녕하세요. ' + name + '님\n' + '송도 IDC 센터에 방문하신 것을 환영합니다.\n-방문시간: ' + str(date) + '\n-방문목적: ' + object + '\n-작업위치: ' + location + '\n-담당자: ' + manager
-
-    insert_data = (datetime.now(), '1', '0', phone_num, '01057320071', '[내방객 출입 관리 시스템 현장 등록 완료]', msg, '1')  # 삽입할 데이터를 튜플로 정의
-    cursor.execute(insert_query, insert_data)  # 쿼리 실행 및 데이터 전달
-    app.mysql_conn.commit()  # 변경 사항 커밋
-    cursor.close()  # 커서 닫기
-
 # MMS-IMAGE TEST SMS 문자 메세지 보내기 - 현장 등록 승인
 def image_send_sms_current(name, date, object, location, manager, phone_num, device, work, company, work_content):
+    connect_to_database()
     cursor = app.mysql_conn.cursor()  # 커서 생성
     insert_query = "INSERT INTO mms_msg (REQDATE, STATUS, TYPE, PHONE, CALLBACK, SUBJECT, MSG, FILE_CNT, FILE_TYPE1, FILE_PATH1) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)"
     if work == "해당":
@@ -994,6 +1102,7 @@ def image_send_sms_current(name, date, object, location, manager, phone_num, dev
 
 # MMS-IMAGE TEST SMS 문자 메세지 보내기 - 사전 등록 승인
 def image_send_sms_previous(name, date, object, location, manager, phone_num, device, work, company_type, company, work_content):
+    connect_to_database()
     cursor = app.mysql_conn.cursor()  # 커서 생성
     insert_query = "INSERT INTO mms_msg (REQDATE, STATUS, TYPE, PHONE, CALLBACK, SUBJECT, MSG, FILE_CNT, FILE_TYPE1, FILE_PATH1) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)"
     if work == "해당":
@@ -1008,6 +1117,7 @@ def image_send_sms_previous(name, date, object, location, manager, phone_num, de
 
 # manage qr 재전송 api
 @app.route('/api/ajax_manage_qrcode_send', methods=['POST'])
+@login_required
 def ajax_manage_qrcode_send():
     data = request.get_json()
     qrcode_id = data['qrcode_btn']
@@ -1036,6 +1146,7 @@ def ajax_manage_qrcode_send():
 
 # Excel 다운로드 api
 @app.route('/api/ajax_excel_download', methods=['GET', 'POST'])
+@login_required
 def ajax_excel_download():
     data = request.get_json()
     start_date = data['start_date_val']
@@ -1117,6 +1228,7 @@ def ajax_excel_download():
 
 # 카드 종류 추가 api
 @app.route('/api/ajax_card_type_create', methods=['POST'])
+@login_required
 def ajax_card_type_create():
     data = request.get_json()
     print(data['card_type_val'])
@@ -1135,6 +1247,7 @@ def ajax_card_type_create():
 
 # cards 카드 수량 추가 api
 @app.route('/api/ajax_add_card', methods=['POST'])
+@login_required
 def ajax_add_card():
     data = request.get_json()
     card_number = data['add_card_value']
@@ -1156,6 +1269,7 @@ def ajax_add_card():
 
 # cards 카드 선택 추가 api
 @app.route('/api/ajax_add_card_select', methods=['POST'])
+@login_required
 def ajax_add_card_select():
     data = request.get_json()
     card_number = data['add_card_value']
@@ -1174,6 +1288,7 @@ def ajax_add_card_select():
 
 # cards 카드 제거 api
 @app.route('/api/ajax_card_delete', methods=['POST'])
+@login_required
 def ajax_card_delete():
     data = request.get_json()
     delete_id = data['delete_id']
@@ -1186,6 +1301,7 @@ def ajax_card_delete():
 
 # 카드 분실 api
 @app.route('/api/ajax_card_lose', methods=['POST'])
+@login_required
 def ajax_card_lose():
     data = request.get_json()
     card = data['card'].split(' ')
@@ -1197,6 +1313,7 @@ def ajax_card_lose():
 
 # 카드 초기화 api
 @app.route('/api/ajax_card_reset', methods=['POST'])
+@login_required
 def ajax_card_reset():
     # Card 테이블 초기화
     db.session.query(Card).delete()
@@ -1210,6 +1327,7 @@ def ajax_card_reset():
 #===================================================================================
 # 키 종류 추가 api
 @app.route('/api/ajax_key_type_create', methods=['POST'])
+@login_required
 def ajax_key_type_create():
     data = request.get_json()
     key_type_value = data['key_type_val']
@@ -1227,6 +1345,7 @@ def ajax_key_type_create():
 
 # keys 키 수량 추가 api
 @app.route('/api/ajax_add_key', methods=['POST'])
+@login_required
 def ajax_add_key():
     data = request.get_json()
     key_number = data['add_key_value']
@@ -1245,6 +1364,7 @@ def ajax_add_key():
 
 # keys 키 선택 추가 api
 @app.route('/api/ajax_add_key_select', methods=['POST'])
+@login_required
 def ajax_add_key_select():
     data = request.get_json()
     key_number = data['add_key_value']
@@ -1262,6 +1382,7 @@ def ajax_add_key_select():
 
 # 키 분실 api
 @app.route('/api/ajax_key_lose', methods=['POST'])
+@login_required
 def ajax_key_lose():
     data = request.get_json()
     key = data['key'].split(' ')
@@ -1273,6 +1394,7 @@ def ajax_key_lose():
 
 # keys 키 제거 api
 @app.route('/api/ajax_key_delete', methods=['POST'])
+@login_required
 def ajax_key_delete():
     data = request.get_json()
     delete_id = data['delete_id']
@@ -1284,6 +1406,7 @@ def ajax_key_delete():
 
 # 키 초기화 api
 @app.route('/api/ajax_key_reset', methods=['POST'])
+@login_required
 def ajax_key_reset():
     # 키 테이블 초기화
     db.session.query(Rack).delete()
@@ -1453,6 +1576,7 @@ def manage_visitors_rack():
 
 # 키 불출 체크 박스 api
 @app.route('/api/ajax_use_rack_key_checkbox', methods=['POST'])
+@login_required
 def ajax_use_rack_key_checkbox():
     data = request.get_json()
     key = data['key'].split(' ')
@@ -1484,6 +1608,7 @@ def ajax_use_rack_key_checkbox():
 
 # 키 회수 체크 박스 api
 @app.route('/api/ajax_recall_rack_key_checkbox', methods=['POST'])
+@login_required
 def ajax_recall_rack_key_checkbox():
     data = request.get_json()
     checked_datas = data['checked_datas']

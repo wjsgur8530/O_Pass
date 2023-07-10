@@ -25,6 +25,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Bacasime+Antique&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Merriweather:wght@700&display=swap" rel="stylesheet">
   <!-- Noto Sans 사용법: font-family: 'Noto Sans KR', sans-serif; -->
 
   <!-- 새로운 favicon 지정 -->
@@ -65,17 +66,40 @@
       <hr class="sidebar-divider my-0">
 
       <!-- Heading -->
+      {% if current_user.is_authenticated %}
       <div class="sidebar-heading">
         Main
       </div>
-
+      {% endif %}
+      {% set allowed_ranks = ['G1', 'G2', 'G3', 'G4', 'G5', 'G6', 'G7', '임원', '기타'] %}
+      {% if current_user.rank in allowed_ranks %}
       <!-- Nav Item - Dashboard -->
       <li class="nav-item">
         <a class="nav-link" href="index">
           <i class="fas fa-fw fa-table"></i>
           <span>Dashboard</span></a>
       </li>
+      {% endif %}
 
+      {% if current_user.rank == 'M' %}
+      <!-- Nav Item - Dashboard -->
+      <li class="nav-item">
+        <a class="nav-link" href="manage_visitors">
+          <i class="fas fa-fw fa-table"></i>
+          <span>Dashboard</span></a>
+      </li>
+      {% endif %}
+
+      {% if current_user.rank == 'S' %}
+      <!-- Nav Item - Dashboard -->
+      <li class="nav-item">
+        <a class="nav-link" href="rack_visitors">
+          <i class="fas fa-fw fa-table"></i>
+          <span>Dashboard</span></a>
+      </li>
+      {% endif %}
+
+      {% if current_user.rank in allowed_ranks or current_user.rank == 'M' %}
       <li class="nav-item">
         <a class="nav-link" href="visit">
           <i class="fas fa-fw fa-user"></i>
@@ -84,7 +108,9 @@
 
       <!-- Divider -->
       <hr class="sidebar-divider">
+      {% endif %}
 
+      {% if current_user.is_authenticated %}
       <!-- Heading -->
       <div class="sidebar-heading">
         Visualization
@@ -99,6 +125,7 @@
 
       <!-- Divider -->
       <hr class="sidebar-divider">
+      {% endif %}
 
       <!-- Heading -->
       <div class="sidebar-heading">
@@ -115,43 +142,11 @@
 
       <!-- Divider -->
       <hr class="sidebar-divider">
-
+      {% if current_user.is_authenticated %}
       <!-- Heading -->
       <div class="sidebar-heading">
         Interface
       </div>
-
-      <!-- Nav Item - Pages Collapse Menu -->
-      <!-- <li class="nav-item">
-        <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseTwo" aria-expanded="true" aria-controls="collapseTwo">
-          <i class="fas fa-fw fa-cog"></i>
-          <span>Components</span>
-        </a>
-        <div id="collapseTwo" class="collapse" aria-labelledby="headingTwo" data-parent="#accordionSidebar">
-          <div class="bg-white py-2 collapse-inner rounded">
-            <h6 class="collapse-header">Custom Components:</h6>
-            <a class="collapse-item" href="buttons">Buttons</a>
-            <a class="collapse-item" href="cards">Cards</a>
-          </div>
-        </div>
-      </li> -->
-
-      <!-- Nav Item - Utilities Collapse Menu -->
-      <!-- <li class="nav-item">
-        <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseUtilities" aria-expanded="true" aria-controls="collapseUtilities">
-          <i class="fas fa-fw fa-wrench"></i>
-          <span>Utilities</span>
-        </a>
-        <div id="collapseUtilities" class="collapse" aria-labelledby="headingUtilities" data-parent="#accordionSidebar">
-          <div class="bg-white py-2 collapse-inner rounded">
-            <h6 class="collapse-header">Custom Utilities:</h6>
-            <a class="collapse-item" href="utilities-color">Colors</a>
-            <a class="collapse-item" href="utilities-border">Borders</a>
-            <a class="collapse-item" href="utilities-animation">Animations</a>
-            <a class="collapse-item" href="utilities-other">Other</a>
-          </div>
-        </div>
-      </li> -->
 
       <!-- Nav Item - Pages Collapse Menu -->
       <li class="nav-item">
@@ -162,16 +157,23 @@
         <div id="collapseManagements" class="collapse" aria-labelledby="headingTwo" data-parent="#accordionSidebar">
           <div class="bg-white py-2 collapse-inner rounded">
             <h6 class="collapse-header">Custom Managements:</h6>
-            <a class="collapse-item" href="manage_visitors">Visitors - Desk</a>
-            <a class="collapse-item" href="rack_visitors">Visitors - Rack</a>
+            {% if current_user.rank in allowed_ranks or current_user.rank == 'M' %}
             <a class="collapse-item" href="departments">Department</a>
+            {% endif %}
+            {% if current_user.rank == 'M' %}
             <a class="collapse-item" href="manage_cards">Cards</a>
+            {% endif %}
+            {% if current_user.rank == 'S' or current_user.rank == 'M' %}
             <a class="collapse-item" href="manage_rack_keys">Rack Keys</a>
+            {% endif %}
+            {% if current_user.rank == 'M' %}
             <a class="collapse-item" href="manage_logs">Log</a>
+            {% endif %}
           </div>
         </div>
       </li>
-      
+      {% endif %}
+
       {% if current_user.is_authenticated %}
       {% else %}
       <!-- Heading -->
@@ -380,6 +382,7 @@
                 {% endif %}
                 <img class="img-profile rounded-circle" src="static/img/CJ_logo.svg.png">
               </a>
+              {% if current_user.is_authenticated %}
               <!-- Dropdown - User Information -->
               <div class="dropdown-menu dropdown-menu-right shadow animated--grow-in" aria-labelledby="userDropdown">
                 <a class="dropdown-item" href="/profile">
@@ -400,6 +403,7 @@
                   Logout
                 </a>
               </div>
+              {% endif %}
             </li>
 
           </ul>
@@ -476,7 +480,22 @@
 
   {% endblock %}
 </body>
-
+<script>
+  // 페이지가 로드될 때 실행되는 함수
+  window.onload = function() {
+    var collapseManagements = document.getElementById('collapseManagements');
+  
+    if (collapseManagements.classList.contains('show')) {
+      collapseManagements.classList.remove('show');
+    }
+  
+    var collapsePages = document.getElementById('collapsePages');
+  
+    if (collapsePages.classList.contains('show')) {
+      collapsePages.classList.remove('show');
+    }
+  }
+  </script>
 </html>
 
 <!-- <script>

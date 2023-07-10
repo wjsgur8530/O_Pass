@@ -8,12 +8,14 @@ class User(db.Model):
     __tablename__ = "User"
 
     id = db.Column(db.Integer, primary_key=True)
-    username = db.Column(db.String(50), unique=True)
+    username = db.Column(db.String(50), unique=False)
     email = db.Column(db.String(50), unique=True)
     password = db.Column(db.String(200), unique=False)
     department = db.Column(db.String(50), unique=False)
     rank = db.Column(db.String(20), unique=False)
-    profile_image = db.Column(db.String(120), nullable=True)
+    login_attempts = db.Column(db.Integer, default=0)  # 로그인 시도 횟수
+    login_blocked_until = db.Column(db.DateTime, nullable=True)  # 로그인 제한 종료 시간
+    password_changed_at = db.Column(db.DateTime) # 비밀번호 변경권고를 위한 시간 ex) 6개월
     user_info_id = db.relationship('User_log', backref='user_log')
 
     def __init__(self, username, email, password, department, rank):

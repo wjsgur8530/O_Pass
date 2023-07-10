@@ -8,7 +8,9 @@
               margin:0;
               box-sizing: border-box;
             }
-        
+            .btn_group {
+              font-size: 1rem;
+            }
             #modalWrap, #modalWrapUpdate {
               position: fixed; /* Stay in place */
               z-index: 10; /* Sit on top */
@@ -317,7 +319,7 @@
                       </tfoot>
                       <tbody>
                         {% for visitor in visitor_info %}
-                          <tr>
+                          <tr class="table_content">
                             <td>
                               <div class="form-check" style="display: flex; justify-content: center; align-items: center;">
                                 <input type="checkbox" class="form-check-input" name="check_box" id="checkbox{{visitor.id}}" value="{{visitor.id}}">
@@ -355,11 +357,13 @@
                             <td>{{ visitor.created_date }}</td>
                             <!-- <td><button class="btn btn-primary mr-2" id="approve_btn">긴급 승인</button></td> -->
                             <td>
-                              <button class="btn btn-success mr-2 btn-sm" type="button" id="approve_btn{{visitor.id}}" value="{{visitor.id}}">승인</button>
-                              <button class="btn btn-danger btn-sm" type="button" id="deny_btn{{visitor.id}}" value="{{visitor.id}}">반려</button>
+                              <div class="btn-group">
+                                <button class="btn_group btn btn-success mr-2 btn-sm" type="button" id="approve_btn{{visitor.id}}" value="{{visitor.id}}">승인</button>
+                                <button class="btn_group btn btn-danger btn-sm" type="button" id="deny_btn{{visitor.id}}" value="{{visitor.id}}">반려</button>
+                              </div>
                             </td>
                             <td>
-                              <button class="btn btn-success mr-2 btn-sm" type="button" id="update_btn{{visitor.id}}" value="{{visitor.id}}">수정</button>
+                              <button class="btn_group btn btn-success btn-sm" type="button" id="update_btn{{visitor.id}}" value="{{visitor.id}}">수정</button>
                             </td>
                           </tr>
                       <script>

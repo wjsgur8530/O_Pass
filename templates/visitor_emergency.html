@@ -211,7 +211,7 @@
               <div class="row no-gutters align-items-center" id="index_total_visitor">
                 <div class="col mr-2">
                   <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">총 방문자 (Total/1m)</div>
-                  <div class="h5 mb-0 font-weight-bold text-gray-800">{% if total_visitors %}{{ total_visitors }}명{% endif %}</div>
+                  <div class="h5 mb-0 font-weight-bold text-gray-800">{% if total_visitors %}{{ total_visitors }}명 {% else %} 0명 {% endif %}</div>
                 </div>
               </div>
             </div>
@@ -350,7 +350,7 @@
                       {% endif %}
                       </td>
                       <td>{{ approve_visitor.department }}</td>
-                      <td>{{ approve_visitor.phone }}</td>
+                      <td>{{ approve_visitor.phone[:3] }}-****-{{ approve_visitor.phone[7:11] }}</td>
                       <td>{{ approve_visitor.manager }}</td>
                       {% if approve_visitor.work == 1 %}
                       <td>O</td>
