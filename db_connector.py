@@ -12,3 +12,7 @@ def account_list():
     admin2_email = "admin2@cj.net"
     admin2_password = "cjcloud2@"
     return admin_email, admin_password, admin2_email, admin2_password
+
+def secret_key():
+    secret_key = "ashjcawgrhjawec"
+    return secret_key

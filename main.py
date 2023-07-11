@@ -550,11 +550,12 @@ def login():
                 db.session.commit()
 
                 check_password_change(user) # 비밀번호 변경 주기 체크
-                
-
-                return redirect(url_for('index', user=user.username))
-                #return render_template('index.html', user=user.username)
-
+                if current_user.rank == 'M':
+                    return redirect(url_for('manage_visitors', user=user.username))
+                elif current_user.rank == 'S':
+                    return redirect(url_for('rack_visitors', user=user.username))
+                else:
+                    return redirect(url_for('index', user=user.username))
             
             else:
                 # 로그인 실패
