@@ -569,7 +569,7 @@ def login():
                     flash('비밀번호가 다릅니다. 로그인 횟수 제한까지 {}번 남았습니다.'.format(MAX_LOGIN_ATTEMPTS - user.login_attempts)) 
                 # flash('비밀번호가 다릅니다.')
                 db.session.commit()
-                return render_template('login.html', login_attempts=user.login_attempts)
+                return render_template('login.html')
         else:
             flash('해당 이메일 정보가 없습니다.')
             return render_template('login.html')
