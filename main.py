@@ -850,6 +850,13 @@ def ajax_approve():
         work = "해당"
         privacy_work = True
 
+    qr_expired_date = datetime.now().strftime('%Y-%m-%d')
+    qr_data = "http://localhost:5000/" + qr_expired_date
+    qr_img = qrcode.make(qr_data)
+    save_path = 'qrcode.png'
+    qr_img.save(save_path)
+
+
     privacy_date = datetime.now().strftime('%Y-%m-%d %H-%M-%S')
     if visitor.registry == "사전 등록":
         image_send_sms_previous(visitor.name, visitor.approve_date, visitor.object, visitor.location, visitor.manager, aes.decrypt(visitor.phone), device, work, visitor.company_type, visitor.company, visitor.work_content)
