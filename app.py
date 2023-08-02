@@ -3,6 +3,12 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 from config import db, create_app
 from datetime import datetime, date, time
+import pytz
+korean_timezone = pytz.timezone('Asia/Seoul')
+
+# 회원가입 시간 기록을 위한 커스텀 함수
+def get_current_korean_time():
+    return datetime.now(korean_timezone)
 
 class User(db.Model):
     __tablename__ = "User"
@@ -15,15 +21,22 @@ class User(db.Model):
     rank = db.Column(db.String(20), unique=False)
     login_attempts = db.Column(db.Integer, default=0)  # 로그인 시도 횟수
     login_blocked_until = db.Column(db.DateTime, nullable=True)  # 로그인 제한 종료 시간
-    password_changed_at = db.Column(db.DateTime) # 비밀번호 변경권고를 위한 시간 ex) 6개월
+    registered_at = db.Column(db.DateTime, nullable=False, default=get_current_korean_time())
+    password_history = db.Column(db.String(200), unique=False)
+    password_changed_at = db.Column(db.DateTime, nullable=False, default=get_current_korean_time()) # 비밀번호 변경권고를 위한 시간 ex) 6개월
+    attempts = db.Column(db.String(50), unique=False)
+    authenticated = db.Column(db.String(30), unique=False)
     user_info_id = db.relationship('User_log', backref='user_log')
+    password_log_id = db.relationship('Password_log', backref='user_log')
+    login_failure_id = db.relationship('Login_failure_log', backref='user_log')
 
-    def __init__(self, username, email, password, department, rank):
+    def __init__(self, username, email, password, department, rank, password_history):
         self.username = username
         self.email = email
         self.password = password
         self.department = department
         self.rank = rank
+        self.password_history = password_history
 
     # Flask-Login integration
     def is_authenticated(self):
@@ -44,7 +57,7 @@ class User(db.Model):
     
     def __repr__(self):
         return '%r' % self.username
-    
+      
 class User_log(db.Model):
     __tablename__ = "User_log"
 
@@ -59,13 +72,44 @@ class User_log(db.Model):
         self.login_timestamp = login_timestamp
         self.user_id = user_id
 
+class Password_log(db.Model):
+    __tablename__ = "Password_log"
+
+    id = db.Column(db.Integer, primary_key=True)
+    password_log = db.Column(db.String(200))
+    user_id = db.Column(db.Integer, db.ForeignKey('User.id'))
+
+    def __init__(self, password_log, user_id):
+        self.password_log = password_log
+        self.user_id = user_id
+
+class Account_log(db.Model):
+    __tablename__ = "Account_log"
+
+    id = db.Column(db.Integer, primary_key=True)
+    account_email = db.Column(db.String(200))
+    account_remove_at = db.Column(db.DateTime, unique=False, default=get_current_korean_time())
+
+    def __init__(self, account_email):
+        self.account_email = account_email
+
+class Login_failure_log(db.Model):
+    __tablename__ = "Login_failure_log"
+
+    id = db.Column(db.Integer, primary_key=True)
+    failure_at = db.Column(db.DateTime, unique=False, default=get_current_korean_time())
+    user_id = db.Column(db.Integer, db.ForeignKey('User.id'))
+
+    def __init__(self, user_id):
+        self.user_id = user_id
+
 class Visitor(db.Model):
     __tablename__ = "Visitor"
 
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(30), unique=False, nullable=False)
-    department = db.Column(db.String(30), unique=False)
-    phone = db.Column(db.String(30), unique=False, nullable=False)
+    department = db.Column(db.String(200), unique=False)
+    phone = db.Column(db.String(200), unique=False, nullable=False)
     manager = db.Column(db.String(30), unique=False, nullable=False)
     device = db.Column(db.Boolean(), unique=False)
     work = db.Column(db.Boolean(), unique=False)
@@ -175,10 +219,10 @@ class Privacy(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(50), unique=False)
-    department = db.Column(db.String(30), unique=False)
-    phone = db.Column(db.String(30), unique=False)
+    department = db.Column(db.String(200), unique=False)
+    phone = db.Column(db.String(200), unique=False)
     birth = db.Column(db.String(50), unique=False)
-    email = db.Column(db.String(30), unique=False, nullable=True)
+    email = db.Column(db.String(200), unique=False, nullable=True)
     manager = db.Column(db.String(30), unique=False, nullable=False)
     device = db.Column(db.Boolean(), unique=False, nullable=True)
     work = db.Column(db.Boolean(), unique=False, nullable=True)

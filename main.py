@@ -3,25 +3,35 @@ from flask import Flask, flash, session, url_for, render_template, request, redi
 from flask_sqlalchemy import SQLAlchemy
 from werkzeug.security import generate_password_hash, check_password_hash # Password Hash
 from flask_bcrypt import Bcrypt
-from app import User, Visitor, Card, User_log, Year, Month, Day, Department, Rack, Privacy
+from app import User, Visitor, Card, User_log, Year, Month, Day, Department, Rack, Privacy, Password_log, Account_log, Login_failure_log
+from pycrypto import *
 import jinja2.exceptions
 from config import create_app, db
 from flask_login import login_user, login_required, logout_user, current_user
 from flask_login import LoginManager
-from datetime import datetime, date, time
+import datetime
+from datetime import datetime, date, time, timedelta
 from sqlalchemy import func, Integer, and_, or_
 import qrcode
 import mysql.connector
 import openpyxl
 import json
 import pandas as pd
-from datetime import datetime, timedelta
 from tabulate import tabulate
 from openpyxl.styles import Alignment
 from openpyxl.utils import get_column_letter
 import re
 from flask.helpers import get_flashed_messages
 from db_connector import db_connector, account_list
+import pytz
+import string
+import random
+import hashlib
+
+# 암복호화 로직
+key = "avhejrghjawerjvawev"
+aes = AESCipher(key)
+
 app = create_app()
 bcrypt = Bcrypt(app)
 
@@ -35,12 +45,28 @@ login_manager.login_message_category = "info"
 def load_user(id):
     return db.session.get(User, id)  # primary_key
 
+def hash_phone_number(phone_number):
+    # 휴대폰 번호를 SHA-256으로 해시
+    sha256 = hashlib.sha256()
+    sha256.update(phone_number.encode('utf-8'))
+    hashed_phone = sha256.hexdigest()
+    return hashed_phone
+
+@app.after_request
+def remove_header(response):
+    response.headers['Server:'] = ''
+
+    return response
 #===================================================================================
 
 @app.route('/')
 @app.route('/index')
 @login_required
 def index():
+    if current_user.attempts == "attempts_password":
+        flash('비밀번호를 변경 후 서비스 이용이 가능합니다.')
+        return redirect('authenticated')
+    
     # 타임 스탬프
     today_weekday = datetime.now().weekday()
     weekdays = {0: "월요일", 1: "화요일", 2: "수요일", 3: "목요일", 4: "금요일", 5: "토요일", 6: "일요일"}
@@ -51,6 +77,9 @@ def index():
 
     # 승인된 방문객 Sort_Desc
     approve_visitors = Visitor.query.filter_by(approve=1).order_by(Visitor.id.desc())
+    for visitor in approve_visitors:
+            visitor.department = aes.decrypt(visitor.department)
+            visitor.phone = aes.decrypt(visitor.phone)
 
     # 출입 카드 목록
     card_list = Card.query.all()
@@ -102,7 +131,7 @@ def admin_page():
         username = '관리자'
         email = admin_email
         hashed_password = bcrypt.generate_password_hash(admin_password)
-        admin = User(username, email, hashed_password, 'Admin', 'M')
+        admin = User(username, email, hashed_password, 'Admin', 'M', hashed_password)
         db.session.add(admin)
         db.session.commit()
         flash("관리자 계정이 생성되었습니다.")
@@ -196,23 +225,23 @@ def visualization_chart():
 @app.route('/manage_visitors', methods=['GET', 'POST'])
 @login_required
 def manage_visitors():
-    if request.method == 'POST':
+    if request.method == 'POST' and current_user.rank == 'M':
         update_id = request.form['inputUpdateNumber']
         name = request.form['inputName']
         department = request.form['inputDepartment']
         phone = request.form['inputPhoneNumber']
         manager = request.form['inputManager']
-        location = request.form['inputLocation']
+        location = request.form.get('inputLocation')
         device = request.form.get('inputDevice')
         remarks = request.form.get('inputRemarks')
         object = request.form.get('inputObject')
-        detail_location = request.form['inputDetailLocation']
+        detail_location = request.form.get('inputDetailLocation')
         # print(update_id)
 
         update_visitor = Visitor.query.filter_by(id=update_id).first()
         update_visitor.name = name
-        update_visitor.department = department
-        update_visitor.phone = phone
+        update_visitor.department = aes.encrypt(department)
+        update_visitor.phone = aes.encrypt(phone)
         update_visitor.manager = manager
         if device == '1':
             update_visitor.device = True
@@ -224,7 +253,7 @@ def manage_visitors():
         update_visitor.object = object
         db.session.commit()
         return redirect('manage_visitors')
-    else:
+    elif current_user.rank == 'M':
         # 타임 스탬프
         today_weekday = datetime.now().weekday()
         weekdays = {0: "월요일", 1: "화요일", 2: "수요일", 3: "목요일", 4: "금요일", 5: "토요일", 6: "일요일"}
@@ -235,6 +264,9 @@ def manage_visitors():
 
         # 승인된 방문객 Sort_Desc
         approve_visitors = Visitor.query.filter_by(approve=1).order_by(Visitor.id.desc())
+        for visitor in approve_visitors:
+            visitor.department = aes.decrypt(visitor.department)
+            visitor.phone = aes.decrypt(visitor.phone)
 
         # 출입 카드 목록
         card_list = Card.query.all()
@@ -271,7 +303,8 @@ def manage_visitors():
         # 내방객 등록 - 부서 목록
         department_lists = Department.query.all()
         return render_template('visitor_update.html', current_user=current_user, approve_visitors=approve_visitors, visitor_count=visitor_count, time=time, card_list=card_list, department_lists=department_lists, total_visitors=total_visitors)
-
+    else:
+        return render_template('404.html')
 #===================================================================================
 
 
@@ -349,16 +382,16 @@ def visit_update():
         department = request.form['inputUpdateDepartment']
         phone = request.form['inputUpdatePhoneNumber']
         manager = request.form['inputUpdateManager']
-        location = request.form['inputUpdateLocation']
-        detail_location = request.form['inputUpdateDetailLocation']
+        location = request.form.get('inputUpdateLocation')
+        detail_location = request.form.get('inputUpdateDetailLocation')
         device = request.form.get('inputUpdateDevice')
         remarks = request.form.get('inputUpdateRemarks')
         object = request.form.get('inputUpdateObject')
 
         update_visitor = Visitor.query.filter_by(id=update_id).first()
         update_visitor.name = name
-        update_visitor.department = department
-        update_visitor.phone = phone
+        update_visitor.department = aes.encrypt(department)
+        update_visitor.phone = aes.encrypt(phone)
         update_visitor.manager = manager
         if device == '1':
             update_visitor.device = True
@@ -380,9 +413,7 @@ def visit_update():
 @app.route('/manage_cards', methods=['GET', 'POST'])
 @login_required
 def manage_cards():
-    if request.method == 'POST':
-        pass
-    else:
+    if current_user.rank == 'M':
         cards = db.session.query(Card.card_type).distinct().all()
         categories = []
         for card in cards:
@@ -400,6 +431,8 @@ def manage_cards():
         total_cards = Card.query.count()
 
         return render_template('manage_cards.html', card_counts=card_counts, recall_cards=recall_cards, total_cards=total_cards)
+    else:
+        return render_template('404.html')
 
 #===================================================================================
 
@@ -410,9 +443,7 @@ def manage_cards():
 @app.route('/manage_rack_keys', methods=['GET', 'POST'])
 @login_required
 def manage_rack_keys():
-    if request.method == 'POST':
-        pass
-    else:
+    if current_user.rank == 'M' or current_user == 'S':
         keys = db.session.query(Rack.key_type).distinct().all()
         categories = []
         for key in keys:
@@ -430,6 +461,8 @@ def manage_rack_keys():
         total_keys = Rack.query.count()
         
         return render_template('manage_rack_key.html', key_counts=key_counts, recall_keys=recall_keys, total_keys=total_keys)
+    else:
+        return render_template('404.html')
 
 #===================================================================================
 
@@ -440,9 +473,52 @@ def manage_rack_keys():
 @app.route('/manage_logs', methods=['GET', 'POST'])
 @login_required
 def manage_logs():
-    user_log = User_log.query.all()
-    visitors = Visitor.query.all()
-    return render_template('manage_logs.html', user_log=user_log)
+    if current_user.rank == 'M':
+        user_log = User_log.query.all()
+        return render_template('manage_logs.html', user_log=user_log)
+    else:
+        return render_template('404.html')
+
+@app.route('/user_logs', methods=['GET', 'POST'])
+@login_required
+def user_logs():
+    rank_list = ['G1','G2','G3','G4','G5','G6','G7','S','임원']
+    if current_user.rank in rank_list:
+        user_log = User_log.query.filter_by(user_id=current_user.id).all()
+        return render_template('user_logs.html', user_log=user_log)
+    else:
+        return render_template('404.html')
+
+@app.route('/account_logs', methods=['GET', 'POST'])
+@login_required
+def account_logs():
+    if current_user.rank == 'M':
+        user = User.query.all()
+        remove_user = Account_log.query.all()
+        return render_template('account_logs.html', user=user, remove_user=remove_user)
+    else:
+        return render_template('404.html')
+
+@app.route('/failure_logs', methods=['GET', 'POST'])
+@login_required
+def login_failure_logs():
+    login_fail_log = Login_failure_log.query.filter_by(user_id=current_user.id).order_by(Login_failure_log.id.desc()).all()
+    return render_template('login_failure_logs.html', login_fail_log=login_fail_log)
+
+@app.route('/api/ajax_delete_account', methods=['POST'])
+@login_required
+def ajax_delete_account():
+    data = request.get_json()
+    account_num = data['delete_btn']
+    user = User.query.filter_by(id=account_num).first()
+    if user == None:
+        return "No Data"
+    
+    delete_user = Account_log(user.email)
+    db.session.add(delete_user)
+    db.session.delete(user)
+    db.session.commit()
+    return jsonify()
 
 @app.route('/<pagename>')
 def admin(pagename):
@@ -469,10 +545,12 @@ def register():
         user = User.query.filter_by(email=email).first()
         if user:
             flash("이미 가입된 이메일입니다.")
-        elif len(email) < 5 :
-            flash("이메일은 5자 이상이어야 합니다.")
+        elif len(email) < 8 :
+            flash("이메일은 8자 이상이어야 합니다.")
         elif len(email) > 30 :
             flash("이메일은 30자 이하여야 합니다.")
+        elif re.search(r'(.)\1\1\1', email) or re.search(r'(\d)\1\1\1', email):
+            flash("이메일에 4자 이상의 반복문자나 반복숫자를 사용할 수 없습니다.")
         elif len(username) < 2:
             flash("이름은 2자 이상이어야 합니다.")
         elif len(username) > 10:
@@ -485,11 +563,17 @@ def register():
             flash("비밀번호는 14자 이하여야 합니다.")
         elif not re.search(r'[A-Z]', password1) or not re.search(r'[a-z]', password1) or not re.search(r'\d', password1) or not re.search(r'[!@#$%^&*(),.?":{}|<>]', password1):
             flash("비밀번호는 대문자, 숫자, 특수문자가 포함되어야 합니다.")
+        elif re.search(r'(.)\1\1\1', password1) or re.search(r'(\d)\1\1\1', password1):
+            flash("비밀번호에 4자 이상의 반복문자나 반복숫자를 사용할 수 없습니다.")
+        elif any(email[i:i+4].lower() in password1.lower() for i in range(len(email)-3)):
+            flash("비밀번호에 이메일과 연관된 부분이 연속된 4자리 이상으로 포함될 수 없습니다.")
         else:
-            # # 비밀번호 암호화
+            # 비밀번호 암호화
             hashed_password = bcrypt.generate_password_hash(password1)
+            user = User(username, email, hashed_password, department, rank, hashed_password)
+            # 비밀번호 이력 보관
+            
 
-            user = User(username, email, hashed_password, department, rank)
             db.session.add(user)
             db.session.commit()
 
@@ -503,18 +587,22 @@ def register():
 # 6개월 이상된 비밀번호 변경권고 코드 
 def check_password_change(user):
     if user.password_changed_at:
-        delta = datetime.now() - user.password_changed_at
+        current_date = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+        current_date = datetime.strptime(current_date, '%Y-%m-%d %H:%M:%S')
+        delta = current_date - user.password_changed_at
         print("비밀번호 변경 시간:", user.password_changed_at)
-        print("현재 시간:", datetime.now())
-        if delta > timedelta(minutes=1):  # 6개월 이상 경과한 경우
+        print("현재 시간:", current_date)
+        print(delta)
+        if delta > timedelta(days=180):  # 6개월 이상 경과한 경우
             print("비밀번호 변경이 필요합니다.")
             print("현재 초과시간:", delta)
             flash("마지막 비밀번호 변경일로부터 6개월이 경과하였습니다. 비밀번호를 변경해주세요.")
             print("알림 메시지:", get_flashed_messages())
+        else:
+            pass
 
 LOGIN_BLOCK_DURATION = 10 # 로그인 제한 기간 (분)
 MAX_LOGIN_ATTEMPTS = 5 # 로그인 실패 허용 횟수
-
 
 # 로그인 기능
 @app.route('/login', methods=['GET', 'POST'])
@@ -535,27 +623,37 @@ def login():
             if bcrypt.check_password_hash(user.password, password):
                 # 로그인 성공
                 
-                
                 user.login_attempts = 0  # 로그인 시도 횟수 초기화
                 user.login_blocked_until = None  # 로그인 제한 해제
-                print('로그인 완료')
-                
-                #flash('마지막 비밀번호 변경일로부터 1분이 경과하였습니다. 비밀번호를 변경해주세요.')
 
-                login_user(user, remember=True)
+                login_user(user)
+                # 비인가 접근 및 오남용 등에 대한 경고 문구, 로그인 시 이전 로그인 정보 표시
                 user_log = User_log(request.remote_addr, current_date, user.id)
                 
                 
                 db.session.add(user_log)
                 db.session.commit()
 
-                check_password_change(user) # 비밀번호 변경 주기 체크
+                current_login = User_log.query.filter_by(user_id=current_user.id).order_by(User_log.id.desc()).first()
+                # check_password_change(user) # 비밀번호 변경 주기 체크
                 if current_user.rank == 'M':
-                    return redirect(url_for('manage_visitors', user=user.username))
+                    if current_login.login_timestamp:
+                        flash('이전 로그인 일시: ' + str(current_login.login_timestamp) + " 접근 IP주소: " + current_login.ip_address)
+                    else:
+                        flash('이전 로그인 일시: 없음'+ " 접근 IP주소: " + current_login.ip_address)
+                    return redirect(url_for('manage_visitors'))
                 elif current_user.rank == 'S':
-                    return redirect(url_for('rack_visitors', user=user.username))
+                    if current_login.login_timestamp:
+                        flash('이전 로그인 일시: ' + str(current_login.login_timestamp) + " 접근 IP주소: " + current_login.ip_address)
+                    else:
+                        flash('이전 로그인 일시: 없음'+ " 접근 IP주소: " + current_login.ip_address)                   
+                    return redirect(url_for('rack_visitors'))
                 else:
-                    return redirect(url_for('index', user=user.username))
+                    if current_login.login_timestamp:
+                        flash('이전 로그인 일시: ' + str(current_login.login_timestamp) + " 접근 IP주소: " + current_login.ip_address)
+                    else:
+                        flash('이전 로그인 일시: 없음'+ " 접근 IP주소: " + current_login.ip_address)
+                    return redirect(url_for('index'))
             
             else:
                 # 로그인 실패
@@ -564,14 +662,24 @@ def login():
                     # 일정 횟수 이상 실패 시 로그인 제한
                     user.login_blocked_until = datetime.now() + timedelta(minutes=LOGIN_BLOCK_DURATION)
                     block_remaining = LOGIN_BLOCK_DURATION
+
+                    # 로그인 실패 로그 기록
+                    login_fail = Login_failure_log(user.id)
+                    db.session.add(login_fail)
+                    db.session.commit()
+
                     flash('로그인 횟수 제한까지 {}번 남았습니다. 잠시 후 다시 시도해주세요. (제한 시간: {}분)'.format(MAX_LOGIN_ATTEMPTS - user.login_attempts, block_remaining))
                 else:
-                    flash('비밀번호가 다릅니다. 로그인 횟수 제한까지 {}번 남았습니다.'.format(MAX_LOGIN_ATTEMPTS - user.login_attempts)) 
-                # flash('비밀번호가 다릅니다.')
+                    # 로그인 실패 로그 기록
+                    login_fail = Login_failure_log(user.id)
+                    db.session.add(login_fail)
+                    db.session.commit()
+
+                    flash('로그인 정보가 틀렸습니다. 로그인 횟수 제한까지 {}번 남았습니다.'.format(MAX_LOGIN_ATTEMPTS - user.login_attempts)) 
                 db.session.commit()
                 return render_template('login.html')
         else:
-            flash('해당 이메일 정보가 없습니다.')
+            flash('로그인 정보가 틀렸습니다.')
             return render_template('login.html')
     else: # GET 로그인 페이지
         return render_template('login.html')
@@ -593,6 +701,44 @@ def logout():
     print('logout success!')
     return redirect(url_for('login'))
 
+def random_string():
+    new_pw_len = 10
+    pw_candidate = string.ascii_letters + string.digits + string.punctuation
+    new_pw = ""
+    for i in range(new_pw_len):
+        new_pw += random.choice(pw_candidate)
+    print("\n생성된 랜덤 비밀번호", new_pw)
+    return new_pw
+
+# 비밀번호 찾기 페이지
+@app.route('/forgot-password', methods=['GET', 'POST'])
+def forgot_password():
+    if request.method == 'POST':
+        email = request.form['inputEmail']
+        phone = request.form['inputPhoneNumber']
+
+        user = User.query.filter_by(email=email).first()
+
+        if user:
+            user.password = bcrypt.generate_password_hash(random_string())
+            user.attempts = "attempts_password"
+            db.session.commit()
+
+            connect_to_database()
+            cursor = app.mysql_conn.cursor()  # 커서 생성
+            insert_query = "INSERT INTO sms_msg (REQDATE, STATUS, TYPE, PHONE, CALLBACK, MSG) VALUES (%s, %s, %s, %s, %s, %s)"
+            insert_data = (datetime.now(), '1', '0', phone, '01057320071', '[CJ IDC O`PASS 비밀번호 임시 발급] 임시 비밀번호: ' + new_pw)
+
+            cursor.execute(insert_query, insert_data)  # 쿼리 실행 및 데이터 전달
+            app.mysql_conn.commit()  # 변경 사항 커밋
+            cursor.close()  # 커서 닫기
+            flash('입력한 번호로 임시 비밀번호가 전송되었습니다. 임시 비밀번호로 로그인해주세요.')
+            return redirect('login')
+        else:
+            return redirect('forgot-password')
+
+    return render_template('forgot-password.html')
+
 #===================================================================================
 
 
@@ -601,7 +747,7 @@ def logout():
 # 내방객 등록 페이지
 @app.route('/visit', methods=['GET', 'POST'])
 @login_required
-def visitor():
+def visitor():    
     if request.method == 'POST':
         name = request.form['inputName']
         department = request.form['inputDepartment']
@@ -633,14 +779,20 @@ def visitor():
             company_name = None
             work_content = None
 
+            # aes.encrypt(department)
+            # aes.encrypt(phone)
+
         # 내방객 등록하기 - 이름, 부서, 번호, 작업위치, 담당자, 장비체크, 비고, 방문목적, 등록시간, 승인, 사전/현장, 작업체크, 회사종류, 회사이름, 작업내용
-        visitor = Visitor(name, department, phone, location, manager, device, remarks, object, created_time, 0, "사전 등록", work, company_type, company_name, work_content, detail_location)
+        visitor = Visitor(name, aes.encrypt(department), aes.encrypt(phone), location, manager, device, remarks, object, created_time, 0, "사전 등록", work, company_type, company_name, work_content, detail_location)
         db.session.add(visitor)
         db.session.commit()
         return redirect(url_for('visitor'))
     else:
         # GET - 승인되지 않은 방문객 정보
         visitor_info = Visitor.query.filter_by(approve=0)
+        for visitor in visitor_info:
+            visitor.department = aes.decrypt(visitor.department)
+            visitor.phone = aes.decrypt(visitor.phone)
 
         # 내방객 등록 - 부서 목록
         department_lists = Department.query.all()
@@ -700,10 +852,10 @@ def ajax_approve():
 
     privacy_date = datetime.now().strftime('%Y-%m-%d %H-%M-%S')
     if visitor.registry == "사전 등록":
-        image_send_sms_previous(visitor.name, visitor.approve_date, visitor.object, visitor.location, visitor.manager, visitor.phone, device, work, visitor.company_type, visitor.company, visitor.work_content)
+        image_send_sms_previous(visitor.name, visitor.approve_date, visitor.object, visitor.location, visitor.manager, aes.decrypt(visitor.phone), device, work, visitor.company_type, visitor.company, visitor.work_content)
         privacy = Privacy(visitor.name, visitor.department, visitor.phone, "", "", visitor.manager, privacy_device, privacy_work, visitor.remarks, visitor.object, visitor.location, visitor.detail_location, visitor.company_type, visitor.company, visitor.work_content, privacy_date, "사전 등록")
     else:
-        image_send_sms_current(visitor.name, visitor.approve_date, visitor.object, visitor.location, visitor.manager, visitor.phone, device, work, visitor.company, visitor.work_content)
+        image_send_sms_current(visitor.name, visitor.approve_date, visitor.object, visitor.location, visitor.manager, aes.decrypt(visitor.phone), device, work, visitor.company, visitor.work_content)
         privacy = Privacy(visitor.name, visitor.department, visitor.phone, "", "", visitor.manager, privacy_device, privacy_work, visitor.remarks, visitor.object, visitor.location, visitor.detail_location, "", visitor.company, visitor.work_content, privacy_date, "현장 등록")
 
     db.session.add(privacy)
@@ -872,10 +1024,10 @@ def ajax_visit_approve_checkbox():
 
         privacy_date = datetime.now().strftime('%Y-%m-%d %H-%M-%S')
         if visitor.registry == "사전 등록":
-            image_send_sms_previous(visitor.name, visitor.approve_date, visitor.object, visitor.location, visitor.manager, visitor.phone, device, work, visitor.company_type, visitor.company, visitor.work_content)
+            image_send_sms_previous(visitor.name, visitor.approve_date, visitor.object, visitor.location, visitor.manager, aes.decrypt(visitor.phone), device, work, visitor.company_type, visitor.company, visitor.work_content)
             privacy = Privacy(visitor.name, visitor.department, visitor.phone, "", "", visitor.manager, privacy_device, privacy_work, visitor.remarks, visitor.object, visitor.location, visitor.detail_location, visitor.company_type, visitor.company, visitor.work_content, privacy_date, "사전 등록")
         else:
-            image_send_sms_current(visitor.name, visitor.approve_date, visitor.object, visitor.location, visitor.manager, visitor.phone, device, work, visitor.company, visitor.work_content)
+            image_send_sms_current(visitor.name, visitor.approve_date, visitor.object, visitor.location, visitor.manager, aes.decrypt(visitor.phone), device, work, visitor.company, visitor.work_content)
             privacy = Privacy(visitor.name, visitor.department, visitor.phone, "", "", visitor.manager, privacy_device, privacy_work, visitor.remarks, visitor.object, visitor.location, visitor.detail_location, "", visitor.company, visitor.work_content, privacy_date, "현장 등록")
 
         db.session.add(privacy)
@@ -1064,7 +1216,7 @@ def ajax_update_manage_visit():
     if update_visitor.card_id != None:
         return "Use Card"
     else:
-        update_visitor_info = [update_visitor.id, update_visitor.name, update_visitor.department, update_visitor.object, update_visitor.phone, update_visitor.manager, update_visitor.device, update_visitor.remarks, update_visitor.location, update_visitor.work, update_visitor.company_type, update_visitor.company, update_visitor.work_content, update_visitor.detail_location]
+        update_visitor_info = [update_visitor.id, update_visitor.name, aes.decrypt(update_visitor.department), update_visitor.object, aes.decrypt(update_visitor.phone), update_visitor.manager, update_visitor.device, update_visitor.remarks, update_visitor.location, update_visitor.work, update_visitor.company_type, update_visitor.company, update_visitor.work_content, update_visitor.detail_location]
         return jsonify(response=update_visitor_info)
 
 
@@ -1146,82 +1298,82 @@ def ajax_manage_qrcode_send():
 
 #===================================================================================
 
-# Excel 다운로드 api
-@app.route('/api/ajax_excel_download', methods=['GET', 'POST'])
-@login_required
-def ajax_excel_download():
-    data = request.get_json()
-    start_date = data['start_date_val']
-    end_date = data['end_date_val']
+# # Excel 다운로드 api
+# @app.route('/api/ajax_excel_download', methods=['GET', 'POST'])
+# @login_required
+# def ajax_excel_download():
+#     data = request.get_json()
+#     start_date = data['start_date_val']
+#     end_date = data['end_date_val']
 
-    if start_date == '' or end_date == '':
-        return "No Date"
-    if start_date > end_date:
-        return "Date Error"
+#     if start_date == '' or end_date == '':
+#         return "No Date"
+#     if start_date > end_date:
+#         return "Date Error"
 
-    # 내방객 점검 일지
-    file_name = '일일 점검 양식.xlsx'
+#     # 내방객 점검 일지
+#     file_name = '일일 점검 양식.xlsx'
     
-    # 파일 읽기
-    workbook = openpyxl.load_workbook(file_name)  # 기존 파일을 로드합니다.
-    sheet = workbook.active
-    # 데이터 쓰기
-    if start_date == end_date:
-        # If start_date and end_date are the same, include only a single day
-        start_datetime = datetime.strptime(start_date, '%Y-%m-%d')
-        start_datetime_str = start_datetime.strftime('%Y-%m-%d')
-        exited_visitors = Visitor.query.filter(
-            and_(
-                Visitor.approve_date >= start_datetime_str,
-                Visitor.approve_date < (start_datetime + timedelta(days=1)).strftime('%Y-%m-%d'),
-                Visitor.exit_date >= start_datetime_str,
-                Visitor.exit_date < (start_datetime + timedelta(days=1)).strftime('%Y-%m-%d')
-            )
-        )
-    else:
-        # Include the range between start_date and end_date
-        start_datetime = datetime.strptime(start_date, '%Y-%m-%d')
-        end_datetime = datetime.strptime(end_date, '%Y-%m-%d')
-        start_datetime_str = start_datetime.strftime('%Y-%m-%d')
-        end_datetime_str = end_datetime.strftime('%Y-%m-%d')
-        if start_datetime != end_datetime:
-            end_datetime += timedelta(days=1)  # Add one day to include the end_date
-        exited_visitors = Visitor.query.filter(
-            and_(
-                Visitor.approve_date >= start_datetime_str,
-                Visitor.approve_date <= end_datetime.strftime('%Y-%m-%d'),
-                Visitor.exit_date >= start_datetime_str,
-                Visitor.exit_date <= end_datetime.strftime('%Y-%m-%d')
-            )
-        )
+#     # 파일 읽기
+#     workbook = openpyxl.load_workbook(file_name)  # 기존 파일을 로드합니다.
+#     sheet = workbook.active
+#     # 데이터 쓰기
+#     if start_date == end_date:
+#         # If start_date and end_date are the same, include only a single day
+#         start_datetime = datetime.strptime(start_date, '%Y-%m-%d')
+#         start_datetime_str = start_datetime.strftime('%Y-%m-%d')
+#         exited_visitors = Visitor.query.filter(
+#             and_(
+#                 Visitor.approve_date >= start_datetime_str,
+#                 Visitor.approve_date < (start_datetime + timedelta(days=1)).strftime('%Y-%m-%d'),
+#                 Visitor.exit_date >= start_datetime_str,
+#                 Visitor.exit_date < (start_datetime + timedelta(days=1)).strftime('%Y-%m-%d')
+#             )
+#         )
+#     else:
+#         # Include the range between start_date and end_date
+#         start_datetime = datetime.strptime(start_date, '%Y-%m-%d')
+#         end_datetime = datetime.strptime(end_date, '%Y-%m-%d')
+#         start_datetime_str = start_datetime.strftime('%Y-%m-%d')
+#         end_datetime_str = end_datetime.strftime('%Y-%m-%d')
+#         if start_datetime != end_datetime:
+#             end_datetime += timedelta(days=1)  # Add one day to include the end_date
+#         exited_visitors = Visitor.query.filter(
+#             and_(
+#                 Visitor.approve_date >= start_datetime_str,
+#                 Visitor.approve_date <= end_datetime.strftime('%Y-%m-%d'),
+#                 Visitor.exit_date >= start_datetime_str,
+#                 Visitor.exit_date <= end_datetime.strftime('%Y-%m-%d')
+#             )
+#         )
 
-    for row_num, exited_visitor in enumerate(exited_visitors, 18):
-        if exited_visitor.work == 1:
-            work = 'O'
-        else:
-            work = 'X'
+#     for row_num, exited_visitor in enumerate(exited_visitors, 18):
+#         if exited_visitor.work == 1:
+#             work = 'O'
+#         else:
+#             work = 'X'
 
-        if exited_visitor.device == 1:
-            device = 'O'
-        else:
-            device = 'X'
-        row = (
-            exited_visitor.id, exited_visitor.approve_date, exited_visitor.exit_date,
-            exited_visitor.department, exited_visitor.phone, exited_visitor.manager,
-            work, exited_visitor.location, exited_visitor.detail_location,
-            exited_visitor.company_type, exited_visitor.company, exited_visitor.work_content,
-            device, "", exited_visitor.remarks
-        )
-        sheet.append(row)
+#         if exited_visitor.device == 1:
+#             device = 'O'
+#         else:
+#             device = 'X'
+#         row = (
+#             exited_visitor.id, exited_visitor.approve_date, exited_visitor.exit_date,
+#             exited_visitor.department, exited_visitor.phone, exited_visitor.manager,
+#             work, exited_visitor.location, exited_visitor.detail_location,
+#             exited_visitor.company_type, exited_visitor.company, exited_visitor.work_content,
+#             device, "", exited_visitor.remarks
+#         )
+#         sheet.append(row)
 
-        for col_num, _ in enumerate(row, 1):
-            col_letter = get_column_letter(col_num)
-            cell = sheet[col_letter + str(row_num)]
-            cell.alignment = Alignment(horizontal='center', vertical='center')
+#         for col_num, _ in enumerate(row, 1):
+#             col_letter = get_column_letter(col_num)
+#             cell = sheet[col_letter + str(row_num)]
+#             cell.alignment = Alignment(horizontal='center', vertical='center')
 
-    sheet['A6'] = '일시: ' + start_date + ' ~ ' + end_date
-    workbook.save('excel/' + start_date + '-' + end_date + ' 내방객 출입점검 일지1.xlsx')
-    return jsonify(result="success")
+#     sheet['A6'] = '일시: ' + start_date + ' ~ ' + end_date
+#     workbook.save('excel/' + start_date + '-' + end_date + ' 내방객 출입점검 일지1.xlsx')
+#     return jsonify(result="success")
 
 #===================================================================================
 
@@ -1447,41 +1599,108 @@ def user_authenticated():
         user = User.query.filter_by(email=current_user.email).first()
         if user:
             if bcrypt.check_password_hash(user.password, password):
-                return redirect('profile_update')
+                result = hashlib.sha256(user.username.encode())
+                return redirect(url_for('user_profile_update', _method='POST', auth=result.hexdigest()))
             else:
                 flash("비밀번호를 확인 후 다시 입력해주세요.")
     return render_template('authenticated.html')
 
-# 유저 정보 변경 페이지
-@app.route('/profile_update', methods=['GET', 'POST'])
-@login_required
-def user_profile_update():
-    if request.method == 'POST':
-        current_password = request.form['current_pwd']
-        new_password_1 = request.form['new_pwd_1']
-        new_password_2 = request.form['new_pwd_2']
-        
-        user = User.query.filter_by(email=current_user.email).first()
-        
-        if user:
-            if bcrypt.check_password_hash(user.password, current_password):
-                if current_password == new_password_1:
-                    flash("현재 비밀번호와 새 비밀번호는 같을 수 없습니다.")
-                elif new_password_1 != new_password_2:
-                    flash("비밀번호와 비밀번호재입력이 서로 다릅니다.")
-                elif len(new_password_1) < 7:
-                    flash("비밀번호가 너무 짧습니다.")
-                else:
-                    hashed_password = bcrypt.generate_password_hash(new_password_1)
-                    user.password = hashed_password
-                    db.session.commit()
-                    logout_user()
-                    flash("비밀번호가 정상적으로 변경되었습니다.")
-                    return redirect('login')
-            else:
-                flash("비밀번호를 잘못 입력하셨습니다.")
 
-    return render_template('user_profile_update.html')
+# 유저 정보 변경 페이지
+@app.route('/profile_update/<auth>', methods=['GET', 'POST'])
+@login_required
+def user_profile_update(auth):
+    if auth:
+        korean_timezone = pytz.timezone('Asia/Seoul')
+        if request.method == 'POST':
+            current_password = request.form['current_pwd']
+            new_password_1 = request.form['new_pwd_1']
+            new_password_2 = request.form['new_pwd_2']
+            
+            user = User.query.filter_by(email=current_user.email).first()
+
+            current_time_korean = datetime.now(korean_timezone).strftime("%Y-%m-%d %H:%M:%S")
+            fomatting_time_korean = datetime.strptime(current_time_korean, '%Y-%m-%d %H:%M:%S')
+
+            time_since_registration = fomatting_time_korean - user.registered_at
+            print(time_since_registration)
+            print(type(time_since_registration))
+            print(timedelta(days=1))
+            print(type(timedelta(days=1)))
+
+            if user:
+                if user.attempts == 'attempts_password':
+                    if bcrypt.check_password_hash(user.password, current_password):
+                        if current_password == new_password_1:
+                            flash("현재 비밀번호와 새 비밀번호는 같을 수 없습니다.")
+                        elif new_password_1 != new_password_2:
+                            flash("비밀번호와 비밀번호재입력이 서로 다릅니다.")
+                        elif len(new_password_1) < 8:
+                            flash("비밀번호는 8자 이상이어야 합니다.")
+                        elif len(new_password_1) > 14:
+                            flash("비밀번호는 14자 이하여야 합니다.")
+                        elif not re.search(r'[A-Z]', new_password_1) or not re.search(r'[a-z]', new_password_1) or not re.search(r'\d', new_password_1) or not re.search(r'[!@#$%^&*(),.?":{}|<>]', new_password_1):
+                            flash("비밀번호는 대문자, 숫자, 특수문자가 포함되어야 합니다.")
+                        elif re.search(r'(.)\1\1\1', new_password_1) or re.search(r'(\d)\1\1\1', new_password_1):
+                            flash("비밀번호에 4자 이상의 반복문자나 반복숫자를 사용할 수 없습니다.")
+                        elif any(current_user.email[i:i+4].lower() in new_password_1.lower() for i in range(len(current_user.email)-3)):
+                            flash("비밀번호에 이메일과 연관된 부분이 연속된 4자리 이상으로 포함될 수 없습니다.")
+                        else:
+                            # 비밀번호 수정
+                            hashed_password = bcrypt.generate_password_hash(new_password_1)
+                            user.password = hashed_password
+                            user.password_changed_at = current_time_korean
+                            user.attempts = None
+
+                            # 비밀번호 이력 보관
+                            password_log = Password_log(hashed_password, user.id)
+                            db.session.add(password_log)
+                            db.session.commit()
+
+                            logout_user()
+                            flash("비밀번호가 정상적으로 변경되었습니다.")
+                            return redirect('login')
+                        
+            elif time_since_registration < timedelta(days=1):
+                flash("회원가입 후 최소 1일이 지나야 비밀번호를 수정할 수 있습니다.")
+
+            else:
+                if user:
+                    if bcrypt.check_password_hash(user.password, current_password):
+                        if current_password == new_password_1:
+                            flash("현재 비밀번호와 새 비밀번호는 같을 수 없습니다.")
+                        elif new_password_1 != new_password_2:
+                            flash("비밀번호와 비밀번호재입력이 서로 다릅니다.")
+                        elif len(new_password_1) < 8:
+                            flash("비밀번호는 8자 이상이어야 합니다.")
+                        elif len(new_password_1) > 14:
+                            flash("비밀번호는 14자 이하여야 합니다.")
+                        elif not re.search(r'[A-Z]', new_password_1) or not re.search(r'[a-z]', new_password_1) or not re.search(r'\d', new_password_1) or not re.search(r'[!@#$%^&*(),.?":{}|<>]', new_password_1):
+                            flash("비밀번호는 대문자, 숫자, 특수문자가 포함되어야 합니다.")
+                        elif re.search(r'(.)\1\1\1', new_password_1) or re.search(r'(\d)\1\1\1', new_password_1):
+                            flash("비밀번호에 4자 이상의 반복문자나 반복숫자를 사용할 수 없습니다.")
+                        elif any(current_user.email[i:i+4].lower() in new_password_1.lower() for i in range(len(current_user.email)-3)):
+                            flash("비밀번호에 이메일과 연관된 부분이 연속된 4자리 이상으로 포함될 수 없습니다.")
+                        else:
+                            # 비밀번호 수정
+                            hashed_password = bcrypt.generate_password_hash(new_password_1)
+                            user.password = hashed_password
+                            user.password_changed_at = current_time_korean
+
+                            # 비밀번호 이력 보관
+                            password_log = Password_log(hashed_password, user.id)
+                            db.session.add(password_log)
+                            db.session.commit()
+
+                            logout_user()
+                            flash("비밀번호가 정상적으로 변경되었습니다.")
+                            return redirect('login')
+                    else:
+                        flash("비밀번호를 잘못 입력하셨습니다.")
+
+        return render_template('user_profile_update.html')
+    else:
+        return render_template('404.html')
 
 #===================================================================================
 
@@ -1494,7 +1713,6 @@ def form_input():
         name = request.form['visitorName']
         department = request.form['visitorDepartment']
         phone = request.form['visitorPhone']
-        birth = request.form['visitorBirth']
         manager = request.form['visitorManager']
         device = request.form['visitorDevice']
         remarks = request.form['visitorRemarks']
@@ -1516,8 +1734,8 @@ def form_input():
         else:
             device = False
 
-        privacy = Privacy(name, department, phone, birth, email, manager, device, work, remarks, object, location, detail_location, "", company, work_content, date, "현장 등록")
-        visitor = Visitor(name, department, phone, location, manager, device, remarks, object, date, 0, "현장 등록", work, "", company, work_content, detail_location)
+        privacy = Privacy(name, aes.encrypt(department), aes.encrypt(phone), None, aes.encrypt(email), manager, device, work, remarks, object, location, detail_location, "", company, work_content, date, "현장 등록")
+        visitor = Visitor(name, aes.encrypt(department), aes.encrypt(phone), location, manager, device, remarks, object, date, 0, "현장 등록", work, "", company, work_content, detail_location)
         db.session.add(privacy)
         db.session.add(visitor)
         db.session.commit()
@@ -1527,54 +1745,60 @@ def form_input():
 
 #===================================================================================
 
-@app.route('/rack_visitors')
+@app.route('/rack_visitors', methods=['GET','POST'])
 @login_required
 def manage_visitors_rack():
-    # 타임 스탬프
-    today_weekday = datetime.now().weekday()
-    weekdays = {0: "월요일", 1: "화요일", 2: "수요일", 3: "목요일", 4: "금요일", 5: "토요일", 6: "일요일"}
-    weekday = weekdays.get(today_weekday, "")
-    current_date = datetime.now().strftime('%Y년 %m월 %d일 ') + weekday
-    current_time = datetime.now().strftime('\n%p %H:%M:%S')
-    time = [ current_date, current_time]
+    if current_user.rank == 'S':
+        # 타임 스탬프
+        today_weekday = datetime.now().weekday()
+        weekdays = {0: "월요일", 1: "화요일", 2: "수요일", 3: "목요일", 4: "금요일", 5: "토요일", 6: "일요일"}
+        weekday = weekdays.get(today_weekday, "")
+        current_date = datetime.now().strftime('%Y년 %m월 %d일 ') + weekday
+        current_time = datetime.now().strftime('\n%p %H:%M:%S')
+        time = [current_date, current_time]
 
-    # 승인된 방문객 Sort_Desc
-    approve_visitors = Visitor.query.filter_by(approve=1).order_by(Visitor.id.desc())
+        # 승인된 방문객 Sort_Desc
+        approve_visitors = Visitor.query.filter_by(approve=1).order_by(Visitor.id.desc())
+        for visitor in approve_visitors:
+            visitor.department = aes.decrypt(visitor.department)
+            visitor.phone = aes.decrypt(visitor.phone)
 
-    # 랙 키 목록
-    rack_key_list = Rack.query.all()
+        # 랙 키 목록
+        rack_key_list = Rack.query.all()
 
-    if approve_visitors:
-        # 실시간 출입 방문객
-        in_visitor = Visitor.query.filter_by(exit=0)
-        in_visitor_card_none = Visitor.query.filter_by(exit=0, card_id=None)
+        if approve_visitors:
+            # 실시간 출입 방문객
+            in_visitor = Visitor.query.filter_by(exit=0)
+            in_visitor_card_none = Visitor.query.filter_by(exit=0, card_id=None)
 
-        # 실시간 출입 방문객 카운팅
-        in_visitor = in_visitor.count()
-        in_visitor_card_none = in_visitor_card_none.count()
-        in_visitor = in_visitor - in_visitor_card_none
+            # 실시간 출입 방문객 카운팅
+            in_visitor = in_visitor.count()
+            in_visitor_card_none = in_visitor_card_none.count()
+            in_visitor = in_visitor - in_visitor_card_none
 
-        today = date.today()
-        total_visitors = db.session.query(func.sum(Year.count)).scalar() # 총 방문객
-        year = Year.query.filter_by(year=today.year).first() # 연간 방문객
-        month = Month.query.filter_by(year=today.year, month=today.month).first() # 월간 방문객
-        day = Day.query.filter_by(year=today.year, month=today.month, day=today.day).first() # 일간 방문객
-        if year:
-            yearly_visitor = year.count
-            if month:
-                monthly_visitor = month.count
-                if day:
-                    daily_visitor = day.count
-                    visitor_count = [in_visitor, yearly_visitor, monthly_visitor, daily_visitor]
+            today = date.today()
+            total_visitors = db.session.query(func.sum(Year.count)).scalar() # 총 방문객
+            year = Year.query.filter_by(year=today.year).first() # 연간 방문객
+            month = Month.query.filter_by(year=today.year, month=today.month).first() # 월간 방문객
+            day = Day.query.filter_by(year=today.year, month=today.month, day=today.day).first() # 일간 방문객
+            if year:
+                yearly_visitor = year.count
+                if month:
+                    monthly_visitor = month.count
+                    if day:
+                        daily_visitor = day.count
+                        visitor_count = [in_visitor, yearly_visitor, monthly_visitor, daily_visitor]
+                    else:
+                        visitor_count = [in_visitor, yearly_visitor, monthly_visitor, 0]
                 else:
-                    visitor_count = [in_visitor, yearly_visitor, monthly_visitor, 0]
+                    visitor_count = [in_visitor, yearly_visitor, 0, 0]
             else:
-                visitor_count = [in_visitor, yearly_visitor, 0, 0]
-        else:
-            visitor_count = [in_visitor, 0, 0, 0]
-    
-    # print('현재 로그인한 사용자: ' + str(current_user))
-    return render_template('visitor_emergency.html', current_user=current_user, approve_visitors=approve_visitors, visitor_count=visitor_count, time=time, rack_key_list=rack_key_list, total_visitors=total_visitors)
+                visitor_count = [in_visitor, 0, 0, 0]
+        
+        # print('현재 로그인한 사용자: ' + str(current_user))
+        return render_template('visitor_emergency.html', current_user=current_user, approve_visitors=approve_visitors, visitor_count=visitor_count, time=time, rack_key_list=rack_key_list, total_visitors=total_visitors)
+    else:
+        return render_template('404.html')
 
 # 키 불출 체크 박스 api
 @app.route('/api/ajax_use_rack_key_checkbox', methods=['POST'])
@@ -1632,10 +1856,6 @@ def ajax_recall_rack_key_checkbox():
     return jsonify(result = "success")
 
 #===================================================================================
-
-
-
-
 
 @app.errorhandler(jinja2.exceptions.TemplateNotFound)
 def template_not_found(e):

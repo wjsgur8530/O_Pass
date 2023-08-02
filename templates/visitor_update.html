@@ -225,12 +225,12 @@
         </div>
       </div>
 
-      <div class="mb-3" style="display:flex; justify-content: flex-end;">
+      <!-- <div class="mb-3" style="display:flex; justify-content: flex-end;">
         <button type="button" class="d-none d-sm-inline-block btn btn-sm shadow-sm btn btn-secondary" id="exit_checkbox">선택 퇴실</button>
         <input type="date" name="start_date" id="start_date" class="form-control col-xl-1 ml-2">
         <input type="date" name="end_date" id="end_date" class="form-control col-xl-1 ml-2">
         <button class="d-none d-sm-inline-block btn btn-sm btn-success shadow-sm ml-2" type="button" id="excel_download_btn" name="excel_download_btn"><i class="fas fa-plus fa-sm text-white-50"></i> 엑셀 다운로드</button>
-      </div>
+      </div> -->
       <!-- Content Row -->
 
       <div class="row">
@@ -367,7 +367,7 @@
                       {% endif %}
                       </td>
                       <td>{{ approve_visitor.department }}</td>
-                      <td>{{ approve_visitor.phone[:3] }}-****-{{ approve_visitor.phone[7:11] }}</td>
+                      <td>{{ approve_visitor.phone[:3] }}-****-{{ approve_visitor.phone[7:] }}</td>
                       <td>{{ approve_visitor.manager }}</td>
                       {% if approve_visitor.work == 1 %}
                       <td>O</td>
@@ -756,7 +756,7 @@
   $(document).ready(function() {
     // DataTable 초기화
     var table = $('#dataTable').DataTable({
-      lengthMenu: [10, 15, 20, 25, 50, 100],
+      lengthMenu: [10, 15, 20],
       pageLength: 10 // 기본 페이지 길이 설정
     });
     // 기존 페이지 길이 조정 기능 활성화

@@ -29,10 +29,10 @@
   <!-- Noto Sans 사용법: font-family: 'Noto Sans KR', sans-serif; -->
 
   <!-- 새로운 favicon 지정 -->
-  <link rel="icon" type="static/img/CJ_logo.svg.png" href="static/img/CJ_logo.svg.png">
+  <link rel="icon" type="static/img/CJ_logo.svg.png" href="{{ url_for('static', filename='img/CJ_logo.svg.png')}}">
 
   <!-- ajax, comman.js 호출 -->
-  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
   {% endblock %}
 </head>
@@ -45,7 +45,7 @@
 
   <!-- Custom scripts for all pages-->
   <script src="js/sb-admin-2.min.js"></script>
-<body id="page-top">
+<body id="page-top" oncontextmenu="return false">
 
   <!-- Page Wrapper -->
   <div id="wrapper">
@@ -56,7 +56,7 @@
       <!-- Sidebar - Brand -->
       <a class="sidebar-brand d-flex align-items-center justify-content-center" href="index">
         <div class="sidebar-brand-icon">
-          <img src="static/img/CJ_logo.svg.png" style="width:50px; height:50px;">
+          <img src="{{ url_for('static', filename='img/CJ_logo.svg.png')}}" style="width:50px; height:50px;">
           <!-- <i class="fas fa-laugh-wink"></i> -->
         </div>
         <div class="sidebar-brand-text mx-3">IDC O`Pass</div>
@@ -80,6 +80,8 @@
           <span>Dashboard</span></a>
       </li>
       {% endif %}
+
+      {% if current_user.attempts != 'attempts_password' %}
 
       {% if current_user.rank == 'M' %}
       <!-- Nav Item - Dashboard -->
@@ -157,21 +159,28 @@
         <div id="collapseManagements" class="collapse" aria-labelledby="headingTwo" data-parent="#accordionSidebar">
           <div class="bg-white py-2 collapse-inner rounded">
             <h6 class="collapse-header">Custom Managements:</h6>
-            {% if current_user.rank in allowed_ranks or current_user.rank == 'M' %}
+            {% if current_user.rank in allowed_ranks %}
             <a class="collapse-item" href="departments">Department</a>
-            {% endif %}
-            {% if current_user.rank == 'M' %}
+            <a class="collapse-item" href="user_logs">Login Log</a>
+            <a class="collapse-item" href="failure_logs">Login Fail Log</a>
+            {% elif current_user.rank == 'M' %}
+            <a class="collapse-item" href="departments">Department</a>
             <a class="collapse-item" href="manage_cards">Cards</a>
-            {% endif %}
-            {% if current_user.rank == 'S' or current_user.rank == 'M' %}
             <a class="collapse-item" href="manage_rack_keys">Rack Keys</a>
-            {% endif %}
-            {% if current_user.rank == 'M' %}
-            <a class="collapse-item" href="manage_logs">Log</a>
+            <a class="collapse-item" href="manage_logs">Login Log</a>
+            <a class="collapse-item" href="failure_logs">Login Fail Log</a>
+            <a class="collapse-item" href="account_logs">Account Log</a>
+            {% elif current_user.rank == 'S' %}
+            <a class="collapse-item" href="departments">Department</a>
+            <a class="collapse-item" href="user_logs">Login Log</a>
+            <a class="collapse-item" href="failure_logs">Login Fail Log</a>
+            <a class="collapse-item" href="manage_rack_keys">Rack Keys</a>
             {% endif %}
           </div>
         </div>
       </li>
+      {% endif %}
+
       {% endif %}
 
       {% if current_user.is_authenticated %}
@@ -269,105 +278,14 @@
                 </form>
               </div>
             </li>
-
-            <!-- <li class="nav-item dropdown no-arrow mx-1">
-              <a class="nav-link dropdown-toggle" href="#" id="alertsDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                <i class="fas fa-bell fa-fw"></i>
-                <span class="badge badge-danger badge-counter">3+</span>
-              </a>
-              <div class="dropdown-list dropdown-menu dropdown-menu-right shadow animated--grow-in" aria-labelledby="alertsDropdown">
-                <h6 class="dropdown-header">
-                  Alerts Center
-                </h6>
-                <a class="dropdown-item d-flex align-items-center" href="#">
-                  <div class="mr-3">
-                    <div class="icon-circle bg-primary">
-                      <i class="fas fa-file-alt text-white"></i>
-                    </div>
-                  </div>
-                  <div>
-                    <div class="small text-gray-500">December 12, 2019</div>
-                    <span class="font-weight-bold">A new monthly report is ready to download!</span>
-                  </div>
-                </a>
-                <a class="dropdown-item d-flex align-items-center" href="#">
-                  <div class="mr-3">
-                    <div class="icon-circle bg-success">
-                      <i class="fas fa-donate text-white"></i>
-                    </div>
-                  </div>
-                  <div>
-                    <div class="small text-gray-500">December 7, 2019</div>
-                    $290.29 has been deposited into your account!
-                  </div>
-                </a>
-                <a class="dropdown-item d-flex align-items-center" href="#">
-                  <div class="mr-3">
-                    <div class="icon-circle bg-warning">
-                      <i class="fas fa-exclamation-triangle text-white"></i>
-                    </div>
-                  </div>
-                  <div>
-                    <div class="small text-gray-500">December 2, 2019</div>
-                    Spending Alert: We've noticed unusually high spending for your account.
-                  </div>
-                </a>
-                <a class="dropdown-item text-center small text-gray-500" href="#">Show All Alerts</a>
-              </div>
-            </li>
-
+            
+            {% if current_user.is_authenticated %}
             <li class="nav-item dropdown no-arrow mx-1">
-              <a class="nav-link dropdown-toggle" href="#" id="messagesDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                <i class="fas fa-envelope fa-fw"></i>
-                <span class="badge badge-danger badge-counter">7</span>
+              <a class="nav-link dropdown-toggle" href="#" id="alertsDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" style="color:#343a40;">
+                <i class="fas fa-bell fa-fw"></i>  비인가 접근 및 오남용에 대한 경고
               </a>
-              <div class="dropdown-list dropdown-menu dropdown-menu-right shadow animated--grow-in" aria-labelledby="messagesDropdown">
-                <h6 class="dropdown-header">
-                  Message Center
-                </h6>
-                <a class="dropdown-item d-flex align-items-center" href="#">
-                  <div class="dropdown-list-image mr-3">
-                    <img class="rounded-circle" src="https://source.unsplash.com/fn_BT9fwg_E/60x60" alt="">
-                    <div class="status-indicator bg-success"></div>
-                  </div>
-                  <div class="font-weight-bold">
-                    <div class="text-truncate">Hi there! I am wondering if you can help me with a problem I've been having.</div>
-                    <div class="small text-gray-500">Emily Fowler · 58m</div>
-                  </div>
-                </a>
-                <a class="dropdown-item d-flex align-items-center" href="#">
-                  <div class="dropdown-list-image mr-3">
-                    <img class="rounded-circle" src="https://source.unsplash.com/AU4VPcFN4LE/60x60" alt="">
-                    <div class="status-indicator"></div>
-                  </div>
-                  <div>
-                    <div class="text-truncate">I have the photos that you ordered last month, how would you like them sent to you?</div>
-                    <div class="small text-gray-500">Jae Chun · 1d</div>
-                  </div>
-                </a>
-                <a class="dropdown-item d-flex align-items-center" href="#">
-                  <div class="dropdown-list-image mr-3">
-                    <img class="rounded-circle" src="https://source.unsplash.com/CS2uCrpNzJY/60x60" alt="">
-                    <div class="status-indicator bg-warning"></div>
-                  </div>
-                  <div>
-                    <div class="text-truncate">Last month's report looks great, I am very happy with the progress so far, keep up the good work!</div>
-                    <div class="small text-gray-500">Morgan Alvarez · 2d</div>
-                  </div>
-                </a>
-                <a class="dropdown-item d-flex align-items-center" href="#">
-                  <div class="dropdown-list-image mr-3">
-                    <img class="rounded-circle" src="https://source.unsplash.com/Mv9hjnEUHR4/60x60" alt="">
-                    <div class="status-indicator bg-success"></div>
-                  </div>
-                  <div>
-                    <div class="text-truncate">Am I a good boy? The reason I ask is because someone told me that people say this to all dogs, even if they aren't good...</div>
-                    <div class="small text-gray-500">Chicken the Dog · 2w</div>
-                  </div>
-                </a>
-                <a class="dropdown-item text-center small text-gray-500" href="#">Read More Messages</a>
-              </div>
-            </li> -->
+            </li>
+            {% endif %}
 
             <div class="topbar-divider d-none d-sm-block"></div>
 
@@ -380,7 +298,7 @@
                 {% else %}
                 <span class="mr-2 d-none d-lg-inline text-gray-600 small">로그인 해주세요.</span>
                 {% endif %}
-                <img class="img-profile rounded-circle" src="static/img/CJ_logo.svg.png">
+                <img class="img-profile rounded-circle" src="{{ url_for('static', filename='img/CJ_logo.svg.png')}}">
               </a>
               {% if current_user.is_authenticated %}
               <!-- Dropdown - User Information -->
