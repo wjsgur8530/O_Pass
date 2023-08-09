@@ -91,7 +91,7 @@
                 </div>
                 <div class="col-12" style="display: flex;">
                   <div class="form-check">
-                    <input class="form-check-input" type="checkbox" id="gridCheck_2" value="1" name="inputDevice" onchange="toggleInputs_work()">
+                    <input class="form-check-input" type="checkbox" id="gridCheck_2" value="1" name="inputWork" onchange="toggleInputs_work()">
                     <label class="form-check-label" for="gridCheck_2">
                     작업 여부
                     </label>
@@ -359,7 +359,13 @@
                       </th>
                       <td>{{ loop.revindex }}</td>
                       <td>{{ approve_visitor.object }}</td>
-                      <td>{{ approve_visitor.name }}</td>
+                      <td>
+                        {% if approve_visitor.name|length > 1 %}
+                            {{ approve_visitor.name[0] + '*' + approve_visitor.name[2:] }}
+                        {% else %}
+                            {{ approve_visitor.name }}
+                        {% endif %}
+                      </td>
                       <td>
                       {% if approve_visitor.exit != 1 %}
                       {{ approve_visitor.card.card_type }}{{approve_visitor.card.card_num}}
@@ -367,7 +373,13 @@
                       {% endif %}
                       </td>
                       <td>{{ approve_visitor.department }}</td>
-                      <td>{{ approve_visitor.phone[:3] }}-****-{{ approve_visitor.phone[7:] }}</td>
+                      <td>
+                        {% if approve_visitor.phone|length > 6 %}
+                            {{ approve_visitor.phone[:3] + '****' + approve_visitor.phone[7:]}}
+                        {% else %}
+                            {{ approve_visitor.phone }}
+                        {% endif %}
+                      </td>
                       <td>{{ approve_visitor.manager }}</td>
                       {% if approve_visitor.work == 1 %}
                       <td>O</td>
@@ -886,17 +898,20 @@
   function toggleInputs_work() {
       var checkbox = document.getElementById('gridCheck_2');
       var inputLocation = document.getElementById('inputLocation');
+      var inputDetailLocation = document.getElementById('inputDetailLocation')
       var inputCompany = document.getElementById('inputCompany');
       var inputCompanyName = document.getElementById('inputCompanyName');
       var inputContent = document.getElementById('inputContent');
 
       if (checkbox.checked) {
         inputLocation.disabled = false;
+        inputDetailLocation.disabled = false;
         inputCompany.disabled = false;
         inputCompanyName.disabled = false;
         inputContent.disabled = false;
       } else {
         inputLocation.disabled = true;
+        inputDetailLocation.disabled = true;
         inputCompany.disabled = true;
         inputCompanyName.disabled = true;
         inputContent.disabled = true;

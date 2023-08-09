@@ -38,10 +38,12 @@
         <div class="row">
           <div class="col-lg-5 d-none d-lg-block bg-register-image"></div>
           <div class="col-lg-7">
-            <h1 class="h4 text-900 mb-4 pt-3 text-gray" style="font-family: 'Merriweather', serif; font-weight: 900; text-align: center; font-size: 30px; color: #343a40;"><img src="static/img/CJ_logo.svg.png" style="width: 50px; height: 50px;">  IDC O` PASS</h1>
+            <h1 class="h4 text-900 mb-4 pt-3 text-gray" style="text-align: center; font-size: 30px; color: #343a40;"><img src="static/img/CJ_logo.svg.png" style="width: 50px; height: 50px;"><b>  Sign Up</b></h1>
             <div class="p-2">
-              <div class="text-center">
-                <h1 class="h4 text-900 mb-4 text-gray" style="font-family: 'Bacasime Antique', serif; font-weight: 900; font-size: 30px;"><i class="fas fa-registered fa-sm text-gray"></i> Sign Up</h1>
+              <div class="text-center mb-3">
+                <h6 style="padding-left:10px;"><b>※비인가 접근 및 오남용에 대한 경고</b></h6>
+                <h6 style="padding-left:10px;"><b>본 시스템은 CJ올리브네트웍스 임직원에 한하여 사용하실 수 있습니다.</b></h6>
+                <h6 style="padding-left:10px;"><b>불법적인 접근 및 사용시 관련법규에 의해 처벌되실 수 있습니다.</b></h6>
               </div>
               <form class="user" method="post" action="">
                 <div class="form-group row">
@@ -73,8 +75,15 @@
                     </select>
                   </div>
                 </div>
-                <div class="form-group">
-                  <input type="email" class="form-control form-control-user" name="email" id="email" placeholder="Email Address">
+                <div class="form-group row">
+                  <div class="col-sm-6 mb-3 mb-sm-0">
+                    <input type="text" class="form-control form-control-user" name="email" id="email" placeholder="Email Address">
+                  </div>
+                  <div class="col-sm-6">
+                    <select class="form-control" aria-label="Default select" name="email_fix" id="email_fix" style="height:50px;">
+                      <option value="@cj.net">@cj.net</option>
+                    </select>
+                  </div>
                 </div>
                 <div class="form-group row">
                   <div class="col-sm-6 mb-3 mb-sm-0">

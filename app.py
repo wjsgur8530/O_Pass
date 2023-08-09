@@ -21,22 +21,26 @@ class User(db.Model):
     rank = db.Column(db.String(20), unique=False)
     login_attempts = db.Column(db.Integer, default=0)  # 로그인 시도 횟수
     login_blocked_until = db.Column(db.DateTime, nullable=True)  # 로그인 제한 종료 시간
-    registered_at = db.Column(db.DateTime, nullable=False, default=get_current_korean_time())
+    registered_at = db.Column(db.DateTime, nullable=False)
     password_history = db.Column(db.String(200), unique=False)
-    password_changed_at = db.Column(db.DateTime, nullable=False, default=get_current_korean_time()) # 비밀번호 변경권고를 위한 시간 ex) 6개월
+    password_changed_at = db.Column(db.DateTime, nullable=False) # 비밀번호 변경권고를 위한 시간 ex) 6개월
     attempts = db.Column(db.String(50), unique=False)
     authenticated = db.Column(db.String(30), unique=False)
+    permission = db.Column(db.String(10))
     user_info_id = db.relationship('User_log', backref='user_log')
     password_log_id = db.relationship('Password_log', backref='user_log')
     login_failure_id = db.relationship('Login_failure_log', backref='user_log')
 
-    def __init__(self, username, email, password, department, rank, password_history):
+    def __init__(self, username, email, password, department, rank, password_history, registered_at, password_changed_at, permission):
         self.username = username
         self.email = email
         self.password = password
         self.department = department
         self.rank = rank
         self.password_history = password_history
+        self.registered_at = registered_at
+        self.password_changed_at = password_changed_at
+        self.permission = permission
 
     # Flask-Login integration
     def is_authenticated(self):
@@ -72,6 +76,21 @@ class User_log(db.Model):
         self.login_timestamp = login_timestamp
         self.user_id = user_id
 
+class Permission_log(db.Model):
+    __tablename__ = "Permission_log"
+
+    id = db.Column(db.Integer, primary_key=True)
+    permission_email = db.Column(db.String(200))
+    original_permission = db.Column(db.String(50))
+    new_permission = db.Column(db.String(50))
+    permission_change_at = db.Column(db.DateTime)
+
+    def __init__(self, permission_email, original_permission, new_permission, permission_change_at):
+        self.permission_email = permission_email
+        self.original_permission = original_permission
+        self.new_permission = new_permission
+        self.permission_change_at = permission_change_at
+
 class Password_log(db.Model):
     __tablename__ = "Password_log"
 
@@ -88,20 +107,41 @@ class Account_log(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     account_email = db.Column(db.String(200))
-    account_remove_at = db.Column(db.DateTime, unique=False, default=get_current_korean_time())
+    account_remove_at = db.Column(db.DateTime, unique=False)
 
-    def __init__(self, account_email):
+    def __init__(self, account_email, account_remove_at):
         self.account_email = account_email
+        self.account_remove_at = account_remove_at
 
 class Login_failure_log(db.Model):
     __tablename__ = "Login_failure_log"
 
     id = db.Column(db.Integer, primary_key=True)
-    failure_at = db.Column(db.DateTime, unique=False, default=get_current_korean_time())
+    failure_at = db.Column(db.DateTime, unique=False)
     user_id = db.Column(db.Integer, db.ForeignKey('User.id'))
 
-    def __init__(self, user_id):
+    def __init__(self, user_id, failure_at):
         self.user_id = user_id
+        self.failure_at = failure_at
+
+class Privacy_log(db.Model):
+    __tablename__ = "Privacy_log"
+
+    id = db.Column(db.Integer, primary_key=True)
+    task_title = db.Column(db.String(50))
+    task_user_id = db.Column(db.Integer)
+    ip_address = db.Column(db.String(50))
+    task_at = db.Column(db.DateTime, unique=False)
+    task_content = db.Column(db.String(100))
+    task_info = db.Column(db.String(100))
+
+    def __init__(self, task_title, task_user_id, ip_address, task_at, task_content, task_info):
+        self.task_title = task_title
+        self.task_user_id = task_user_id
+        self.ip_address = ip_address
+        self.task_at = task_at
+        self.task_content = task_content
+        self.task_info = task_info
 
 class Visitor(db.Model):
     __tablename__ = "Visitor"
@@ -126,13 +166,14 @@ class Visitor(db.Model):
     company = db.Column(db.String(50), unique=False, nullable=True)
     work_content = db.Column(db.String(200), unique=False, nullable=True)
     registry = db.Column(db.String(50), unique=False, nullable=True)
+    writer = db.Column(db.Integer)
     card_id = db.Column(db.Integer, db.ForeignKey('Card.id'))
     rack_id = db.Column(db.Integer, db.ForeignKey('Rack.id'))
     cards = db.relationship('Card', backref='visitor')
     rack_keys = db.relationship('Rack', backref='visitor_rack')
 
     # 이름, 부서, 번호, 작업위치, 담당자, 장비체크, 비고, 방문목적, 등록시간, 승인, 사전/현장, 작업체크, 회사종류, 회사이름, 작업내용
-    def __init__(self, name, department, phone, location, manager, device, remarks, object, created_time, approve, registry, work, company_type, company, work_content, detail_location):
+    def __init__(self, name, department, phone, location, manager, device, remarks, object, created_time, approve, registry, work, company_type, company, work_content, detail_location, writer):
         self.name = name
         self.department = department
         self.phone = phone
@@ -149,6 +190,7 @@ class Visitor(db.Model):
         self.company = company
         self.work_content = work_content
         self.detail_location = detail_location
+        self.writer = writer
 
 class Card(db.Model):
     __tablename__ = "Card"
@@ -221,8 +263,6 @@ class Privacy(db.Model):
     name = db.Column(db.String(50), unique=False)
     department = db.Column(db.String(200), unique=False)
     phone = db.Column(db.String(200), unique=False)
-    birth = db.Column(db.String(50), unique=False)
-    email = db.Column(db.String(200), unique=False, nullable=True)
     manager = db.Column(db.String(30), unique=False, nullable=False)
     device = db.Column(db.Boolean(), unique=False, nullable=True)
     work = db.Column(db.Boolean(), unique=False, nullable=True)
@@ -236,12 +276,10 @@ class Privacy(db.Model):
     visit_date = db.Column(db.DateTime, unique=False)
     registry = db.Column(db.String(50), unique=False, nullable=True)
 
-    def __init__(self, name, department, phone, birth, email, manager, device, work, remarks, object, location, detail_location, company_type, company, work_content, visit_date, registry):
+    def __init__(self, name, department, phone, manager, device, work, remarks, object, location, detail_location, company_type, company, work_content, visit_date, registry):
         self.name = name
         self.department = department
         self.phone = phone
-        self.birth = birth
-        self.email = email
         self.manager = manager
         self.device = device
         self.work = work

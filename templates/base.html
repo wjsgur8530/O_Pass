@@ -10,7 +10,12 @@
   <meta name="author" content="">
 
   <title>송도 IDC 출입 관리 시스템</title>
-
+  <style>
+    @font-face {
+      font-family: "CJ ONLYONE NEW body Regular";
+      src: "{{ url_for('static', filename='font/CJ ONLYONE NEW body Regular') }}";
+    }
+  </style>
   <!-- Custom fonts for this template-->
   <link rel="stylesheet" href="{{ url_for('static', filename='vendor/fontawesome-free/css/all.min.css') }}">
   <link href="https://fonts.googleapis.com/css?family=Nunito:200,200i,300,300i,400,400i,600,600i,700,700i,800,800i,900,900i" rel="stylesheet">
@@ -45,7 +50,7 @@
 
   <!-- Custom scripts for all pages-->
   <script src="js/sb-admin-2.min.js"></script>
-<body id="page-top" oncontextmenu="return false">
+<body id="page-top" oncontextmenu="return false" style="font-family: CJ ONLYONE NEW body Regular;">
 
   <!-- Page Wrapper -->
   <div id="wrapper">
@@ -124,23 +129,7 @@
           <i class="fas fa-fw fa-chart-area"></i>
           <span>Charts</span></a>
       </li>
-
-      <!-- Divider -->
-      <hr class="sidebar-divider">
       {% endif %}
-
-      <!-- Heading -->
-      <div class="sidebar-heading">
-        Components
-      </div>
-      
-      <!-- Nav Item - Charts -->
-      <li class="nav-item">
-        <a class="nav-link" href="form">
-          <i class="fas fa-fw fa-edit"></i>
-          <span>Form</span></a>
-      </li>
-
 
       <!-- Divider -->
       <hr class="sidebar-divider">
@@ -164,12 +153,14 @@
             <a class="collapse-item" href="user_logs">Login Log</a>
             <a class="collapse-item" href="failure_logs">Login Fail Log</a>
             {% elif current_user.rank == 'M' %}
-            <a class="collapse-item" href="departments">Department</a>
-            <a class="collapse-item" href="manage_cards">Cards</a>
-            <a class="collapse-item" href="manage_rack_keys">Rack Keys</a>
-            <a class="collapse-item" href="manage_logs">Login Log</a>
-            <a class="collapse-item" href="failure_logs">Login Fail Log</a>
-            <a class="collapse-item" href="account_logs">Account Log</a>
+            <a class="collapse-item" href="departments">부서/소속 관리</a>
+            <a class="collapse-item" href="manage_cards">카드 관리</a>
+            <a class="collapse-item" href="manage_rack_keys">랙키 관리</a>
+            <a class="collapse-item" href="manage_logs">로그인 로그</a>
+            <a class="collapse-item" href="failure_logs">로그인 실패 로그</a>
+            <a class="collapse-item" href="account_logs">계정 로그</a>
+            <a class="collapse-item" href="privacy_logs">기밀/개인정보 로그</a>
+            <a class="collapse-item" href="permission">권한</a>
             {% elif current_user.rank == 'S' %}
             <a class="collapse-item" href="departments">Department</a>
             <a class="collapse-item" href="user_logs">Login Log</a>
@@ -348,10 +339,10 @@
 
       <!-- Footer -->
       <footer class="sticky-footer bg-white">
-        <div class="container my-auto">
-          <div class="copyright text-center my-auto">
-            <span>Copyright &copy; CJ Olivenetworks 2023</span>
-          </div>
+        <div class="copyright text-center pl-4">
+          <a href="/privacy-policy" style="text-decoration: none; color:dodgerblue;"><b>개인정보 처리방침</b></a>
+          <span style="color:#343a40"><b>인천광역시 연수구 하모니로177번길 20 (우)22013 대표자 유인상 | 사업자등록번호 104-81-36565 | 대표번호 032-211-0290</b></span> <br><br>
+          <span style="color:#343a40"><b>Copyright &copy; CJ Olivenetworks 2023 All rights Reserved.</b></b></span>
         </div>
       </footer>
       <!-- End of Footer -->

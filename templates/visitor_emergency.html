@@ -336,7 +336,13 @@
                       </th>
                       <td>{{ loop.revindex }}</td>
                       <td>{{ approve_visitor.object }}</td>
-                      <td>{{ approve_visitor.name }}</td>
+                      <td>
+                        {% if approve_visitor.name|length > 1 %}
+                            {{ approve_visitor.name[0] + '*' + approve_visitor.name[2:] }}
+                        {% else %}
+                            {{ approve_visitor.name }}
+                        {% endif %}
+                      </td>
                       <td>
                       {% if approve_visitor.exit != 1 %}
                       {{ approve_visitor.card.card_type }}{{approve_visitor.card.card_num}}
@@ -350,7 +356,13 @@
                       {% endif %}
                       </td>
                       <td>{{ approve_visitor.department }}</td>
-                      <td>{{ approve_visitor.phone[:3] }}-****-{{ approve_visitor.phone[7:11] }}</td>
+                      <td>
+                        {% if approve_visitor.phone|length > 6 %}
+                            {{ approve_visitor.phone[:3] + '****' + approve_visitor.phone[7:]}}
+                        {% else %}
+                            {{ approve_visitor.phone }}
+                        {% endif %}
+                      </td>
                       <td>{{ approve_visitor.manager }}</td>
                       {% if approve_visitor.work == 1 %}
                       <td>O</td>

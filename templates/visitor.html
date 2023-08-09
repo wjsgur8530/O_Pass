@@ -228,8 +228,10 @@
           <!-- Page Heading -->
           <div class="d-sm-flex align-items-center justify-content-end mb-4" id="popup">
             <div id="btnWrap">
+              {% if current_user.permission == '관리자' %}
               <button type="button" class="btn btn-success btn-sm" id="approve_checkbox"><i class="fas fa-check fa-sm text-white-50"></i> 승인(체크 선택 승인)</button>
               <button type="button" class="btn btn-danger btn-sm" id="deny_checkbox"><i class="fas fa-ban fa-sm text-white-50"></i> 반려(체크 선택 반려)</button>
+              {% endif %}
               <button class="d-none d-sm-inline-block btn btn-sm btn-primary shadow-sm" id="popupBtn"><i class="fas fa-plus fa-sm text-white-50"></i> 내방객 등록</button>
             </div>
           </div>
@@ -290,7 +292,9 @@
                           <th scope="col">장비 반입</th>
                           <th scope="col">비고</th>
                           <th scope="col">등록 시각</th>
+                          {% if current_user.permission == '관리자' %}
                           <th scope="col">승인 여부</th>
+                          {% endif %}
                           <th scope="col">#</th>
                         </tr>
                       </thead>
@@ -313,7 +317,9 @@
                           <th scope="col">장비 반입</th>
                           <th scope="col">비고</th>
                           <th scope="col">등록 시각</th>
+                          {% if current_user.permission == '관리자' %}
                           <th scope="col">승인 여부</th>
+                          {% endif %}
                           <th scope="col">#</th>
                         </tr>
                       </tfoot>
@@ -328,9 +334,21 @@
                             <th scope="row">{{ visitor.id }}</th>
                             <td>{{ visitor.registry }}</td>
                             <td><span class="visitor_object">{{ visitor.object }}</span></td>
-                            <td>{{ visitor.name }}</td>
+                            <td>
+                              {% if visitor.name|length > 1 %}
+                                  {{ visitor.name[0] + '*' + visitor.name[2:] }}
+                              {% else %}
+                                  {{ visitor.name }}
+                              {% endif %}
+                            </td>
                             <td>{{ visitor.department }}</td>
-                            <td>{{ visitor.phone }}</td>
+                            <td>
+                              {% if visitor.phone|length > 6 %}
+                                  {{ visitor.phone[:2] + '****' + visitor.phone[7:]}}
+                              {% else %}
+                                  {{ visitor.phone }}
+                              {% endif %}
+                            </td>
                             <td>{{ visitor.manager }}</td>
                             {% if visitor.work == 1 %}
                             <td>O</td>
@@ -356,12 +374,14 @@
                             {% endif %}
                             <td>{{ visitor.created_date }}</td>
                             <!-- <td><button class="btn btn-primary mr-2" id="approve_btn">긴급 승인</button></td> -->
+                            {% if current_user.permission == '관리자' %}
                             <td>
                               <div class="btn-group">
                                 <button class="btn_group btn btn-success mr-2 btn-sm" type="button" id="approve_btn{{visitor.id}}" value="{{visitor.id}}">승인</button>
                                 <button class="btn_group btn btn-danger btn-sm" type="button" id="deny_btn{{visitor.id}}" value="{{visitor.id}}">반려</button>
                               </div>
                             </td>
+                            {% endif %}
                             <td>
                               <button class="btn_group btn btn-success btn-sm" type="button" id="update_btn{{visitor.id}}" value="{{visitor.id}}">수정</button>
                             </td>
