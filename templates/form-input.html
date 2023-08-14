@@ -69,7 +69,72 @@
                             <td><input type="text" class="form-control col-xl-6" name="visitorManager" id="visitorManager" placeholder="담당자를 입력해주세요."></td>
                         </tr>
                         <tr>
-                            <th scope="row" colspan="2" style="line-height: 50px;">5. 장비 반입 여부</th>
+                            <th scope="row" colspan="2">5. 방문 목적을 입력해주세요.</th>
+                            <td>
+                                <select class="form-select col-xl-6" name="visitorObject" id="visitorObject">
+                                  <option value="업무 협의">업무 협의</option>
+                                  <option value="업무 요청">업무 요청</option>
+                                  <option value="단순 방문">단순 방문</option>
+                                  <option value="기타">기타</option>
+                                </select>
+                            </td>
+                        </tr>
+                        <tr>
+                            <th scope="row" colspan="2">6. PC 반입 여부</th>
+                            <td>
+                                <select class="form-select col-xl-6" name="visitorPC" id="visitorPC">
+                                  <option value="미반입">미반입</option>
+                                  <option value="반입">반입</option>
+                                </select>
+                            </td>
+                        </tr>
+                        <tr id="visitorPCDiv1">
+                            <th scope="row" colspan="2">6-1. 모델명 </th>
+                            <td><input type="text" class="form-control col-xl-6" placeholder="etc. 삼성 갤럭시북, 맥북" name="visitorModelName" id="visitorModelName"></td>
+                        </tr>
+                        <tr id="visitorPCDiv2">
+                            <th scope="row" colspan="2">6-2. 시리얼 번호 </th>
+                            <td><input type="text" class="form-control col-xl-6" placeholder="etc. XX0X3E" name="visitorSerialNumber" id="visitorSerialNumber"></td>
+                        </tr>
+                        <tr id="visitorPCDiv3">
+                            <th scope="row" colspan="2">6-3. 반입 사유 </th>
+                            <td><input type="text" class="form-control col-xl-6" placeholder="etc. 네트워크 작업" name="visitorReason" id="visitorReason"></td>
+                        </tr>
+                        <tr>
+                            <th scope="row" colspan="2">7. 작업 여부</th>
+                            <td>
+                                <select class="form-select col-xl-6" name="visitorWork" id="visitorWork">
+                                  <option value="해당 없음">해당 없음</option>
+                                  <option value="해당">해당</option>
+                                </select>
+                            </td>
+                        </tr>
+                        <tr id="visitorLocationDiv">
+                            <th scope="row" colspan="2">7-1. 작업 분류</th>
+                            <td>
+                                <select class="form-select col-xl-6" id="visitorWorkDivision" name="visitorWorkDivision" disabled="true">
+                                    <option value="시스템 점검">시스템 점검</option>
+                                    <option value="변경 작업">변경 작업</option>
+                                    <option value="장애 처리">장애 처리</option>
+                                    <option value="공사">공사</option>
+                                    <option value="기타">기타</option>
+                                </select>
+                            </td>
+                        </tr>
+                        <tr id="visitorLocationDiv2">
+                            <th scope="row" colspan="2">7-2. 작업 내용 </th>
+                            <td><input type="text" class="form-control col-xl-6" placeholder="etc. 서버 유지보수" name="visitorWorkContent" id="visitorWorkContent"></td>
+                        </tr>
+                        <tr id="visitorLocationDiv3">
+                            <th scope="row" colspan="2">7-3. 작업 위치 </th>
+                            <td><input type="text" class="form-control col-xl-6" placeholder="etc. 4층 전산실" name="visitorLocation" id="visitorLocation"></td>
+                        </tr>
+                        <tr id="visitorLocationDiv4">
+                            <th scope="row" colspan="2">7-4. 작업 요청 회사 </th>
+                            <td><input type="text" class="form-control col-xl-6" placeholder="etc. CJ 올리브네트웍스" name="visitorCompanyName" id="visitorCompanyName"></td>
+                        </tr>
+                        <tr>
+                            <th scope="row" colspan="2" style="line-height: 50px;">8. 장비 반출입 여부</th>
                             <td>
                                 <select class="form-select col-xl-6" name="visitorDevice" id="visitorDevice">
                                     <option value="미반입">미반입</option>
@@ -77,37 +142,21 @@
                                 </select>
                             </td>
                         </tr>
-                        <tr id="visitorDeviceDiv">
-                            <th scope="row" colspan="2">5-1. 반입 장비(etc. 노트북, USB)</th>
-                            <td><input type="text" class="form-control col-xl-6" name="visitorRemarks" id="visitorRemarks" placeholder="반입 장비(etc. 노트북, USB)"></td>
+                        <tr id="visitorDeviceDiv1">
+                            <th scope="row" colspan="2">8-1. 고객사</th>
+                            <td><input type="text" class="form-control col-xl-6" name="visitorCustomer" id="visitorCustomer" placeholder="etc. 고객사"></td>
                         </tr>
-                        <tr>
-                            <th scope="row" colspan="2">6. 방문 목적을 입력해주세요.</th>
-                            <td>
-                                <select class="form-select col-xl-6" name="visitorObject" id="visitorObject">
-                                  <option value="업무 협의">업무 협의</option>
-                                  <option value="업무 요청">업무 요청</option>
-                                  <option value="작업">작업</option>
-                                  <option value="단순 방문">단순 방문</option>
-                                  <option value="기타">기타</option>
-                                </select>
-                            </td>
+                        <tr id="visitorDeviceDiv2">
+                            <th scope="row" colspan="2">8-2. 장비 기종 / 파트</th>
+                            <td><input type="text" class="form-control col-xl-6" name="visitorDeviceDivision" id="visitorDeviceDivision" placeholder="etc. 서버 장비"></td>
                         </tr>
-                        <tr id="visitorLocationDiv">
-                            <th scope="row" colspan="2">6-1. 작업 위치</th>
-                            <td><input type="text" class="form-control col-xl-6" placeholder="etc. 3층 전산실" name="visitorLocation" id="visitorLocation"></td>
+                        <tr id="visitorDeviceDiv3">
+                            <th scope="row" colspan="2">8-3. 장비 수량</th>
+                            <td><input type="text" class="form-control col-xl-6" name="visitorDeviceCount" id="visitorDeviceCount" placeholder="etc. 3"></td>
                         </tr>
-                        <tr id="visitorLocationDiv2">
-                            <th scope="row" colspan="2">6-2. 세부 작업 위치 </th>
-                            <td><input type="text" class="form-control col-xl-6" placeholder="etc. 랙 A-11" name="visitorDetailLocation" id="visitorDetailLocation"></td>
-                        </tr>
-                        <tr id="visitorLocationDiv3">
-                            <th scope="row" colspan="2">6-3. 작업 내용 </th>
-                            <td><input type="text" class="form-control col-xl-6" placeholder="etc. 서버 유지보수" name="visitorWorkContent" id="visitorWorkContent"></td>
-                        </tr>
-                        <tr id="visitorLocationDiv4">
-                            <th scope="row" colspan="2">6-4. 작업 요청 회사 </th>
-                            <td><input type="text" class="form-control col-xl-6" placeholder="etc. CJ 올리브네트웍스" name="visitorCompanyName" id="visitorCompanyName"></td>
+                        <tr id="visitorDeviceDiv4">
+                            <th scope="row" colspan="2">8-4. 비고</th>
+                            <td><input type="text" class="form-control col-xl-6" name="visitorRemarks" id="visitorRemarks" placeholder=""></td>
                         </tr>
                         </tbody>
                     </table>
@@ -118,16 +167,46 @@
                 </div>
             </div>
         </div>
+        <footer class="sticky-footer bg-white">
+            <div class="copyright text-center pl-4">
+              <a href="/privacy-policy" style="text-decoration: none; color:dodgerblue;"><b>개인정보 처리방침</b></a>
+              <span style="color:#343a40"><b>인천광역시 연수구 하모니로177번길 20 (우)22013 대표자 유인상 | 사업자등록번호 104-81-36565 | 대표번호 032-211-0290</b></span> <br><br>
+              <span style="color:#343a40"><b>Copyright &copy; CJ Olivenetworks 2023 All rights Reserved.</b></b></span>
+            </div>
+          </footer>
     </body>
 </html>
 <script>
     $(document).ready(function() {
         // 페이지 로드 시 "입력" 버튼을 숨김
-        $('#visitorDeviceDiv').hide();
+        $('#visitorPCDiv1').hide();
+        $('#visitorPCDiv2').hide();
+        $('#visitorPCDiv3').hide();
         $('#visitorLocationDiv').hide();
         $('#visitorLocationDiv2').hide();
         $('#visitorLocationDiv3').hide();
         $('#visitorLocationDiv4').hide();
+        $('#visitorDeviceDiv1').hide();
+        $('#visitorDeviceDiv2').hide();
+        $('#visitorDeviceDiv3').hide();
+        $('#visitorDeviceDiv4').hide();
+    });
+</script>
+
+<script>
+    $(document).ready(function() {
+        // 방문 목적 변경 시 작업 장소 입력란 표시 여부 설정
+        $('#visitorPC').change(function() {
+            if ($(this).val() === '반입') {
+                $('#visitorPCDiv1').show();
+                $('#visitorPCDiv2').show();
+                $('#visitorPCDiv3').show();
+            } else {
+                $('#visitorPCDiv1').hide();
+                $('#visitorPCDiv2').hide();
+                $('#visitorPCDiv3').hide();
+            }
+        });
     });
 </script>
 
@@ -136,9 +215,15 @@
         // 장비 반입 여부 변경 시 반입 장비 입력란 표시 여부 설정
         $('#visitorDevice').change(function() {
             if ($(this).val() === '반입') {
-                $('#visitorDeviceDiv').show();
+                $('#visitorDeviceDiv1').show();
+                $('#visitorDeviceDiv2').show();
+                $('#visitorDeviceDiv3').show();
+                $('#visitorDeviceDiv4').show();
             } else {
-                $('#visitorDeviceDiv').hide();
+                $('#visitorDeviceDiv1').hide();
+                $('#visitorDeviceDiv2').hide();
+                $('#visitorDeviceDiv3').hide();
+                $('#visitorDeviceDiv4').hide();
             }
         });
     });
@@ -147,35 +232,40 @@
 <script>
     $(document).ready(function() {
         // 방문 목적 변경 시 작업 장소 입력란 표시 여부 설정
-        $('#visitorObject').change(function() {
-            if ($(this).val() === '작업') {
+        $('#visitorWork').change(function() {
+            if ($(this).val() === '해당') {
                 $('#visitorLocationDiv').show();
                 $('#visitorLocationDiv2').show();
                 $('#visitorLocationDiv3').show();
                 $('#visitorLocationDiv4').show();
+                $("#visitorWorkDivision").removeAttr("disabled");
             } else {
                 $('#visitorLocationDiv').hide();
                 $('#visitorLocationDiv2').hide();
                 $('#visitorLocationDiv3').hide();
                 $('#visitorLocationDiv4').hide();
+                $("#visitorWorkDivision").attr("disabled","disabled");
             }
         });
     });
 </script>
 
+
 <script>
     $(document).ready(function() {
         $('#confirm_btn').hide();
         // 필수 입력 필드 모두 채워지면 입력 버튼 표시
-        $('input[name="visitorName"], input[name="visitorDepartment"], input[name="visitorPhone"], input[name="visitorManager"], select[name="visitorDevice"], select[name="visitorObject"]').on('input change', function() {
+        $('input[name="visitorName"], input[name="visitorDepartment"], input[name="visitorPhone"], input[name="visitorManager"], select[name="visitorDevice"], select[name="visitorObject"], select[name="visitorWork"], select[name="visitorPC"]').on('input change', function() {
             var name = $('#visitorName').val();
             var department = $('#visitorDepartment').val();
             var phone = $('#visitorPhone').val();
             var manager = $('#visitorManager').val();
-            var device = $('#visitorDevice').val();
             var object = $('#visitorObject').val();
+            var personal_computer = $('#visitorPC').val();
+            var work =  $('#visitorWork').val();
+            var device = $('#visitorDevice').val();
     
-            if (name !== '' && department !== '' && phone !== '' && manager !== '' && device !== '' && object !== '') {
+            if (name !== '' && department !== '' && phone !== '' && manager !== '' && device !== '' && object !== '' && personal_computer !== '' && work !== '') {
                 $('#confirm_btn').show();
             } else {
                 $('#confirm_btn').hide();

@@ -53,11 +53,11 @@
                           <td style="width: 100px; text-align: center;">
                             {% if log.username == '관리자' %}
                             {% else %}
-                            <button class="btn btn-danger btn-sm" id="account_remove{{log.id}}" type="button" data-toggle="modal" data-target="#deleteModal">삭제</button>
+                            <button class="btn btn-danger btn-sm" id="account_remove{{log.id}}" type="button" data-toggle="modal" data-target="#deleteModal{{log.id}}">삭제</button>
                             {% endif %}
                           </td>
                         </tr>
-                        <div class="modal fade" id="deleteModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+                        <div class="modal fade" id="deleteModal{{log.id}}" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
                           <div class="modal-dialog" role="document">
                             <div class="modal-content">
                               <div class="modal-header">

@@ -347,53 +347,57 @@
                       <thead>
                         <tr>
                           <th scope="col" style="width:40px;">#</th>
-                          <th scope="col" style="width:40px;">No</th>
-                          <th>등록 구분 / 방문 목적 / 방문객 / 방문객 소속 / 번호 / 담당자 / 등록 시간</th>
+                          <th scope="col">등록 구분</th>
+                          <th scope="col">방문 목적</th>
+                          <th scope="col">이름</th>
+                          <th scope="col">소속</th>
+                          <th scope="col">연락처</th>
+                          <th scope="col">담당자</th>
+                          <th scope="col">등록 시각</th>
                         </tr>
                       </thead>
                       <tfoot>
                         <tr>
                           <th scope="col">#</th>
-                          <th scope="col" style="width:40px;">No</th>
-                          <th></th>
+                          <th scope="col">등록 구분</th>
+                          <th scope="col">방문 목적</th>
+                          <th scope="col">이름</th>
+                          <th scope="col">소속</th>
+                          <th scope="col">연락처</th>
+                          <th scope="col">담당자</th>
+                          <th scope="col">등록 시각</th>
                         </tr>
                       </tfoot>
                       <tbody>
                         {% for visitor in visitor_info %}
                           <tr class="table_content">
-                            <td style="vertical-align: middle; text-align: center;">
+                            <td>
                               <div class="form-check" style="display: flex; justify-content: center; align-items: center;">
                                 <input type="checkbox" class="form-check-input" name="check_box" id="checkbox{{visitor.id}}" value="{{visitor.id}}">
                               </div>
                             </td>
-                            <td style="vertical-align: middle; text-align: center;">{{loop.index}}</td>
-                            <td>
+                            <td colspan="7">
                               <!-- 아코디언 -->
                                 <div class="accordion" id="accordionExample{{visitor.id}}">
                                   <div class="accordion-item">
                                     <h2 class="accordion-header" id="heading{{visitor.id}}">
-                                      <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse{{visitor.id}}" aria-expanded="true" aria-controls="collapse{{visitor.id}}">
-                                        <ul class="list-group list-group-horizontal">
-                                          <li class="list-group-item">{{visitor.registry}}</li>
-                                          <li class="list-group-item">{{visitor.object}}</li>
-                                          <li class="list-group-item">
-                                            {% if visitor.name|length > 1 %}
-                                                {{ visitor.name[0] + '*' + visitor.name[2:] }}
-                                            {% else %}
-                                                {{ visitor.name }}
-                                            {% endif %}
-                                          </li>
-                                          <li class="list-group-item">{{visitor.department}}</li>
-                                          <li class="list-group-item">
-                                            {% if visitor.phone|length > 6 %}
-                                                {{ visitor.phone[:3] + '****' + visitor.phone[7:]}}
-                                            {% else %}
-                                                {{ visitor.phone }}
-                                            {% endif %}
-                                          </li>
-                                          <li class="list-group-item">{{visitor.manager}}</li>
-                                          <li class="list-group-item">{{visitor.created_date}}</li>
-                                        </ul>
+                                      <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapse{{visitor.id}}" aria-expanded="true" aria-controls="collapse{{visitor.id}}">
+                                        {{visitor.id}}
+                                        {{visitor.registry}}
+                                        {{visitor.object}}
+                                        {% if visitor.name|length > 1 %}
+                                            {{ visitor.name[0] + '*' + visitor.name[2:] }}
+                                        {% else %}
+                                            {{ visitor.name }}
+                                        {% endif %}
+                                        {{visitor.department}}
+                                        {% if visitor.phone|length > 6 %}
+                                            {{ visitor.phone[:3] + '****' + visitor.phone[7:]}}
+                                        {% else %}
+                                            {{ visitor.phone }}
+                                        {% endif %}
+                                        {{visitor.manager}}
+                                        {{visitor.created_date}}
                                       </button>
                                     </h2>
                                     <div id="collapse{{visitor.id}}" class="accordion-collapse collapse" aria-labelledby="heading{{visitor.id}}" data-bs-parent="#accordionExample">
@@ -409,33 +413,12 @@
                                                 X
                                                 {% endif %}
                                               </li>
-                                              {% if visitor.personal_computer == 1 %}
-                                                <li class="list-group-item"><b>모델명</b></li>
-                                                {% if visitor.model_name %}
-                                                  <li class="list-group-item">{{visitor.model_name}}</li>
-                                                {% else %}
-                                                  <li class="list-group-item"></li>
-                                                {% endif %}
-                                                <li class="list-group-item"><b>시리얼 넘버</b></li>
-                                                {% if visitor.serial_number %}
-                                                  <li class="list-group-item">{{visitor.serial_number}}</li>
-                                                {% else %}
-                                                  <li class="list-group-item"></li>
-                                                {% endif %}
-                                                <li class="list-group-item"><b>반입 사유</b></li>
-                                                {% if visitor.pc_reason %}
-                                                  <li class="list-group-item">{{visitor.pc_reason}}</li>
-                                                {% else %}
-                                                  <li class="list-group-item"></li>
-                                                {% endif %}
-                                              {% else %}
-                                                <li class="list-group-item"><b>모델명</b></li>
-                                                <li class="list-group-item"></li>
-                                                <li class="list-group-item"><b>시리얼 넘버</b></li>
-                                                <li class="list-group-item"></li>
-                                                <li class="list-group-item"><b>반입 사유</b></li>
-                                                <li class="list-group-item"></li>
-                                              {% endif %}
+                                              <li class="list-group-item"><b>모델명</b></li>
+                                              <li class="list-group-item">{{visitor.model_name}}</li>
+                                              <li class="list-group-item"><b>시리얼 넘버</b></li>
+                                              <li class="list-group-item">{{visitor.serial_number}}</li>
+                                              <li class="list-group-item"><b>반입 사유</b></li>
+                                              <li class="list-group-item">{{visitor.pc_reason}}</li>
                                             </ul>
                                           </div>
                                           <div class="col-xl-4">
@@ -448,21 +431,12 @@
                                                 X
                                                 {% endif %}
                                               </li>
-                                              {% if visitor.work == 1 %}
-                                                <li class="list-group-item"><b>작업 분류 / 작업 위치</b></li>
-                                                <li class="list-group-item">{{visitor.work_division}} / {{visitor.location}}</li>
-                                                <li class="list-group-item"><b>요청 종류 / 요청 회사</b></li>
-                                                <li class="list-group-item">{{visitor.company_type}} / {{visitor.company}}</li>
-                                                <li class="list-group-item"><b>작업 내용</b></li>
-                                                <li class="list-group-item">{{visitor.work_content}}</li>
-                                              {% else %}
-                                                <li class="list-group-item"><b>작업 분류 / 작업 위치</b></li>
-                                                <li class="list-group-item"></li>
-                                                <li class="list-group-item"><b>요청 종류 / 요청 회사</b></li>
-                                                <li class="list-group-item"></li>
-                                                <li class="list-group-item"><b>작업 내용</b></li>
-                                                <li class="list-group-item"></li>
-                                              {% endif %}
+                                              <li class="list-group-item"><b>작업 분류 / 작업 위치</b></li>
+                                              <li class="list-group-item">{{visitor.work_division}} / {{visitor.location}}</li>
+                                              <li class="list-group-item"><b>요청 종류 / 요청 회사</b></li>
+                                              <li class="list-group-item">{{visitor.company_type}} / {{visitor.company}}</li>
+                                              <li class="list-group-item"><b>작업 내용</b></li>
+                                              <li class="list-group-item">{{visitor.work_content}}</li>
                                             </ul>
                                           </div>
                                           <div class="col-xl-4">
@@ -475,21 +449,12 @@
                                                 X
                                                 {% endif %}
                                               </li>
-                                              {% if visitor.device == 1 %}
-                                                <li class="list-group-item"><b>고객사</b></li>
-                                                <li class="list-group-item">{{visitor.customer}}</li>
-                                                <li class="list-group-item"><b>장비 기종 / 장비 수량</b></li>
-                                                <li class="list-group-item">{{visitor.device_division}} / {{visitor.device_count}}</li>
-                                                <li class="list-group-item"><b>비고</b></li>
-                                                <li class="list-group-item">{{visitor.remarks}}</li>
-                                              {% else %}
-                                                <li class="list-group-item"><b>고객사</b></li>
-                                                <li class="list-group-item"></li>
-                                                <li class="list-group-item"><b>장비 기종 / 장비 수량</b></li>
-                                                <li class="list-group-item"></li>
-                                                <li class="list-group-item"><b>비고</b></li>
-                                                <li class="list-group-item"></li>
-                                              {% endif %}
+                                              <li class="list-group-item"><b>고객사</b></li>
+                                              <li class="list-group-item">{{visitor.customer}}</li>
+                                              <li class="list-group-item"><b>장비 기종 / 장비 수량</b></li>
+                                              <li class="list-group-item">{{visitor.device_division}} / {{visitor.device_count}}</li>
+                                              <li class="list-group-item"><b>비고</b></li>
+                                              <li class="list-group-item">{{visitor.remarks}}</li>
                                             </ul>
                                           </div>
                                         </div>
@@ -498,10 +463,6 @@
                                           <div class="btn-group mt-4">
                                             <button class="btn_group btn btn-success mr-2 btn-sm" type="button" id="approve_btn{{visitor.id}}" value="{{visitor.id}}">승인</button>
                                             <button class="btn_group btn btn-danger mr-4 btn-sm" type="button" id="deny_btn{{visitor.id}}" value="{{visitor.id}}">반려</button>
-                                            <button class="btn_group btn btn-success btn-sm" type="button" id="update_btn{{visitor.id}}" value="{{visitor.id}}">수정</button>
-                                          </div>
-                                          {% else %}
-                                          <div class="btn-group mt-4">
                                             <button class="btn_group btn btn-success btn-sm" type="button" id="update_btn{{visitor.id}}" value="{{visitor.id}}">수정</button>
                                           </div>
                                           {% endif %}
@@ -649,7 +610,6 @@
 
                                 if (work == true) {
                                   document.getElementById('gridCheck_5').checked = true;
-                                  document.getElementById('inputUpdateWorkDivision').value = work_division
                                   document.getElementById("inputUpdateLocation").value = location;
                                   document.getElementById('inputUpdateCompany').value = company_type;
                                   document.getElementById('inputUpdateCompanyName').value = company;
@@ -661,7 +621,6 @@
                                   inputContent.disabled = false;
                                 } else {
                                   document.getElementById('gridCheck_5').checked = false;
-                                  document.getElementById('inputUpdateWorkDivision').value = null;
                                   document.getElementById("inputUpdateLocation").value = null;
                                   document.getElementById('inputUpdateCompany').value = null;
                                   document.getElementById('inputUpdateCompanyName').value = null;

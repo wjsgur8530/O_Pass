@@ -241,30 +241,52 @@ def manage_visitors():
         device = request.form.get('inputDevice')
         remarks = request.form.get('inputRemarks')
         object = request.form.get('inputObject')
-        detail_location = request.form.get('inputDetailLocation')
+        personal_computer = request.form.get('inputPC')
         work = request.form.get('inputWork')
         company_type = request.form.get('inputCompany')
         company = request.form.get('inputCompanyName')
         work_content = request.form.get('inputContent')
+        model_name = request.form.get('inputModelName')
+        serial_number = request.form.get('inputSerialNumber')
+        reason = request.form.get('inputReason')
+        work_division = request.form.get('inputWorkDivision')
+        customer = request.form.get('inputCustomer')
+        device_division = request.form.get('inputDeviceDivision')
+        device_count = request.form.get('inputDeviceCount')
 
         update_visitor = Visitor.query.filter_by(id=update_id).first()
         update_visitor.name = name
         update_visitor.department = aes.encrypt(department)
         update_visitor.phone = aes.encrypt(phone)
         update_visitor.manager = manager
+
+        if personal_computer == '1':
+            update_visitor.personal_computer = True
+        else:
+            update_visitor.personal_computer = False
+
+        update_visitor.model_name = model_name
+        update_visitor.serial_number = serial_number
+        update_visitor.pc_reason = reason
+
         if device == '1':
             update_visitor.device = True
         else:
             update_visitor.device = False
+
+        update_visitor.customer = customer
+        update_visitor.device_division = device_division
+        update_visitor.device_count = device_count
         update_visitor.remarks = remarks
         update_visitor.location = location
-        update_visitor.detail_location = detail_location
         update_visitor.object = object
 
         if work == '1':
             update_visitor.work = True
         else:
             update_visitor.work = False
+
+        update_visitor.work_division = work_division
         update_visitor.company_type = company_type
         update_visitor.company = company
         update_visitor.work_content = work_content
@@ -456,15 +478,21 @@ def visit_update():
         phone = request.form['inputUpdatePhoneNumber']
         manager = request.form['inputUpdateManager']
         location = request.form.get('inputUpdateLocation')
-        detail_location = request.form.get('inputUpdateDetailLocation')
         device = request.form.get('inputUpdateDevice')
         remarks = request.form.get('inputUpdateRemarks')
         object = request.form.get('inputUpdateObject')
+        personal_computer = request.form.get('inputUpdatePC')
         work = request.form.get('inputUpdateWork')
         company_type = request.form.get('inputUpdateCompany')
         company = request.form.get('inputUpdateCompanyName')
         work_content = request.form.get('inputUpdateContent')
-
+        model_name = request.form.get('inputUpdateModelName')
+        serial_number = request.form.get('inputUpdateSerialNumber')
+        reason = request.form.get('inputUpdateReason')
+        work_division = request.form.get('inputUpdateWorkDivision')
+        customer = request.form.get('inputUpdateCustomer')
+        device_division = request.form.get('inputUpdateDeviceDivision')
+        device_count = request.form.get('inputUpdateDeviceCount')
 
         update_visitor = Visitor.query.filter_by(id=update_id).first()
         update_visitor.name = name
@@ -472,14 +500,25 @@ def visit_update():
         update_visitor.phone = aes.encrypt(phone)
         update_visitor.manager = manager
 
+        if personal_computer == '1':
+            update_visitor.personal_computer = True
+        else:
+            update_visitor.personal_computer = False
+
+        update_visitor.model_name = model_name
+        update_visitor.serial_number = serial_number
+        update_visitor.pc_reason = reason
+
         if device == '1':
             update_visitor.device = True
         else:
             update_visitor.device = False
-
+        
+        update_visitor.customer = customer
+        update_visitor.device_division = device_division
+        update_visitor.device_count = device_count
         update_visitor.remarks = remarks
         update_visitor.location = location
-        update_visitor.detail_location = detail_location
         update_visitor.object = object
 
         if work == '1':
@@ -487,6 +526,7 @@ def visit_update():
         else:
             update_visitor.work = False
 
+        update_visitor.work_division = work_division
         update_visitor.company_type = company_type
         update_visitor.company = company
         update_visitor.work_content = work_content
@@ -750,7 +790,7 @@ def check_password_change(user):
         else:
             pass
 
-LOGIN_BLOCK_DURATION = 5 # 로그인 제한 기간 (분)
+LOGIN_BLOCK_DURATION = 30 # 로그인 제한 기간 (분)
 MAX_LOGIN_ATTEMPTS = 5 # 로그인 실패 허용 횟수
 
 # 로그인 기능
@@ -789,20 +829,32 @@ def login():
                 if current_user.rank == 'M':
                     if current_login.login_timestamp:
                         flash('이전 로그인 일시: ' + str(current_login.login_timestamp) + " 접근 IP주소: " + current_login.ip_address)
+                        if user.attempts == 'attempts_password':
+                            return redirect('authenticated')
                     else:
                         flash('이전 로그인 일시: 없음'+ " 접근 IP주소: " + current_login.ip_address)
+                        if user.attempts == 'attempts_password':
+                            return redirect('authenticated')
                     return redirect(url_for('manage_visitors'))
                 elif current_user.rank == 'S':
                     if current_login.login_timestamp:
                         flash('이전 로그인 일시: ' + str(current_login.login_timestamp) + " 접근 IP주소: " + current_login.ip_address)
+                        if user.attempts == 'attempts_password':
+                            return redirect('authenticated')
                     else:
-                        flash('이전 로그인 일시: 없음'+ " 접근 IP주소: " + current_login.ip_address)                   
+                        flash('이전 로그인 일시: 없음'+ " 접근 IP주소: " + current_login.ip_address)     
+                        if user.attempts == 'attempts_password':
+                            return redirect('authenticated')              
                     return redirect(url_for('rack_visitors'))
                 else:
                     if current_login.login_timestamp:
                         flash('이전 로그인 일시: ' + str(current_login.login_timestamp) + " 접근 IP주소: " + current_login.ip_address)
+                        if user.attempts == 'attempts_password':
+                            return redirect('authenticated')
                     else:
                         flash('이전 로그인 일시: 없음'+ " 접근 IP주소: " + current_login.ip_address)
+                        if user.attempts == 'attempts_password':
+                            return redirect('authenticated')
                     return redirect(url_for('index'))
             
             else:
@@ -858,7 +910,7 @@ def logout():
 
 def random_string():
     new_pw_len = 10
-    pw_candidate = string.ascii_letters + string.digits + string.punctuation
+    pw_candidate = string.ascii_letters
     new_pw = ""
     for i in range(new_pw_len):
         new_pw += random.choice(pw_candidate)
@@ -875,14 +927,14 @@ def forgot_password():
         user = User.query.filter_by(email=email).first()
 
         if user:
-            user.password = bcrypt.generate_password_hash(random_string())
+            connect_to_database()
+            hash_password = random_string()
+            user.password = bcrypt.generate_password_hash(hash_password)
             user.attempts = "attempts_password"
             db.session.commit()
-            new_pw = random_string()
-            connect_to_database()
             cursor = app.mysql_conn.cursor()  # 커서 생성
             insert_query = "INSERT INTO sms_msg (REQDATE, STATUS, TYPE, PHONE, CALLBACK, MSG) VALUES (%s, %s, %s, %s, %s, %s)"
-            insert_data = (datetime.now(), '1', '0', phone, '01057320071', '[CJ IDC O`PASS 비밀번호 임시 발급] 임시 비밀번호: ' + new_pw)
+            insert_data = (datetime.now(), '1', '0', phone, '0322110290', '[CJ IDC O`PASS 비밀번호 임시 발급] 임시 비밀번호: ' + hash_password)
 
             cursor.execute(insert_query, insert_data)  # 쿼리 실행 및 데이터 전달
             app.mysql_conn.commit()  # 변경 사항 커밋
@@ -911,26 +963,46 @@ def visitor():
         phone = request.form['inputPhoneNumber']
         manager = request.form['inputManager']
         created_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        personal_computer = request.form.get('inputPC')
         device = request.form.get('inputDevice')
         remarks = request.form.get('inputRemarks')
         work = request.form.get('inputWork')
+
+        if personal_computer:
+            personal_computer = True
+            model_name = request.form.get('inputModelName')
+            serial_number = request.form.get('inputSerialNumber')
+            reason = request.form.get('inputReason')
+        else:
+            personal_computer = False
+            model_name = None
+            serial_number = None
+            reason = None
+
         if device:
             device = True
+            customer = request.form.get('inputCustomer')
+            device_division = request.form.get('inputDeviceDivision')
+            device_count = request.form.get('inputDeviceCount')
             remarks = request.form.get('inputRemarks')
         else:
             device = False
+            customer = None
+            device_division = None
+            device_count = None
             remarks = None
+
         if work:
             work = True
             location = request.form.get('inputLocation')
-            detail_location = request.form.get('inputDetailLocation')
+            work_division = request.form.get('inputWorkDivision')
             company_type = request.form.get('inputCompany')
             company_name = request.form.get('inputCompanyName')
             work_content = request.form.get('inputContent')
         else:
             work = False
             location = None
-            detail_location = None
+            work_division = None
             company_type = None
             company_name = None
             work_content = None
@@ -939,16 +1011,13 @@ def visitor():
             # aes.encrypt(phone)
 
         # 내방객 등록하기 - 이름, 부서, 번호, 작업위치, 담당자, 장비체크, 비고, 방문목적, 등록시간, 승인, 사전/현장, 작업체크, 회사종류, 회사이름, 작업내용
-        visitor = Visitor(name, aes.encrypt(department), aes.encrypt(phone), location, manager, device, remarks, object, created_time, 0, "사전 등록", work, company_type, company_name, work_content, detail_location, current_user.id)
+        visitor = Visitor(name, aes.encrypt(department), aes.encrypt(phone), location, manager, device, remarks, object, created_time, 0, "사전 등록", work, company_type, company_name, work_content, current_user.id, personal_computer, model_name, serial_number, reason, work_division, customer, device_division, device_count)
         task_change = Privacy_log("등록", current_user.id, request.remote_addr, current_timestamp, "내방객 등록", name)
         db.session.add(visitor)
         db.session.add(task_change)
         db.session.commit()
         return redirect(url_for('visitor'))
     else:
-        task_change = Privacy_log("조회", current_user.id, request.remote_addr, current_timestamp, "내방객 등록 화면 조회", "")
-        db.session.add(task_change)
-        db.session.commit()
         # GET - 승인되지 않은 방문객 정보
         if current_user.permission == '관리자':
             visitor_info = Visitor.query.filter_by(approve=0)
@@ -1011,6 +1080,10 @@ def ajax_approve():
     else:
         day.count += 1
 
+    if visitor.personal_computer == 0:
+        personal_computer = "미반입"
+    else:
+        personal_computer = "반입"
     if visitor.device == 0:
         device = "미반입"
         privacy_device = False
@@ -1032,13 +1105,13 @@ def ajax_approve():
     qr_img.save(save_path)
 
 
-    privacy_date = datetime.now().strftime('%Y-%m-%d %H-%M-%S')
+    privacy_date = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
     if visitor.registry == "사전 등록":
-        image_send_sms_previous(visitor.name, visitor.approve_date, visitor.object, visitor.location, visitor.manager, aes.decrypt(visitor.phone), device, work, visitor.company_type, visitor.company, visitor.work_content)
-        privacy = Privacy(visitor.name, visitor.department, visitor.phone, visitor.manager, privacy_device, privacy_work, visitor.remarks, visitor.object, visitor.location, visitor.detail_location, visitor.company_type, visitor.company, visitor.work_content, privacy_date, "사전 등록")
+        image_send_sms_previous(visitor.name, visitor.approve_date, visitor.object, visitor.location, visitor.manager, aes.decrypt(visitor.phone), device, work, visitor.company, visitor.work_content, personal_computer, visitor.model_name, visitor.work_division, visitor.device_division, visitor.device_count)
+        privacy = Privacy(visitor.name, aes.encrypt(visitor.department), aes.encrypt(visitor.phone), visitor.manager, privacy_device, privacy_work, visitor.remarks, visitor.object, visitor.location, visitor.company_type, visitor.company, visitor.work_content, privacy_date, "사전 등록", visitor.personal_computer, visitor.model_name, visitor.serial_number, visitor.pc_reason, visitor.work_division, visitor.customer, visitor.device_division, visitor.device_count)
     else:
-        image_send_sms_current(visitor.name, visitor.approve_date, visitor.object, visitor.location, visitor.manager, aes.decrypt(visitor.phone), device, work, visitor.company, visitor.work_content)
-        privacy = Privacy(visitor.name, visitor.department, visitor.phone, visitor.manager, privacy_device, privacy_work, visitor.remarks, visitor.object, visitor.location, visitor.detail_location, "", visitor.company, visitor.work_content, privacy_date, "현장 등록")
+        image_send_sms_current(visitor.name, visitor.approve_date, visitor.object, visitor.location, visitor.manager, aes.decrypt(visitor.phone), device, work, visitor.company, visitor.work_content, personal_computer, visitor.model_name, visitor.work_division, visitor.device_division, visitor.device_count)
+        privacy = Privacy(visitor.name, aes.encrypt(visitor.department), aes.encrypt(visitor.phone), visitor.manager, privacy_device, privacy_work, visitor.remarks, visitor.object, visitor.location, "", visitor.company, visitor.work_content, privacy_date, "현장 등록", visitor.personal_computer, visitor.model_name, visitor.serial_number, visitor.pc_reason, visitor.work_division, visitor.customer, visitor.device_division, visitor.device_count)
     task_change = Privacy_log("승인", current_user.id, request.remote_addr, privacy_date, "내방객 승인", visitor.name)
     db.session.add(task_change)
 
@@ -1197,6 +1270,11 @@ def ajax_visit_approve_checkbox():
         else:
             day.count += 1
 
+        if visitor.personal_computer == 0:
+            personal_computer = "미반입"
+        else:
+            personal_computer = "반입"
+
         if visitor.device == 0:
             device = "미반입"
             privacy_device = False
@@ -1211,13 +1289,14 @@ def ajax_visit_approve_checkbox():
             work = "해당"
             privacy_work = True
 
-        privacy_date = datetime.now().strftime('%Y-%m-%d %H-%M-%S')
+        privacy_date = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+
         if visitor.registry == "사전 등록":
-            image_send_sms_previous(visitor.name, visitor.approve_date, visitor.object, visitor.location, visitor.manager, aes.decrypt(visitor.phone), device, work, visitor.company_type, visitor.company, visitor.work_content)
-            privacy = Privacy(visitor.name, visitor.department, visitor.phone, visitor.manager, privacy_device, privacy_work, visitor.remarks, visitor.object, visitor.location, visitor.detail_location, visitor.company_type, visitor.company, visitor.work_content, privacy_date, "사전 등록")
+            image_send_sms_previous(visitor.name, visitor.approve_date, visitor.object, visitor.location, visitor.manager, aes.decrypt(visitor.phone), device, work, visitor.company, visitor.work_content, personal_computer, visitor.model_name, visitor.work_division, visitor.device_division, visitor.device_count)
+            privacy = Privacy(visitor.name, aes.encrypt(visitor.department), aes.encrypt(visitor.phone), visitor.manager, privacy_device, privacy_work, visitor.remarks, visitor.object, visitor.location, visitor.company_type, visitor.company, visitor.work_content, privacy_date, "사전 등록", visitor.personal_computer, visitor.model_name, visitor.serial_number, visitor.pc_reason, visitor.work_division, visitor.customer, visitor.device_division, visitor.device_count)
         else:
-            image_send_sms_current(visitor.name, visitor.approve_date, visitor.object, visitor.location, visitor.manager, aes.decrypt(visitor.phone), device, work, visitor.company, visitor.work_content)
-            privacy = Privacy(visitor.name, visitor.department, visitor.phone, visitor.manager, privacy_device, privacy_work, visitor.remarks, visitor.object, visitor.location, visitor.detail_location, "", visitor.company, visitor.work_content, privacy_date, "현장 등록")
+            image_send_sms_current(visitor.name, visitor.approve_date, visitor.object, visitor.location, visitor.manager, aes.decrypt(visitor.phone), device, work, visitor.company, visitor.work_content, personal_computer, visitor.model_name, visitor.work_division, visitor.device_division, visitor.device_count)
+            privacy = Privacy(visitor.name, aes.encrypt(visitor.department), aes.encrypt(visitor.phone), visitor.manager, privacy_device, privacy_work, visitor.remarks, visitor.object, visitor.location, "", visitor.company, visitor.work_content, privacy_date, "현장 등록", visitor.personal_computer, visitor.model_name, visitor.serial_number, visitor.pc_reason, visitor.work_division, visitor.customer, visitor.device_division, visitor.device_count)
         task_change = Privacy_log("승인", current_user.id, request.remote_addr, privacy_date, "내방객 승인", visitor.name)
         db.session.add(task_change)
 
@@ -1413,7 +1492,7 @@ def ajax_update_manage_visit():
     if update_visitor.card_id != None:
         return "Use Card"
     else:
-        update_visitor_info = [update_visitor.id, update_visitor.name, aes.decrypt(update_visitor.department), update_visitor.object, aes.decrypt(update_visitor.phone), update_visitor.manager, update_visitor.device, update_visitor.remarks, update_visitor.location, update_visitor.work, update_visitor.company_type, update_visitor.company, update_visitor.work_content, update_visitor.detail_location]
+        update_visitor_info = [update_visitor.id, update_visitor.name, aes.decrypt(update_visitor.department), update_visitor.object, aes.decrypt(update_visitor.phone), update_visitor.manager, update_visitor.device, update_visitor.remarks, update_visitor.location, update_visitor.work, update_visitor.company_type, update_visitor.company, update_visitor.work_content, update_visitor.personal_computer, update_visitor.model_name, update_visitor.serial_number, update_visitor.pc_reason, update_visitor.work_division, update_visitor.customer, update_visitor.device_division, update_visitor.device_count]
         
         return jsonify(response=update_visitor_info)
 
@@ -1438,31 +1517,27 @@ def ajax_delete_manage_visit():
 #===================================================================================
 
 # MMS-IMAGE TEST SMS 문자 메세지 보내기 - 현장 등록 승인
-def image_send_sms_current(name, date, object, location, manager, phone_num, device, work, company, work_content):
+def image_send_sms_current(name, date, object, location, manager, phone_num, device, work, company, work_content, personal_computer, model_name, work_division, device_division, device_count):
     connect_to_database()
     cursor = app.mysql_conn.cursor()  # 커서 생성
     insert_query = "INSERT INTO mms_msg (REQDATE, STATUS, TYPE, PHONE, CALLBACK, SUBJECT, MSG, FILE_CNT, FILE_TYPE1, FILE_PATH1) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)"
-    if work == "해당":
-        msg = name + '님 ' + '안녕하세요.\n' + '송도 IDC 센터에 방문하신 것을 환영합니다.\n-등록시간: ' + str(date) + '\n-방문위치: 인천광역시 연수구 하모니로177번길 20' + '\n-방문목적: ' + object + '\n-장비반입: ' + device + '\n-작업: ' + work + '\n-회사명: ' + company + '\n-작업내용:' + work_content + '\n-작업위치: ' + location + '\n-담당자: ' + manager + '\n-QR Code◀ '
-    else:
-        msg = name + '님 ' + '안녕하세요.\n' + '송도 IDC 센터에 방문하신 것을 환영합니다.\n-등록시간: ' + str(date) + '\n-방문위치: 인천광역시 연수구 하모니로177번길 20' + '\n-방문목적: ' + object + '\n-장비반입: ' + device + '\n-작업: ' + work + '\n-담당자: ' + manager + '\n-QR Code◀ '
 
-    insert_data = (datetime.now(), '1', '0', phone_num, '01057320071', '[내방객 출입 관리 시스템 현장 등록 승인]', msg, '2', 'I', 'D://CJAgent//qr_img.jpg')  # 삽입할 데이터를 튜플로 정의
+    msg = name + '님 ' + '안녕하세요.\n' + '송도 IDC 센터에 방문하신 것을 환영합니다.\n-등록시간: ' + str(date) + '\n-방문위치: 인천광역시 연수구 하모니로177번길 20' + '\n-방문목적: ' + object + '\n-PC 반입: ' + personal_computer + '\n-모델명: ' + model_name + '\n-작업: ' + work + '\n-작업 분류: ' + work_division + '\n-작업위치: ' + location + '\n-요청 회사명: ' + company + '\n-작업내용:' + work_content + '\n-장비반출입: ' + device + '\n-장비 기종: ' + device_division + '\n-장비 수량: ' + str(device_count) + '\n-담당자: ' + manager + '\n-QR Code◀ '
+
+    insert_data = (datetime.now(), '1', '0', phone_num, '0322110290', '[내방객 출입 관리 시스템 현장 등록 승인]', msg, '2', 'I', 'D://CJAgent//qr_img.jpg')  # 삽입할 데이터를 튜플로 정의
     cursor.execute(insert_query, insert_data)  # 쿼리 실행 및 데이터 전달
     app.mysql_conn.commit()  # 변경 사항 커밋
     cursor.close()  # 커서 닫기
 
 # MMS-IMAGE TEST SMS 문자 메세지 보내기 - 사전 등록 승인
-def image_send_sms_previous(name, date, object, location, manager, phone_num, device, work, company_type, company, work_content):
+def image_send_sms_previous(name, date, object, location, manager, phone_num, device, work, company, work_content, personal_computer, model_name, work_division, device_division, device_count):
     connect_to_database()
     cursor = app.mysql_conn.cursor()  # 커서 생성
     insert_query = "INSERT INTO mms_msg (REQDATE, STATUS, TYPE, PHONE, CALLBACK, SUBJECT, MSG, FILE_CNT, FILE_TYPE1, FILE_PATH1) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)"
-    if work == "해당":
-        msg = name + '님 ' + '안녕하세요.\n' + '송도 IDC 센터에 방문하신 것을 환영합니다.\n-등록시간: ' + str(date) + '\n-방문위치: 인천광역시 연수구 하모니로177번길 20' + '\n-방문목적: ' + object + '\n-장비반입: ' + device + '\n-작업: ' + work + '\n-요청 회사: ' + company_type + '\n-회사명: ' + company + '\n-작업내용:' + work_content + '\n-작업위치: ' + location + '\n-담당자: ' + manager + '\n-QR Code◀ '
-    else:
-        msg = name + '님 ' + '안녕하세요.\n' + '송도 IDC 센터에 방문하신 것을 환영합니다.\n-등록시간: ' + str(date) + '\n-방문위치: 인천광역시 연수구 하모니로177번길 20' + '\n-방문목적: ' + object + '\n-장비반입: ' + device + '\n-작업: ' + work + '\n-담당자: ' + manager + '\n-QR Code◀ '
 
-    insert_data = (datetime.now(), '1', '0', phone_num, '01057320071', '[내방객 출입 관리 시스템 사전 등록 승인]', msg, '2', 'I', 'D://CJAgent//qr_img.jpg')  # 삽입할 데이터를 튜플로 정의
+    msg = name + '님 ' + '안녕하세요.\n' + '송도 IDC 센터에 방문하신 것을 환영합니다.\n-등록시간: ' + str(date) + '\n-방문위치: 인천광역시 연수구 하모니로177번길 20' + '\n-방문목적: ' + object + '\n-PC 반입: ' + personal_computer + '\n-모델명: ' + model_name + '\n-작업: ' + work + '\n-작업 분류: ' + work_division + '\n-작업위치: ' + location + '\n-요청 회사명: ' + company + '\n-작업내용:' + work_content + '\n-장비반출입: ' + device + '\n-장비 기종: ' + device_division + '\n-장비 수량: ' + str(device_count) + '\n-담당자: ' + manager + '\n-QR Code◀ '
+
+    insert_data = (datetime.now(), '1', '0', phone_num, '0322110290', '[내방객 출입 관리 시스템 사전 등록 승인]', msg, '2', 'I', 'D://CJAgent//qr_img.jpg')  # 삽입할 데이터를 튜플로 정의
     cursor.execute(insert_query, insert_data)  # 쿼리 실행 및 데이터 전달
     app.mysql_conn.commit()  # 변경 사항 커밋
     cursor.close()  # 커서 닫기
@@ -1479,6 +1554,11 @@ def ajax_manage_qrcode_send():
     if qrcode_visitor.card_id:
         return "Use Card"
     
+    if qrcode_visitor.personal_computer == 0:
+        personal_computer = "미반입"
+    else:
+        personal_computer = "반입"
+
     if qrcode_visitor.device == 0:
         device = "미반입"
     else:
@@ -1488,7 +1568,7 @@ def ajax_manage_qrcode_send():
         work = "해당 없음"
     else:
         work = "해당"
-    image_send_sms_previous(qrcode_visitor.name, qrcode_visitor.approve_date, qrcode_visitor.object, qrcode_visitor.location, qrcode_visitor.manager, qrcode_visitor.phone, device, work, qrcode_visitor.company_type, qrcode_visitor.company, qrcode_visitor.work_content)
+    image_send_sms_previous(qrcode_visitor.name, qrcode_visitor.approve_date, qrcode_visitor.object, qrcode_visitor.location, qrcode_visitor.manager, aes.decrypt(qrcode_visitor.phone), device, work, qrcode_visitor.company, qrcode_visitor.work_content, personal_computer, qrcode_visitor.model_name, qrcode_visitor.work_division, qrcode_visitor.device_division, qrcode_visitor.device_count)
     return jsonify()
 
 #===================================================================================
@@ -1818,12 +1898,7 @@ def user_profile_update():
 
         current_time_korean = datetime.now(korean_timezone).strftime("%Y-%m-%d %H:%M:%S")
         fomatting_time_korean = datetime.strptime(current_time_korean, '%Y-%m-%d %H:%M:%S')
-
         time_since_registration = fomatting_time_korean - user.registered_at
-        print(time_since_registration)
-        print(type(time_since_registration))
-        print(timedelta(days=1))
-        print(type(timedelta(days=1)))
 
         if user:
             if user.attempts == 'attempts_password':
@@ -1845,6 +1920,14 @@ def user_profile_update():
                     else:
                         # 비밀번호 수정
                         hashed_password = bcrypt.generate_password_hash(new_password_1)
+                        
+                        # 비밀번호 이력 확인
+                        confirm_password = Password_log.query.filter_by(user_id=user.id).order_by(Password_log.id.desc()).limit(3).all()
+                        for idx in confirm_password:
+                            if bcrypt.check_password_hash(idx.password_log, new_password_1):
+                                flash('최근 3개의 비밀번호는 사용하실 수 없습니다.')
+                                return redirect('profile_update')
+
                         user.password = hashed_password
                         user.password_changed_at = current_time_korean
                         user.attempts = None
@@ -1880,6 +1963,15 @@ def user_profile_update():
                     else:
                         # 비밀번호 수정
                         hashed_password = bcrypt.generate_password_hash(new_password_1)
+                        print(hashed_password)
+
+                        # 비밀번호 이력 확인
+                        confirm_password = Password_log.query.filter_by(user_id=user.id).order_by(Password_log.id.desc()).limit(3).all()
+                        for idx in confirm_password:
+                            if bcrypt.check_password_hash(idx.password_log, new_password_1):
+                                flash('최근 3개의 비밀번호는 사용하실 수 없습니다.')
+                                return redirect('profile_update')
+                            
                         user.password = hashed_password
                         user.password_changed_at = current_time_korean
 
@@ -1907,16 +1999,33 @@ def form_input():
         department = request.form['visitorDepartment']
         phone = request.form['visitorPhone']
         manager = request.form['visitorManager']
-        device = request.form['visitorDevice']
-        remarks = request.form['visitorRemarks']
         object = request.form['visitorObject']
+        personal_computer = request.form['visitorPC']
+        work = request.form['visitorWork']
+        device = request.form['visitorDevice']
+        
 
         # 선택 입력
-        location = request.form.get('visitorLocation')
-        detail_location = request.form.get('visitorDetailLocation')
-        company = request.form.get('visitorCompanyName')
+        model_name = request.form.get('visitorModelName')
+        serial_number = request.form.get('visitorSerialNumber')
+        pc_reason = request.form.get('visitorReason')
+
+        work_division = request.form.get('visitorWorkDivision')
         work_content = request.form.get('visitorWorkContent')
-        if object == '작업':
+        location = request.form.get('visitorLocation')
+        company = request.form.get('visitorCompanyName')
+
+        customer = request.form.get('visitorCustomer')
+        device_division = request.form.get('visitorDeviceDivision')
+        device_count = request.form.get('visitorDeviceCount')
+        remarks = request.form.get('visitorRemarks')
+
+        if personal_computer == '반입':
+            personal_computer = True
+        else:
+            personal_computer = False
+
+        if work == '해당':
             work = True
         else:
             work = False
@@ -1926,8 +2035,8 @@ def form_input():
         else:
             device = False
 
-        privacy = Privacy(name, aes.encrypt(department), aes.encrypt(phone), manager, device, work, remarks, object, location, detail_location, "", company, work_content, date, "현장 등록")
-        visitor = Visitor(name, aes.encrypt(department), aes.encrypt(phone), location, manager, device, remarks, object, date, 0, "현장 등록", work, "", company, work_content, detail_location, "")
+        privacy = Privacy(name, aes.encrypt(department), aes.encrypt(phone), manager, device, work, remarks, object, location, "", company, work_content, date, "현장 등록", personal_computer, model_name, serial_number, pc_reason, work_division, customer, device_division, device_count)
+        visitor = Visitor(name, aes.encrypt(department), aes.encrypt(phone), location, manager, device, remarks, object, date, 0, "현장 등록", work, "", company, work_content, 0, personal_computer, model_name, serial_number, pc_reason, work_division, customer, device_division, device_count)
         db.session.add(privacy)
         db.session.add(visitor)
         db.session.commit()
@@ -2007,6 +2116,15 @@ def user_delete():
         return "Error"
 
 #===================================================================================
+# qr_expired_date = datetime.now().strftime('%Y-%m-%d')
+# qr_data = "http://localhost:5000/?name=" + aes.encrypt(visitor.name) + "&date=" + aes.encrypt(qr_expired_date)
+# qr_img = qrcode.make(qr_data)
+# save_path = 'qrcode.png'
+# qr_img.save(save_path)
+# @app.route('/name=<name>&date=<date>', methods=['POST'])
+# def qrcode_authenticated():
+#     print("222222222222222222")
+#     return redirect('index')
 
 @app.errorhandler(jinja2.exceptions.TemplateNotFound)
 def template_not_found(e):

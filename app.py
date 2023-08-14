@@ -160,11 +160,18 @@ class Visitor(db.Model):
     exit_date = db.Column(db.DateTime, unique=False, nullable=True)
     exit = db.Column(db.Boolean(), unique=False, nullable=True)
     approve = db.Column(db.Boolean(), unique=False)
+    personal_computer = db.Column(db.Boolean(), unique=False)
+    model_name = db.Column(db.String(50), unique=False, nullable=True)
+    serial_number = db.Column(db.String(50), unique=False, nullable=True)
+    pc_reason = db.Column(db.String(100), unique=False, nullable=True)
+    work_division = db.Column(db.String(50), unique=False, nullable=True)
+    work_content = db.Column(db.String(200), unique=False, nullable=True)
     location = db.Column(db.String(50), unique=False, nullable=True)
-    detail_location = db.Column(db.String(50), unique=False, nullable=True)
     company_type = db.Column(db.String(50), unique=False, nullable=True)
     company = db.Column(db.String(50), unique=False, nullable=True)
-    work_content = db.Column(db.String(200), unique=False, nullable=True)
+    customer = db.Column(db.String(50), unique=False, nullable=True)
+    device_division = db.Column(db.String(50), unique=False, nullable=True)
+    device_count = db.Column(db.String(50), unique=False, nullable=True)
     registry = db.Column(db.String(50), unique=False, nullable=True)
     writer = db.Column(db.Integer)
     card_id = db.Column(db.Integer, db.ForeignKey('Card.id'))
@@ -173,7 +180,7 @@ class Visitor(db.Model):
     rack_keys = db.relationship('Rack', backref='visitor_rack')
 
     # 이름, 부서, 번호, 작업위치, 담당자, 장비체크, 비고, 방문목적, 등록시간, 승인, 사전/현장, 작업체크, 회사종류, 회사이름, 작업내용
-    def __init__(self, name, department, phone, location, manager, device, remarks, object, created_time, approve, registry, work, company_type, company, work_content, detail_location, writer):
+    def __init__(self, name, department, phone, location, manager, device, remarks, object, created_time, approve, registry, work, company_type, company, work_content, writer, personal_computer, model_name, serial_number, pc_reason, work_division, customer, device_division, device_count):
         self.name = name
         self.department = department
         self.phone = phone
@@ -189,8 +196,15 @@ class Visitor(db.Model):
         self.company_type = company_type
         self.company = company
         self.work_content = work_content
-        self.detail_location = detail_location
         self.writer = writer
+        self.personal_computer = personal_computer
+        self.model_name = model_name
+        self.serial_number = serial_number
+        self.pc_reason = pc_reason
+        self.work_division = work_division
+        self.customer = customer
+        self.device_division = device_division
+        self.device_count = device_count
 
 class Card(db.Model):
     __tablename__ = "Card"
@@ -269,14 +283,21 @@ class Privacy(db.Model):
     remarks = db.Column(db.String(50), unique=False, nullable=True)
     object = db.Column(db.String(50), unique=False)
     location = db.Column(db.String(50), unique=False, nullable=True)
-    detail_location = db.Column(db.String(50), unique=False, nullable=True)
     company_type = db.Column(db.String(50), unique=False, nullable=True)
     company = db.Column(db.String(50), unique=False, nullable=True)
     work_content = db.Column(db.String(200), unique=False, nullable=True)
     visit_date = db.Column(db.DateTime, unique=False)
     registry = db.Column(db.String(50), unique=False, nullable=True)
+    personal_computer = db.Column(db.Boolean(), unique=False)
+    model_name = db.Column(db.String(50), unique=False, nullable=True)
+    serial_number = db.Column(db.String(50), unique=False, nullable=True)
+    pc_reason = db.Column(db.String(100), unique=False, nullable=True)
+    work_division = db.Column(db.String(50), unique=False, nullable=True)
+    customer = db.Column(db.String(50), unique=False, nullable=True)
+    device_division = db.Column(db.String(50), unique=False, nullable=True)
+    device_count = db.Column(db.String(50), unique=False, nullable=True)
 
-    def __init__(self, name, department, phone, manager, device, work, remarks, object, location, detail_location, company_type, company, work_content, visit_date, registry):
+    def __init__(self, name, department, phone, manager, device, work, remarks, object, location, company_type, company, work_content, visit_date, registry, personal_computer, model_name, serial_number, pc_reason, work_division, customer, device_division, device_count):
         self.name = name
         self.department = department
         self.phone = phone
@@ -286,12 +307,19 @@ class Privacy(db.Model):
         self.remarks = remarks
         self.object = object
         self.location = location
-        self.detail_location = detail_location
         self.company_type = company_type
         self.company = company
         self.work_content = work_content
         self.visit_date = visit_date
         self.work = work
         self.registry = registry
+        self.personal_computer = personal_computer
+        self.model_name = model_name
+        self.serial_number = serial_number
+        self.pc_reason = pc_reason
+        self.work_division = work_division
+        self.customer = customer
+        self.device_division = device_division
+        self.device_count = device_count
     
 

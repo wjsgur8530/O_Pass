@@ -169,7 +169,7 @@
                       {% if card.card_status == '불출' %}
                       <li class="list-group-item" style="line-height: 30px;">
                         {% for visitor in card.visitor %}
-                        {{ type }} {{ card.card_num }} - {{visitor.name}} ({{visitor.department}}, {{visitor.approve_date}})
+                        {{ type }} {{ card.card_num }} - {{visitor.name}} ({{visitor.manager}}, {{visitor.approve_date}})
                         {% endfor %}
                         <button class="btn btn-secondary btn-sm float-right" id="delete_btn_{{card.id}}" value="{{card.id}}">X</button>
                       </li>

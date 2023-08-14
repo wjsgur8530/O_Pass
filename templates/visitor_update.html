@@ -25,7 +25,7 @@
   
       #modalBody {
         width: 800px;
-        height: 600px;
+        height: 720px;
         padding: 30px 30px;
         margin: 0 auto;
         border: 1px solid #777;
@@ -91,23 +91,55 @@
                 </div>
                 <div class="col-12" style="display: flex;">
                   <div class="form-check">
+                    <input class="form-check-input" type="checkbox" id="gridCheck_3" value="1" name="inputPC" onchange="toggleInputs_pc()">
+                    <label class="form-check-label" for="gridCheck_3">
+                    PC 반입
+                    </label>
+                  </div>
+                  <div class="form-check ml-2">
                     <input class="form-check-input" type="checkbox" id="gridCheck_2" value="1" name="inputWork" onchange="toggleInputs_work()">
                     <label class="form-check-label" for="gridCheck_2">
-                    작업 여부
+                    서버실 출입
                     </label>
                   </div>
                   <div class="form-check ml-2">
                     <input class="form-check-input" type="checkbox" id="gridCheck" value="1" name="inputDevice" onchange="toggleInputs()">
                     <label class="form-check-label" for="gridCheck">
-                    장비 반입 여부
+                    장비 반출입
                     </label>
                   </div>
                 </div>
                 <div class="col-3">
+                  <label for="inputModelName" class="form-label">모델명</label>
+                  <input type="text" class="form-control" id="inputModelName" placeholder="etc. 맥북" disabled="true" name="inputModelName">
+                </div>
+                <div class="col-3">
+                  <label for="inputSerialNumber" class="form-label">일련 번호</label>
+                  <input type="text" class="form-control" id="inputSerialNumber" placeholder="etc. XY0XX0" disabled="true" name="inputSerialNumber">
+                </div>
+                <div class="col-6">
+                  <label for="inputReason" class="form-label">PC 반입 사유</label>
+                  <input type="text" class="form-control" id="inputReason" placeholder="" disabled="true" name="inputReason">
+                </div>
+                <div class="col-3">
+                  <label for="inputWorkDivision" class="form-label">작업 구분</label>
+                  <select class="form-select" id="inputWorkDivision" name="inputWorkDivision" disabled="true">
+                    <option value="시스템 점검">시스템 점검</option>
+                    <option value="변경 작업">변경 작업</option>
+                    <option value="장애 처리">장애 처리</option>
+                    <option value="공사">공사</option>
+                    <option value="기타">기타</option>
+                  </select>
+                </div>
+                <div class="col-9">
+                  <label for="inputContent" class="form-label">작업 내용</label>
+                  <input type="text" class="form-control" id="inputContent" disabled="true" name="inputContent">
+                </div>
+                <div class="col-6">
                   <label for="inputLocation" class="form-label">작업 위치</label>
                   <input type="text" class="form-control" id="inputLocation" placeholder="etc. 4층 전산실" disabled="true" name="inputLocation">
                 </div>
-                <div class="col-5">
+                <div class="col-6">
                   <label for="inputCompany" class="form-label">작업 요청 회사</label>
                   <div class="input-group">
                   <select class="form-select col-xl-5" id="inputCompany" name="inputCompany" disabled="true">
@@ -117,15 +149,19 @@
                   <input type="text" class="form-control" id="inputCompanyName" disabled="true" name="inputCompanyName">
                   </div>
                 </div>
-                <div class="col-4">
-                  <label for="inputDetailLocation" class="form-label">작업 세부 위치</label>
-                  <input type="text" class="form-control" id="inputDetailLocation" placeholder="etc. Rack 번호" disabled="true" name="inputDetailLocation">
+                <div class="col-md-3">
+                  <label for="inputCustomer" class="form-label">고객사</label>
+                  <input type="text" class="form-control" id="inputCustomer" disabled="true" name="inputCustomer" placeholder="etc. 고객사명">
                 </div>
-                <div class="col-12">
-                  <label for="inputContent" class="form-label">작업 내용</label>
-                  <input type="text" class="form-control" id="inputContent" disabled="true" name="inputContent">
+                <div class="col-md-4">
+                  <label for="inputDeviceDivision" class="form-label">장비 기종</label>
+                  <input type="text" class="form-control" id="inputDeviceDivision" disabled="true" name="inputDeviceDivision" placeholder="etc. 기종, 파트">
                 </div>
-                <div class="col-md-12">
+                <div class="col-md-2">
+                  <label for="inputDeviceCount" class="form-label">수량</label>
+                  <input type="text" class="form-control" id="inputDeviceCount" disabled="true" name="inputDeviceCount" placeholder="etc. 1">
+                </div>
+                <div class="col-md-3">
                   <label for="inputRemarks" class="form-label">비고</label>
                   <input type="text" class="form-control" id="inputRemarks" disabled="true" name="inputRemarks">
                 </div>
@@ -256,6 +292,24 @@
                 <div class="col">
                   <div class="input-group">
                     <div class="custom-select" style="overflow: hidden;">
+                      <label for="key_select_box">
+                      <select name="key_select_box" id="key_select_box">
+                        {% for key in rack_key_list %}
+                          {% if key.key_status != "불출" %}
+                          <option value="{{key.key_type}} {{key.key_num}}">{{key.key_type}}{{key.key_num}}</option>
+                          {% else %}
+                          {% endif %}
+                        {% endfor %}
+                      </select> Rack 키
+                      </label>
+                    </div>
+                    <button class="btn btn-secondary" type="submit" id="entrance_key">불출</button>
+                    <button class="btn btn-secondary ml-2" type="submit" id="recall_key">회수</button>
+                  </div>
+                </div>
+                <div class="col">
+                  <div class="input-group">
+                    <div class="custom-select" style="overflow: hidden;">
                       <label for="card_select_box">
                       <select name="card_select_box" id="card_select_box">
                         {% for card in card_list %}
@@ -272,12 +326,6 @@
                   </div>
                 </div>
                 <!-- 방문객 퇴실 -->
-                <div class="col">
-                  <div class="input-group">
-                    <input type="text" class="form-control" id="manager_update_input" name="manager_update_input" placeholder="담당자명 입력" maxlength="8" style="height: 38px;">
-                    <button class="btn btn-secondary" type="button" id="manager_update">수정</button>
-                  </div>
-                </div>
                 <div class="col">
                   <div class="input-group">
                     <input type="text" class="form-control" id="remarks_update_input" name="remarks_update_input" placeholder="비고 입력" maxlength="8" style="height: 38px;">
@@ -302,136 +350,172 @@
                           <input type="checkbox" class="form-check-input" name="index_total_check_box" id="index_total_check_box">
                         </div>
                       </th>
-                      <th scope="col">#</th>
-                      <th scope="col">방문 목적</th>
-                      <th scope="col" style="width:75px;">이름</th>
-                      <th scope="col">카드No</th>
-                      <th scope="col">소속</th>
-                      <th scope="col">연락처</th>
-                      <th scope="col">담당자</th>
-                      <th scope="col">작업</th>
-                      <th scope="col">작업 위치</th>
-                      <th scope="col">세부 위치</th>
-                      <th scope="col">요청 회사</th>
-                      <th scope="col">회사명</th>
-                      <th scope="col">작업 내용</th>
-                      <th scope="col">장비 반입</th>
-                      <th scope="col">비고</th>
-                      <th scope="col">방문 시각</th>
-                      <th scope="col">퇴실 시각</th>
-                      <th scope="col">#</th>
-                      <th scope="col">#</th>
-                      <th scope="col">#</th>
+                      <th scope="col">No</th>
+                      <th scope="col"><span class="text-success"><랙키></span> / <span class="text-primary"><카드></span> / 등록 구분 / 방문 목적 / 방문객 / 소속 / 번호 / 담당자 / 승인 시간 / 퇴실 시간 / <span class="text-danger"><퇴실></span></th>
                     </tr>
                   </thead>
                   <tfoot>
                     <tr>
                       <th scope="col">#</th>
-                      <th scope="col">#</th>
-                      <th scope="col">방문 목적</th>
-                      <th scope="col">이름</th>
-                      <th scope="col">카드No</th>
-                      <th scope="col">소속</th>
-                      <th scope="col">연락처</th>
-                      <th scope="col">담당자</th>
-                      <th scope="col">작업</th>
-                      <th scope="col">작업 위치</th>
-                      <th scope="col">세부 위치</th>
-                      <th scope="col">요청 회사</th>
-                      <th scope="col">회사명</th>
-                      <th scope="col">작업 내용</th>
-                      <th scope="col">장비 반입</th>
-                      <th scope="col">비고</th>
-                      <th scope="col">방문 시각</th>
-                      <th scope="col">퇴실 시각</th>
-                      <th scope="col">#</th>
-                      <th scope="col">#</th>
-                      <th scope="col">#</th>
+                      <th scope="col">No</th>
+                      <th scope="col"><span class="text-success"><랙키></span> / <span class="text-primary"><카드></span> / 등록 구분 / 방문 목적 / 방문객 / 소속 / 번호 / 담당자 / 승인 시간 / 퇴실 시간 / <span class="text-danger"><퇴실></span></th>
                     </tr>
                   </tfoot>
                   <tbody id="table_tbody">
                   {% for approve_visitor in approve_visitors %}
                     <tr>
-                      <th scope="row">
+                      <th scope="row" style="vertical-align: middle; text-align: center;">
                         <div class="form-check" style="display: flex; justify-content: center; align-items: center;">
                           <input type="checkbox" class="form-check-input" name="check_box" id="checkbox{{approve_visitor.id}}" value="{{approve_visitor.id}}">
                         </div>
                       </th>
-                      <td>{{ loop.revindex }}</td>
-                      <td>{{ approve_visitor.object }}</td>
+                      <td style="vertical-align: middle; text-align: center;">{{ loop.index }}</td>
                       <td>
-                        {% if approve_visitor.name|length > 1 %}
-                            {{ approve_visitor.name[0] + '*' + approve_visitor.name[2:] }}
-                        {% else %}
-                            {{ approve_visitor.name }}
-                        {% endif %}
-                      </td>
-                      <td>
-                      {% if approve_visitor.exit != 1 %}
-                      {{ approve_visitor.card.card_type }}{{approve_visitor.card.card_num}}
-                      {% else %}
-                      {% endif %}
-                      </td>
-                      <td>{{ approve_visitor.department }}</td>
-                      <td>
-                        {% if approve_visitor.phone|length > 6 %}
-                            {{ approve_visitor.phone[:3] + '****' + approve_visitor.phone[7:]}}
-                        {% else %}
-                            {{ approve_visitor.phone }}
-                        {% endif %}
-                      </td>
-                      <td>{{ approve_visitor.manager }}</td>
-                      {% if approve_visitor.work == 1 %}
-                      <td>O</td>
-                      <td>{{ approve_visitor.location }}</td>
-                      <td>{{ approve_visitor.detail_location }}</td>
-                      <td>{{ approve_visitor.company_type }}</td>
-                      <td>{{ approve_visitor.company }}</td>
-                      <td>{{ approve_visitor.work_content }}</td>
-                      {% else %}
-                      <td>X</td>
-                      <td></td>
-                      <td></td>
-                      <td></td>
-                      <td></td>
-                      <td></td>
-                      {% endif %}
-                      {% if approve_visitor.device == 1 %}
-                      <td>O</td>
-                        {% if approve_visitor.remarks == None %}
-                        <td></td>
-                        {% else %}
-                        <td>{{ approve_visitor.remarks }}</td>
-                        {% endif %}
-                      {% else %}
-                      <td>X</td>
-                      <td></td>
-                      {% endif %}
-                      <td>{{ approve_visitor.created_date }}</td>
-                      <td>
-                        {% if approve_visitor.exit_date != None %}
-                        {{ approve_visitor.exit_date }}
-                      </td>
-                        {% else %}
-                        {% endif %}
-                      <td>
-                        {% if approve_visitor.exit == 0 %}
-                        <button class="btn btn-secondary btn-sm" type="button" id="exit_btn{{approve_visitor.id}}" value="{{approve_visitor.id}}">퇴실</button>
-                        {% endif %}
-                      </td>
-                      <td>
-                        {% if approve_visitor.exit == 0 %}
-                        <button class="btn btn-primary btn-sm" type="button" id="qrcode_btn{{approve_visitor.id}}" value="{{approve_visitor.id}}">QR 재전송</button>
-                        {% endif %}
-                      </td>
-                      <td>
-                        {% if approve_visitor.exit == 0 %}
-                        <div class="btn-group">
-                          <button class="btn_group btn btn-success btn-sm mr-1" type="button" id="update_btn{{approve_visitor.id}}" value="{{approve_visitor.id}}">수정</button>
-                          <button class="btn_group btn btn-danger btn-sm" type="button" data-toggle="modal" data-target="#deleteModal">삭제</button>
+                        <!-- 아코디언 -->
+                        <div class="accordion" id="accordionExample{{approve_visitor.id}}">
+                          <div class="accordion-item">
+                            <h2 class="accordion-header" id="heading{{approve_visitor.id}}">
+                              <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse{{approve_visitor.id}}" aria-expanded="true" aria-controls="collapse{{approve_visitor.id}}">
+                                <ul class="list-group list-group-horizontal">
+                                  {% if approve_visitor.rack_id != None %}
+                                  <li class="list-group-item bg-success text-white">{{approve_visitor.rack.key_type}}{{approve_visitor.rack.key_num}}</li>
+                                  {% endif %}
+                                  {% if approve_visitor.card_id != None %}
+                                  <li class="list-group-item bg-primary text-white">{{approve_visitor.card.card_type}}{{approve_visitor.card.card_num}}</li>
+                                  {% endif %}
+
+                                  <li class="list-group-item">{{approve_visitor.registry}}</li>
+                                  <li class="list-group-item">{{approve_visitor.object}}</li>
+                                  <li class="list-group-item">
+                                    {% if approve_visitor.name|length > 1 %}
+                                        {{ approve_visitor.name[0] + '*' + approve_visitor.name[2:] }}
+                                    {% else %}
+                                        {{ approve_visitor.name }}
+                                    {% endif %}
+                                  </li>
+                                  <li class="list-group-item">{{approve_visitor.department}}</li>
+                                  <li class="list-group-item">
+                                    {% if approve_visitor.phone|length > 6 %}
+                                        {{ approve_visitor.phone[:3] + '****' + approve_visitor.phone[7:]}}
+                                    {% else %}
+                                        {{ approve_visitor.phone }}
+                                    {% endif %}
+                                  </li>
+                                  <li class="list-group-item">{{approve_visitor.manager}}</li>
+                                  <li class="list-group-item">{{approve_visitor.approve_date}}</li>
+                                  {% if approve_visitor.exit_date != None %}
+                                    <li class="list-group-item">{{approve_visitor.exit_date}}</li>
+                                    <li class="list-group-item bg-danger text-white">퇴실</li>
+                                  {% else %}
+                                    <li class="list-group-item bg-white text-danger">퇴실 안함</li>
+                                  {% endif %}
+                                </ul>
+                              </button>
+                            </h2>
+                            <div id="collapse{{approve_visitor.id}}" class="accordion-collapse collapse" aria-labelledby="heading{{approve_visitor.id}}" data-bs-parent="#accordionExample">
+                              <div class="accordion-body">
+                                <div class="row">
+                                  <div class="col-xl-4">
+                                    <ul class="list-group list-group-vertical">
+                                      <li class="list-group-item"><b>PC 반입</b></li>
+                                      <li class="list-group-item">
+                                        {% if approve_visitor.personal_computer == 1 %}
+                                        O
+                                        {% else %}
+                                        X
+                                        {% endif %}
+                                      </li>
+                                      {% if approve_visitor.personal_computer == 1 %}
+                                      <li class="list-group-item"><b>모델명</b></li>
+                                      <li class="list-group-item">{{approve_visitor.model_name}}</li>
+                                      <li class="list-group-item"><b>시리얼 넘버</b></li>
+                                      <li class="list-group-item">{{approve_visitor.serial_number}}</li>
+                                      <li class="list-group-item"><b>반입 사유</b></li>
+                                      <li class="list-group-item">{{approve_visitor.pc_reason}}</li>
+                                      {% else %}
+                                      <li class="list-group-item"><b>모델명</b></li>
+                                      <li class="list-group-item"></li>
+                                      <li class="list-group-item"><b>시리얼 넘버</b></li>
+                                      <li class="list-group-item"></li>
+                                      <li class="list-group-item"><b>반입 사유</b></li>
+                                      <li class="list-group-item"></li>
+                                      {% endif %}
+                                    </ul>
+                                  </div>
+                                  <div class="col-xl-4">
+                                    <ul class="list-group list-group-vertical">
+                                      <li class="list-group-item"><b>작업</b></li>
+                                      <li class="list-group-item">
+                                        {% if approve_visitor.work == 1 %}
+                                        O
+                                        {% else %}
+                                        X
+                                        {% endif %}
+                                      </li>
+                                      {% if approve_visitor.work == 1 %}
+                                        <li class="list-group-item"><b>작업 분류 / 작업 위치</b></li>
+                                        <li class="list-group-item">{{approve_visitor.work_division}} / {{approve_visitor.location}}</li>
+                                        <li class="list-group-item"><b>요청 종류 / 요청 회사</b></li>
+                                        <li class="list-group-item">{{approve_visitor.company_type}} / {{approve_visitor.company}}</li>
+                                        <li class="list-group-item"><b>작업 내용</b></li>
+                                        <li class="list-group-item">{{approve_visitor.work_content}}</li>
+                                      {% else %}
+                                        <li class="list-group-item"><b>작업 분류 / 작업 위치</b></li>
+                                        <li class="list-group-item"></li>
+                                        <li class="list-group-item"><b>요청 종류 / 요청 회사</b></li>
+                                        <li class="list-group-item"></li>
+                                        <li class="list-group-item"><b>작업 내용</b></li>
+                                        <li class="list-group-item"></li>
+                                      {% endif %}
+                                    </ul>
+                                  </div>
+                                  <div class="col-xl-4">
+                                    <ul class="list-group list-group-vertical">
+                                      <li class="list-group-item"><b>장비 반출입</b></li>
+                                      <li class="list-group-item">
+                                        {% if approve_visitor.device == 1 %}
+                                        O
+                                        {% else %}
+                                        X
+                                        {% endif %}
+                                      </li>
+                                      {% if approve_visitor.device == 1 %}
+                                      <li class="list-group-item"><b>고객사</b></li>
+                                      <li class="list-group-item">{{approve_visitor.customer}}</li>
+                                      <li class="list-group-item"><b>장비 기종 / 장비 수량</b></li>
+                                      <li class="list-group-item">{{approve_visitor.device_division}} / {{approve_visitor.device_count}}</li>
+                                      <li class="list-group-item"><b>비고</b></li>
+                                      <li class="list-group-item">{{approve_visitor.remarks}}</li>
+                                      {% else %}
+                                      <li class="list-group-item"><b>고객사</b></li>
+                                      <li class="list-group-item"></li>
+                                      <li class="list-group-item"><b>장비 기종 / 장비 수량</b></li>
+                                      <li class="list-group-item"></li>
+                                      <li class="list-group-item"><b>비고</b></li>
+                                      <li class="list-group-item"></li>
+                                      {% endif %}
+                                    </ul>
+                                  </div>
+                                </div>
+                                <div style="text-align: right;">
+                                  {% if current_user.permission == '관리자' %}
+                                  {% if approve_visitor.exit == 0 %}
+                                  <div class="btn-group mt-4">
+                                    <button class="btn btn-secondary btn-sm" type="button" id="exit_btn{{approve_visitor.id}}" value="{{approve_visitor.id}}">퇴실</button>
+
+                                    <button class="btn btn-primary btn-sm ml-3" type="button" id="qrcode_btn{{approve_visitor.id}}" value="{{approve_visitor.id}}">QR 재전송</button>
+
+                                    <button class="btn_group btn btn-success btn-sm ml-3" type="button" id="update_btn{{approve_visitor.id}}" value="{{approve_visitor.id}}">수정</button>
+                                    <button class="btn_group btn btn-danger btn-sm ml-1" type="button" data-toggle="modal" data-target="#deleteModal">삭제</button>
+                                  </div>
+                                  {% endif %}
+                                  {% endif %}
+                                </div>
+                              </div>
+                            </div>
+                          </div>
                         </div>
-                        {% else %}
-                        {% endif %}
+                        <!-- 아코디언 끝 -->
                       </td>
                     </tr>
                   <!-- 퇴실 스크립트 -->
@@ -487,12 +571,20 @@
                   </script>
                   <script>
                       function handleSuccess(response) {
+                        var inputModelName = document.getElementById('inputModelName');
+                        var inputSerialNumber = document.getElementById('inputSerialNumber');
+                        var inputReason = document.getElementById('inputReason');
+                        
+                        var inputWorkDivision = document.getElementById('inputWorkDivision');
+                        var inputLocation = document.getElementById('inputLocation');
+                        var inputCompanyType = document.getElementById('inputCompany');
+                        var inputCompanyName = document.getElementById('inputCompanyName');
+                        var inputContent = document.getElementById('inputContent');
+
+                        var inputCustomer = document.getElementById('inputCustomer');
+                        var inputDeviceDivision = document.getElementById('inputDeviceDivision');
+                        var inputDeviceCount = document.getElementById('inputDeviceCount');
                         var inputRemarks = document.getElementById('inputRemarks');
-                        var inputLocation = document.getElementById('inputLocation')
-                        var inputDetailLocation = document.getElementById('inputDetailLocation');
-                        var inputCompanyType = document.getElementById('inputCompany')
-                        var inputCompanyName = document.getElementById('inputCompanyName')
-                        var inputContent = document.getElementById('inputContent')
 
                         var update_id = response.response[0];
                         var name = response.response[1];
@@ -507,7 +599,14 @@
                         var company_type = response.response[10];
                         var company = response.response[11];
                         var work_content = response.response[12];
-                        var detail_location = response.response[13];
+                        var personal_computer = response.response[13];
+                        var model_name = response.response[14];
+                        var serial_number = response.response[15];
+                        var pc_reason = response.response[16];
+                        var work_division = response.response[17];
+                        var customer = response.response[18];
+                        var device_division = response.response[19];
+                        var device_count = response.response[20];
 
                         document.getElementById("inputUpdateNumber").value = update_id;
                         document.getElementById("inputName").value = name;
@@ -515,42 +614,71 @@
                         document.getElementById("inputObject").value = object;
                         document.getElementById("inputPhoneNumber").value = phone;
                         document.getElementById("inputManager").value = manager;
+                        
+                        if (personal_computer == true) {
+                          document.getElementById('gridCheck_3').checked = true;
+                          document.getElementById("inputModelName").value = model_name;
+                          document.getElementById("inputSerialNumber").value = serial_number;
+                          document.getElementById("inputReason").value = pc_reason;
+                          inputModelName.disabled = false;
+                          inputSerialNumber.disabled = false;
+                          inputReason.disabled = false;
+                        } else {
+                          document.getElementById('gridCheck_3').checked = false;
+                          document.getElementById("inputModelName").value = null;
+                          document.getElementById("inputSerialNumber").value = null;
+                          document.getElementById("inputReason").value = null;
+                          inputModelName.disabled = true;
+                          inputSerialNumber.disabled = true;
+                          inputReason.disabled = true;
+                        }
+
 
                         if (work == true) {
                           document.getElementById('gridCheck_2').checked = true;
+                          document.getElementById('inputWorkDivision').value = work_division
                           document.getElementById("inputLocation").value = location;
-                          document.getElementById('inputDetailLocation').value = detail_location;
                           document.getElementById('inputCompany').value = company_type;
                           document.getElementById('inputCompanyName').value = company;
                           document.getElementById('inputContent').value = work_content;
+                          inputWorkDivision.disabled = false;
                           inputLocation.disabled = false;
-                          inputDetailLocation.disabled = false;
                           inputCompanyType.disabled = false;
                           inputCompanyName.disabled = false;
                           inputContent.disabled = false;
                         } else {
                           document.getElementById('gridCheck_2').checked = false;
+                          document.getElementById('inputWorkDivision').value = null;
                           document.getElementById("inputLocation").value = null;
-                          document.getElementById('inputDetailLocation').value = null;
                           document.getElementById('inputCompany').value = null;
                           document.getElementById('inputCompanyName').value = null;
                           document.getElementById('inputContent').value = null;
+                          inputWorkDivision.disabled = true;
                           inputLocation.disabled = true;
-                          inputDetailLocation.disabled = true;
                           inputCompanyType.disabled = true;
                           inputCompanyName.disabled = true;
                           inputContent.disabled = true;
                         }
                         if (device == true) {
                           document.getElementById('gridCheck').checked = true;
-                          inputRemarks.disabled = false;
+                          document.getElementById("inputCustomer").value = customer;
+                          document.getElementById("inputDeviceDivision").value = device_division;
+                          document.getElementById("inputDeviceCount").value = device_count;
                           document.getElementById("inputRemarks").value = remarks;
-                          document.getElementById("inputDevice").value = true;
+                          inputCustomer.disabled = false;
+                          inputDeviceDivision.disabled = false;
+                          inputDeviceCount.disabled = false;
+                          inputRemarks.disabled = false;
                         } else {
                           document.getElementById('gridCheck').checked = false;
-                          inputRemarks.disabled = true;
+                          document.getElementById("inputCustomer").value = null;
+                          document.getElementById("inputDeviceDivision").value = null;
+                          document.getElementById("inputDeviceCount").value = null;
                           document.getElementById("inputRemarks").value = null;
-                          document.getElementById("inputDevice").value = false;
+                          inputCustomer.disabled = true;
+                          inputDeviceDivision.disabled = true;
+                          inputDeviceCount.disabled = true;
+                          inputRemarks.disabled = true; 
                         }
                       }
                       $(document).ready(function() {
@@ -647,7 +775,7 @@
 
   </body>
 </html>
-
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-ka7Sk0Gln4gmtz2MlQnikT1wXgYsOg+OMhuP+IlRH9sENBO0LRn5q+8nbTov4+1p" crossorigin="anonymous"></script>
 <!-- 체크박스 전체 선택/해제 스크립트 -->
 <script type="text/javascript">
   $(document).ready(function() {
@@ -884,11 +1012,20 @@
 <script>
   function toggleInputs() {
       var checkbox = document.getElementById('gridCheck');
+      var inputCustomer = document.getElementById('inputCustomer');
+      var inputDeviceDivision = document.getElementById('inputDeviceDivision');
+      var inputDeviceCount = document.getElementById('inputDeviceCount');
       var inputRemarks = document.getElementById('inputRemarks');
 
       if (checkbox.checked) {
+        inputCustomer.disabled = false;
+        inputDeviceDivision.disabled = false;
+        inputDeviceCount.disabled = false;
         inputRemarks.disabled = false;
       } else {
+        inputCustomer.disabled = true;
+        inputDeviceDivision.disabled = true;
+        inputDeviceCount.disabled = true;
         inputRemarks.disabled = true;
       }
   }
@@ -897,24 +1034,43 @@
 <script>
   function toggleInputs_work() {
       var checkbox = document.getElementById('gridCheck_2');
+      var inputWorkDivision = document.getElementById('inputWorkDivision')
       var inputLocation = document.getElementById('inputLocation');
-      var inputDetailLocation = document.getElementById('inputDetailLocation')
       var inputCompany = document.getElementById('inputCompany');
       var inputCompanyName = document.getElementById('inputCompanyName');
       var inputContent = document.getElementById('inputContent');
 
       if (checkbox.checked) {
+        inputWorkDivision.disabled = false;
         inputLocation.disabled = false;
-        inputDetailLocation.disabled = false;
         inputCompany.disabled = false;
         inputCompanyName.disabled = false;
         inputContent.disabled = false;
       } else {
+        inputWorkDivision.disabled = true;
         inputLocation.disabled = true;
-        inputDetailLocation.disabled = true;
         inputCompany.disabled = true;
         inputCompanyName.disabled = true;
         inputContent.disabled = true;
+      }
+  }
+</script>
+
+<script>
+  function toggleInputs_pc() {
+      var checkbox = document.getElementById('gridCheck_3');
+      var inputModelName = document.getElementById('inputModelName');
+      var inputSerialNumber = document.getElementById('inputSerialNumber');
+      var inputReason = document.getElementById('inputReason');
+
+      if (checkbox.checked) {
+        inputModelName.disabled = false;
+        inputSerialNumber.disabled = false;
+        inputReason.disabled = false;
+      } else {
+        inputModelName.disabled = true;
+        inputSerialNumber.disabled = true;
+        inputReason.disabled = true;
       }
   }
 </script>
