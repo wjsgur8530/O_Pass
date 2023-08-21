@@ -1075,6 +1075,79 @@
   }
 </script>
 
+<script>
+  $('#entrance_key').click(function(){
+    var checked_list = [];
+    var input_key = document.getElementById('key_select_box');
+    var key = input_key.value
+    $("input[name='check_box']:checked").each(function(){
+      checked_list.push($(this).val());
+    });
+    var postdata = {'checked_datas': checked_list, 'key': key}
+    $.ajax({
+      contentType: 'application/json',
+      type: 'POST',
+      url: 'api/ajax_use_rack_key_checkbox',
+      data: JSON.stringify(postdata),
+      dataType: 'json',
+      success: function(data) {
+        alert('키가 불출 되었습니다.');
+        history.go(0);
+      },
+      error: function(request, status, error) {
+        message = request.responseText;
+        if (message == "No Key")
+          alert('키를 먼저 불출해주세요.');
+
+        if (message == "No Select")
+          alert('방문객을 선택해주세요.');
+
+        if (message == "Exited")
+          alert('이미 퇴실한 방문객입니다.')
+
+        if (message == "Use Key")
+          alert('이미 키를 불출했습니다.')
+
+        if (message == "No Card")
+          alert('출입 카드가 없는 방문자입니다.')
+
+        if (message == "No Work")
+          alert('작업에 해당하지 않는 방문자입니다.')
+      }
+    })
+  })
+</script>
+<!-- 체크 박스 랙키 회수 스크립트 -->
+<script>
+  $('#recall_key').click(function(){
+    var checked_list = [];
+    $("input[name='check_box']:checked").each(function(){
+      checked_list.push($(this).val());
+    });
+    var postdata = {'checked_datas': checked_list}
+    $.ajax({
+      contentType: 'application/json',
+      type: 'POST',
+      url: 'api/ajax_recall_rack_key_checkbox',
+      data: JSON.stringify(postdata),
+      dataType: 'json',
+      success: function(data) {
+        alert('키가 회수 되었습니다.');
+        history.go(0);
+      },
+      error: function(request, status, error) {
+        message = request.responseText;
+        if (message == "No Key")
+          alert('불출된 키가 없습니다.');
+        if (message == "No Select")
+          alert('방문객을 선택해주세요.');
+        if (message == "Exited")
+          alert('이미 퇴실한 방문객입니다.');
+      }
+    })
+  })
+</script>
+
 <!-- 시간 새로고침 js -->
 <script>
   function autoRefresh_stamptime_div()

@@ -58,7 +58,25 @@
     <!-- Sidebar -->
     <ul class="navbar-nav sidebar sidebar-dark accordion toggled" id="accordionSidebar" style="background-color: #343a40;">
       
+      {% if current_user.rank == 'M' %}
       <!-- Sidebar - Brand -->
+      <a class="sidebar-brand d-flex align-items-center justify-content-center" href="manage_visitors">
+        <div class="sidebar-brand-icon">
+          <img src="{{ url_for('static', filename='img/CJ_logo.svg.png')}}" style="width:50px; height:50px;">
+          <!-- <i class="fas fa-laugh-wink"></i> -->
+        </div>
+        <div class="sidebar-brand-text mx-3">IDC O`Pass</div>
+      </a>
+      {% elif current_user.rank == 'S' %}
+      <!-- Sidebar - Brand -->
+      <a class="sidebar-brand d-flex align-items-center justify-content-center" href="rack_visitors">
+        <div class="sidebar-brand-icon">
+          <img src="{{ url_for('static', filename='img/CJ_logo.svg.png')}}" style="width:50px; height:50px;">
+          <!-- <i class="fas fa-laugh-wink"></i> -->
+        </div>
+        <div class="sidebar-brand-text mx-3">IDC O`Pass</div>
+      </a>
+      {% else %}
       <a class="sidebar-brand d-flex align-items-center justify-content-center" href="index">
         <div class="sidebar-brand-icon">
           <img src="{{ url_for('static', filename='img/CJ_logo.svg.png')}}" style="width:50px; height:50px;">
@@ -66,6 +84,7 @@
         </div>
         <div class="sidebar-brand-text mx-3">IDC O`Pass</div>
       </a>
+      {% endif %}
 
       <!-- Divider -->
       <hr class="sidebar-divider my-0">
@@ -149,23 +168,30 @@
           <div class="bg-white py-2 collapse-inner rounded">
             <h6 class="collapse-header">Custom Managements:</h6>
             {% if current_user.rank in allowed_ranks %}
-            <a class="collapse-item" href="departments">Department</a>
-            <a class="collapse-item" href="user_logs">Login Log</a>
-            <a class="collapse-item" href="failure_logs">Login Fail Log</a>
+            <a class="collapse-item" href="departments">부서/소속 관리</a>
+            <a class="collapse-item" href="user_logs">로그인 로그</a>
+            <a class="collapse-item" href="failure_logs">로그인 실패 로그</a>
+            <a class="collapse-item" href="password_change_at">패스워드 변경 로그</a>
+            {% if current_user.permission == '관리자' %}
+            <a class="collapse-item" href="user_approve">회원가입 승인</a>
+            {% endif %}
             {% elif current_user.rank == 'M' %}
             <a class="collapse-item" href="departments">부서/소속 관리</a>
             <a class="collapse-item" href="manage_cards">카드 관리</a>
             <a class="collapse-item" href="manage_rack_keys">랙키 관리</a>
             <a class="collapse-item" href="manage_logs">로그인 로그</a>
             <a class="collapse-item" href="failure_logs">로그인 실패 로그</a>
+            <a class="collapse-item" href="password_change_at">패스워드 변경 로그</a>
             <a class="collapse-item" href="account_logs">계정 로그</a>
             <a class="collapse-item" href="privacy_logs">기밀/개인정보 로그</a>
             <a class="collapse-item" href="permission">권한</a>
+            <a class="collapse-item" href="user_approve">회원가입 승인</a>
             {% elif current_user.rank == 'S' %}
-            <a class="collapse-item" href="departments">Department</a>
-            <a class="collapse-item" href="user_logs">Login Log</a>
-            <a class="collapse-item" href="failure_logs">Login Fail Log</a>
-            <a class="collapse-item" href="manage_rack_keys">Rack Keys</a>
+            <a class="collapse-item" href="departments">부서/소속 관리</a>
+            <a class="collapse-item" href="user_logs">로그인 로그</a>
+            <a class="collapse-item" href="failure_logs">로그인 실패 로그</a>
+            <a class="collapse-item" href="password_change_at">패스워드 변경 로그</a>
+            <a class="collapse-item" href="manage_rack_keys">랙키 관리</a>
             {% endif %}
           </div>
         </div>
@@ -190,7 +216,7 @@
             <div class="bg-white py-2 collapse-inner rounded">
               <h6 class="collapse-header">Login Screens:</h6>
               <a class="collapse-item" href="login">Login</a>
-              <a class="collapse-item" href="register">Register</a>
+              <a class="collapse-item" href="policy-register">Register</a>
               <a class="collapse-item" href="forgot-password">Forgot Password</a>
             </div>
           </div>
@@ -341,7 +367,7 @@
       <footer class="sticky-footer bg-white">
         <div class="copyright text-center pl-4">
           <a href="/privacy-policy" style="text-decoration: none; color:dodgerblue;"><b>개인정보 처리방침</b></a>
-          <span style="color:#343a40"><b>인천광역시 연수구 하모니로177번길 20 (우)22013 대표자 유인상 | 사업자등록번호 104-81-36565 | 대표번호 032-211-0290</b></span> <br><br>
+          <span style="color:#343a40"><b>씨제이올리브네트웍스(주) | 인천광역시 연수구 하모니로177번길 20 (우)22013 대표자 유인상 | 사업자등록번호 104-81-36565 | 대표번호 032-211-0290</b></span> <br><br>
           <span style="color:#343a40"><b>Copyright &copy; CJ Olivenetworks 2023 All rights Reserved.</b></b></span>
         </div>
       </footer>

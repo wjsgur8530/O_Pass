@@ -4,7 +4,7 @@ from flask_session import Session
 from flask_sqlalchemy import SQLAlchemy
 from werkzeug.security import generate_password_hash, check_password_hash # Password Hash
 from flask_bcrypt import Bcrypt
-from app import User, Visitor, Card, User_log, Year, Month, Day, Department, Rack, Privacy, Password_log, Account_log, Login_failure_log, Permission_log, Privacy_log
+from app import User, Visitor, Card, User_log, Year, Month, Day, Department, Rack, Privacy, Password_log, Account_log, Login_failure_log, Permission_log, Privacy_log, Password_change_log
 from pycrypto import *
 import jinja2.exceptions
 from config import create_app, db
@@ -28,6 +28,7 @@ import pytz
 import string
 import random
 import hashlib
+from apscheduler.schedulers.background import BackgroundScheduler
 
 # 암복호화 로직
 key = "avhejrghjawerjvawev"
@@ -35,6 +36,8 @@ aes = AESCipher(key)
 
 app = create_app()
 bcrypt = Bcrypt(app)
+
+SECRET_TOKEN = 'Ssw8Ik0OWZM3vYSyqPQdgo1M7oPSE5EZLayiMPPlMFg'
 
 # Login
 login_manager = LoginManager()
@@ -59,6 +62,24 @@ def remove_header(response):
 
     return response
 #===================================================================================
+# 데이터 삭제 작업 함수
+def delete_old_records():
+    with app.app_context():
+        now = datetime.now()
+        one_year_ago = now - timedelta(days=365)
+        
+        old_records = Privacy.query.filter(Privacy.visit_date <= one_year_ago).all()
+        for record in old_records:
+            db.session.delete(record)
+        
+        db.session.commit()
+
+
+scheduler = BackgroundScheduler(daemon=True)
+# 1년마다 데이터 삭제 작업 스케줄링
+scheduler.add_job(delete_old_records, trigger='interval', weeks=52)
+scheduler.start()
+
 
 @app.route('/')
 @app.route('/index')
@@ -135,7 +156,7 @@ def admin_page():
         username = '관리자'
         email = admin_email
         hashed_password = bcrypt.generate_password_hash(admin_password)
-        admin = User(username, email, hashed_password, 'Admin', 'M', hashed_password, current_timestamp, current_timestamp, "관리자")
+        admin = User(username, email, hashed_password, 'Admin', 'M', hashed_password, current_timestamp, current_timestamp, "관리자", 1, "", "")
         db.session.add(admin)
         db.session.commit()
         flash("관리자 계정이 생성되었습니다.")
@@ -153,7 +174,7 @@ def admin2_page():
         username = '상황실'
         email = admin2_email
         hashed_password = bcrypt.generate_password_hash(admin2_password)
-        admin = User(username, email, hashed_password, 'Admin', 'S', hashed_password, current_timestamp, current_timestamp, "일반")
+        admin = User(username, email, hashed_password, 'Admin', 'S', hashed_password, current_timestamp, current_timestamp, "일반", 1, "", "")
         db.session.add(admin)
         db.session.commit()
         flash("상황실 계정이 생성되었습니다.")
@@ -311,7 +332,8 @@ def manage_visitors():
 
         # 출입 카드 목록
         card_list = Card.query.all()
-
+        # 랙 키 목록
+        rack_key_list = Rack.query.all()
         if approve_visitors:
             # 실시간 출입 방문객
             in_visitor = Visitor.query.filter_by(exit=0)
@@ -343,7 +365,7 @@ def manage_visitors():
 
         # 내방객 등록 - 부서 목록
         department_lists = Department.query.all()
-        return render_template('visitor_update.html', current_user=current_user, approve_visitors=approve_visitors, visitor_count=visitor_count, time=time, card_list=card_list, department_lists=department_lists, total_visitors=total_visitors)
+        return render_template('visitor_update.html', current_user=current_user, approve_visitors=approve_visitors, visitor_count=visitor_count, time=time, card_list=card_list, department_lists=department_lists, total_visitors=total_visitors, rack_key_list=rack_key_list)
     else:
         return render_template('404.html')
 #===================================================================================
@@ -626,7 +648,7 @@ def user_logs():
 @login_required
 def account_logs():
     if current_user.rank == 'M':
-        user = User.query.order_by(User.id).all()
+        user = User.query.filter_by(approve=1).order_by(User.id).all()
         remove_user = Account_log.query.all()
         print(user)
         return render_template('account_logs.html', user=user, remove_user=remove_user)
@@ -637,7 +659,7 @@ def account_logs():
 @login_required
 def permission():
     if current_user.rank == 'M':
-        user = User.query.order_by(User.id).all()
+        user = User.query.filter_by(approve=1).order_by(User.id).all()
         permission = Permission_log.query.all()
         return render_template('permission.html', user=user, permission=permission)
     else:
@@ -648,6 +670,16 @@ def permission():
 def login_failure_logs():
     login_fail_log = Login_failure_log.query.filter_by(user_id=current_user.id).order_by(Login_failure_log.id.desc()).all()
     return render_template('login_failure_logs.html', login_fail_log=login_fail_log)
+
+@app.route('/password_change_at', methods=['GET', 'POST'])
+@login_required
+def password_change_log():
+    if current_user.rank == 'M':
+        password_change_log = Password_change_log.query.order_by(Password_change_log.id.desc()).all()
+        return render_template('password_change_at.html', password_change_log=password_change_log)
+    else:
+        password_change_log = Password_change_log.query.filter_by(user_id=current_user.id).order_by(Password_change_log.id.desc()).all()
+        return render_template('password_change_at.html', password_change_log=password_change_log)
 
 @app.route('/privacy_logs', methods=['GET', 'POST'])
 @login_required
@@ -661,6 +693,14 @@ def privacy_logs():
     else:
         return render_template('404.html')
 
+@app.route('/user_approve', methods=['GET', 'POST'])
+@login_required
+def user_approve():
+    if current_user.rank == 'M' or current_user.permission == '관리자':
+        approve_user = User.query.filter_by(approve=0).all()
+        return render_template('user_approve.html', approve_user=approve_user)
+    else:
+        return render_template('404.html')
 
 @app.route('/api/ajax_delete_account', methods=['POST'])
 @login_required
@@ -698,6 +738,26 @@ def ajax_permission_change():
     db.session.commit()
     return jsonify()
 
+@app.route('/api/ajax_user_register_approve', methods=['POST'])
+@login_required
+def ajax_user_register_approve():
+    data = request.get_json()
+    user_id = data['user_id']
+    approve_user = User.query.filter_by(id=user_id, approve=0).first()
+    approve_user.approve = 1
+    db.session.commit()
+    return jsonify()
+
+@app.route('/api/ajax_user_register_deny', methods=['POST'])
+@login_required
+def ajax_user_register_deny():
+    data = request.get_json()
+    user_id = data['user_id']
+    deny_user = User.query.filter_by(id=user_id, approve=0).first()
+    db.session.delete(deny_user)
+    db.session.commit()
+    return jsonify()
+
 @app.route('/<pagename>')
 def admin(pagename):
     return render_template(pagename+'.html')
@@ -713,6 +773,11 @@ def contains_consecutive(string, length):
             return True
     return False
 
+# 회원가입 개인정보 수집 동의
+@app.route('/policy-register', methods=['GET','POST'])
+def policy_register():
+    return render_template('policy-register.html')
+
 # 회원가입 페이지
 @app.route('/register', methods=['GET', 'POST'])
 def register():
@@ -726,6 +791,8 @@ def register():
         password2 = request.form['password2']
         department = request.form['registerDepartment']
         rank = request.form['registerRank']
+        password_question = request.form['password_question']
+        password_hint_answer = request.form['password_hint']
 
         print(email)
         print(email_fix)
@@ -759,19 +826,21 @@ def register():
             # 비밀번호 암호화
             hashed_password = bcrypt.generate_password_hash(password1)
             email = email + email_fix
-            user = User(username, email, hashed_password, department, rank, hashed_password, current_timestamp, current_timestamp, "일반")
-            # 비밀번호 이력 보관
-            
+            user = User(username, email, hashed_password, department, rank, hashed_password, current_timestamp, current_timestamp, "일반", 0, password_question, password_hint_answer)
 
+            # 비밀번호 이력 보관
             db.session.add(user)
             db.session.commit()
 
             # 회원가입이 성공적으로 완료됨을 알리는 메시지 표시
-            flash("회원가입 완료")
+            flash("회원가입 완료되었습니다. 관리자 승인 후 로그인 가능합니다.")
             return redirect('login')
-
-    # GET 요청인 경우 회원가입 양식을 표시
-    return render_template('register.html')
+    else:
+        form_val = request.args.get('checkVal')
+        if form_val != SECRET_TOKEN:
+            return redirect('policy-register')
+        # GET 요청인 경우 회원가입 양식을 표시
+        return render_template('register.html')
 
 # 6개월 이상된 비밀번호 변경권고 코드 
 def check_password_change(user):
@@ -802,7 +871,7 @@ def login():
         email = request.form['email']
         password = request.form['password1']
 
-        user = User.query.filter_by(email=email).first()
+        user = User.query.filter_by(email=email, approve=1).first()
         if user:
             if user.login_blocked_until and user.login_blocked_until > datetime.now():
                 # 로그인이 제한된 경우
@@ -920,31 +989,64 @@ def random_string():
 # 비밀번호 찾기 페이지
 @app.route('/forgot-password', methods=['GET', 'POST'])
 def forgot_password():
-    if request.method == 'POST':
-        email = request.form['inputEmail']
-        phone = request.form['inputPhoneNumber']
-
-        user = User.query.filter_by(email=email).first()
-
-        if user:
-            connect_to_database()
-            hash_password = random_string()
-            user.password = bcrypt.generate_password_hash(hash_password)
-            user.attempts = "attempts_password"
-            db.session.commit()
-            cursor = app.mysql_conn.cursor()  # 커서 생성
-            insert_query = "INSERT INTO sms_msg (REQDATE, STATUS, TYPE, PHONE, CALLBACK, MSG) VALUES (%s, %s, %s, %s, %s, %s)"
-            insert_data = (datetime.now(), '1', '0', phone, '0322110290', '[CJ IDC O`PASS 비밀번호 임시 발급] 임시 비밀번호: ' + hash_password)
-
-            cursor.execute(insert_query, insert_data)  # 쿼리 실행 및 데이터 전달
-            app.mysql_conn.commit()  # 변경 사항 커밋
-            cursor.close()  # 커서 닫기
-            flash('입력한 번호로 임시 비밀번호가 전송되었습니다. 임시 비밀번호로 로그인해주세요.')
-            return redirect('login')
-        else:
-            return redirect('forgot-password')
-
     return render_template('forgot-password.html')
+
+# 이메일 유효성 검사
+@app.route('/api/password_forgot_email_valid', methods=['POST'])
+def password_forgot_email_valid():
+    data = request.get_json()
+    email = data['email']
+    user = User.query.filter_by(email=email, approve=1).first()
+    
+    if user:
+        return jsonify(result = "success")
+    else:
+        return "No Email"
+    
+# 패스워드 정답 유효성 검사
+@app.route('/api/password_forgot_answer_valid', methods=['POST'])
+def password_forgot_answer_valid():
+    data = request.get_json()
+    email = data['email']
+    question = data['question']
+    answer = data['answer']
+    user = User.query.filter_by(email=email, password_question=question, password_hint_answer=answer, approve=1).first()
+    
+    if user:
+        return jsonify(result = "success")
+    else:
+        return "No Answer"
+
+# 임시 패스워드 전송 검사 
+@app.route('/api/password_forgot_transfer_valid', methods=['POST'])
+def password_forgot_transfer_valid():
+    data = request.get_json()
+    email = data['email']
+    question = data['question']
+    answer = data['answer']
+    phone = data['phone']
+
+    user = User.query.filter_by(email=email, password_question=question, password_hint_answer=answer, approve=1).first()
+
+    if user:
+        connect_to_database()
+        hash_password = random_string()
+        user.password = bcrypt.generate_password_hash(hash_password)
+        user.attempts = "attempts_password"
+        db.session.commit()
+
+        insert_query = "INSERT INTO SMS_MSG (REQDATE, STATUS, TYPE, PHONE, CALLBACK, MSG) VALUES (%s, %s, %s, %s, %s, %s)"
+        insert_data = (datetime.now(), '1', '0', phone, '0322110290', '[CJ IDC O`PASS 비밀번호 임시 발급] 임시 비밀번호: ' + hash_password)
+
+        cursor = app.mysql_conn.cursor()  # 커서 생성
+        cursor.execute(insert_query, insert_data)  # 쿼리 실행 및 데이터 전달
+        app.mysql_conn.commit()  # 변경 사항 커밋
+        cursor.close()  # 커서 닫기
+
+        flash('입력한 번호로 임시 비밀번호가 전송되었습니다. 임시 비밀번호로 로그인해주세요.')
+        return jsonify(result = "success")
+    else:
+        return "No Answer"
 
 #===================================================================================
 
@@ -1098,11 +1200,12 @@ def ajax_approve():
         work = "해당"
         privacy_work = True
 
-    qr_expired_date = datetime.now().strftime('%Y-%m-%d')
-    qr_data = "http://localhost:5000/?name=" + aes.encrypt(visitor.name) + "&date=" + aes.encrypt(qr_expired_date)
-    qr_img = qrcode.make(qr_data)
-    save_path = 'qrcode.png'
-    qr_img.save(save_path)
+    print(visitor.id)
+    # qr_expired_date = datetime.now().strftime('%Y-%m-%d')
+    # qr_data = "https://opass.cj.net/?id="
+    # qr_img = qrcode.make(qr_data)
+    # save_path = 'qrcode.png'
+    # qr_img.save(save_path)
 
 
     privacy_date = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
@@ -1520,9 +1623,128 @@ def ajax_delete_manage_visit():
 def image_send_sms_current(name, date, object, location, manager, phone_num, device, work, company, work_content, personal_computer, model_name, work_division, device_division, device_count):
     connect_to_database()
     cursor = app.mysql_conn.cursor()  # 커서 생성
-    insert_query = "INSERT INTO mms_msg (REQDATE, STATUS, TYPE, PHONE, CALLBACK, SUBJECT, MSG, FILE_CNT, FILE_TYPE1, FILE_PATH1) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)"
+    insert_query = "INSERT INTO MMS_MSG (REQDATE, STATUS, TYPE, PHONE, CALLBACK, SUBJECT, MSG, FILE_CNT, FILE_TYPE1, FILE_PATH1) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)"
 
-    msg = name + '님 ' + '안녕하세요.\n' + '송도 IDC 센터에 방문하신 것을 환영합니다.\n-등록시간: ' + str(date) + '\n-방문위치: 인천광역시 연수구 하모니로177번길 20' + '\n-방문목적: ' + object + '\n-PC 반입: ' + personal_computer + '\n-모델명: ' + model_name + '\n-작업: ' + work + '\n-작업 분류: ' + work_division + '\n-작업위치: ' + location + '\n-요청 회사명: ' + company + '\n-작업내용:' + work_content + '\n-장비반출입: ' + device + '\n-장비 기종: ' + device_division + '\n-장비 수량: ' + str(device_count) + '\n-담당자: ' + manager + '\n-QR Code◀ '
+    if personal_computer == "반입" and work == "해당" and device == "반입":
+        msg = (
+            f"{name}님 안녕하세요.\n"
+            f"송도 IDC 센터에 방문하신 것을 환영합니다.\n"
+            f"-등록시간: {date}\n"
+            f"-방문위치: 인천광역시 연수구 하모니로177번길 20\n"
+            f"-방문목적: {object}\n"
+            f"-PC 반입: {personal_computer}\n"
+            f"-모델명: {model_name}\n"
+            f"-작업: {work}\n"
+            f"-작업 분류: {work_division}\n"
+            f"-작업위치: {location}\n"
+            f"-요청 회사명: {company}\n"
+            f"-작업내용: {work_content}\n"
+            f"-장비반출입: {device}\n"
+            f"-장비 기종: {device_division}\n"
+            f"-장비 수량: {device_count}\n"
+            f"-담당자: {manager}\n"
+            f"-QR Code◀"
+        )
+    elif personal_computer == "반입" and work == "해당" and device == "미반입":
+        msg = (
+            f"{name}님 안녕하세요.\n"
+            f"송도 IDC 센터에 방문하신 것을 환영합니다.\n"
+            f"-등록시간: {date}\n"
+            f"-방문위치: 인천광역시 연수구 하모니로177번길 20\n"
+            f"-방문목적: {object}\n"
+            f"-PC 반입: {personal_computer}\n"
+            f"-모델명: {model_name}\n"
+            f"-작업: {work}\n"
+            f"-작업 분류: {work_division}\n"
+            f"-작업위치: {location}\n"
+            f"-요청 회사명: {company}\n"
+            f"-작업내용: {work_content}\n"
+            f"-담당자: {manager}\n"
+            f"-QR Code◀"
+        )
+    elif personal_computer == "반입" and work == "해당 없음" and device == "반입":
+        msg = (
+            f"{name}님 안녕하세요.\n"
+            f"송도 IDC 센터에 방문하신 것을 환영합니다.\n"
+            f"-등록시간: {date}\n"
+            f"-방문위치: 인천광역시 연수구 하모니로177번길 20\n"
+            f"-방문목적: {object}\n"
+            f"-PC 반입: {personal_computer}\n"
+            f"-모델명: {model_name}\n"
+            f"-장비반출입: {device}\n"
+            f"-장비 기종: {device_division}\n"
+            f"-장비 수량: {device_count}\n"
+            f"-담당자: {manager}\n"
+            f"-QR Code◀"
+        )
+    elif personal_computer == "반입" and work == "해당 없음" and device == "미반입":
+        msg = (
+            f"{name}님 안녕하세요.\n"
+            f"송도 IDC 센터에 방문하신 것을 환영합니다.\n"
+            f"-등록시간: {date}\n"
+            f"-방문위치: 인천광역시 연수구 하모니로177번길 20\n"
+            f"-방문목적: {object}\n"
+            f"-PC 반입: {personal_computer}\n"
+            f"-모델명: {model_name}\n"
+            f"-담당자: {manager}\n"
+            f"-QR Code◀"
+        )
+    elif personal_computer == "미반입" and work == "해당" and device == "반입":
+        msg = (
+            f"{name}님 안녕하세요.\n"
+            f"송도 IDC 센터에 방문하신 것을 환영합니다.\n"
+            f"-등록시간: {date}\n"
+            f"-방문위치: 인천광역시 연수구 하모니로177번길 20\n"
+            f"-방문목적: {object}\n"
+            f"-작업: {work}\n"
+            f"-작업 분류: {work_division}\n"
+            f"-작업위치: {location}\n"
+            f"-요청 회사명: {company}\n"
+            f"-작업내용: {work_content}\n"
+            f"-장비반출입: {device}\n"
+            f"-장비 기종: {device_division}\n"
+            f"-장비 수량: {device_count}\n"
+            f"-담당자: {manager}\n"
+            f"-QR Code◀"
+        )
+    elif personal_computer == "미반입" and work == "해당" and device == "미반입":
+        msg = (
+            f"{name}님 안녕하세요.\n"
+            f"송도 IDC 센터에 방문하신 것을 환영합니다.\n"
+            f"-등록시간: {date}\n"
+            f"-방문위치: 인천광역시 연수구 하모니로177번길 20\n"
+            f"-방문목적: {object}\n"
+            f"-작업: {work}\n"
+            f"-작업 분류: {work_division}\n"
+            f"-작업위치: {location}\n"
+            f"-요청 회사명: {company}\n"
+            f"-작업내용: {work_content}\n"
+            f"-담당자: {manager}\n"
+            f"-QR Code◀"
+        )
+    elif personal_computer == "미반입" and work == "해당 없음" and device == "반입":
+        msg = (
+            f"{name}님 안녕하세요.\n"
+            f"송도 IDC 센터에 방문하신 것을 환영합니다.\n"
+            f"-등록시간: {date}\n"
+            f"-방문위치: 인천광역시 연수구 하모니로177번길 20\n"
+            f"-방문목적: {object}\n"
+            f"-장비반출입: {device}\n"
+            f"-장비 기종: {device_division}\n"
+            f"-장비 수량: {device_count}\n"
+            f"-담당자: {manager}\n"
+            f"-QR Code◀"
+        )
+    elif personal_computer == "미반입" and work == "해당 없음" and device == "미반입":
+        msg = (
+            f"{name}님 안녕하세요.\n"
+            f"송도 IDC 센터에 방문하신 것을 환영합니다.\n"
+            f"-등록시간: {date}\n"
+            f"-방문위치: 인천광역시 연수구 하모니로177번길 20\n"
+            f"-방문목적: {object}\n"
+            f"-담당자: {manager}\n"
+            f"-QR Code◀"
+        )
 
     insert_data = (datetime.now(), '1', '0', phone_num, '0322110290', '[내방객 출입 관리 시스템 현장 등록 승인]', msg, '2', 'I', 'D://CJAgent//qr_img.jpg')  # 삽입할 데이터를 튜플로 정의
     cursor.execute(insert_query, insert_data)  # 쿼리 실행 및 데이터 전달
@@ -1533,9 +1755,129 @@ def image_send_sms_current(name, date, object, location, manager, phone_num, dev
 def image_send_sms_previous(name, date, object, location, manager, phone_num, device, work, company, work_content, personal_computer, model_name, work_division, device_division, device_count):
     connect_to_database()
     cursor = app.mysql_conn.cursor()  # 커서 생성
-    insert_query = "INSERT INTO mms_msg (REQDATE, STATUS, TYPE, PHONE, CALLBACK, SUBJECT, MSG, FILE_CNT, FILE_TYPE1, FILE_PATH1) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)"
+    insert_query = "INSERT INTO MMS_MSG (REQDATE, STATUS, TYPE, PHONE, CALLBACK, SUBJECT, MSG, FILE_CNT, FILE_TYPE1, FILE_PATH1) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)"
 
-    msg = name + '님 ' + '안녕하세요.\n' + '송도 IDC 센터에 방문하신 것을 환영합니다.\n-등록시간: ' + str(date) + '\n-방문위치: 인천광역시 연수구 하모니로177번길 20' + '\n-방문목적: ' + object + '\n-PC 반입: ' + personal_computer + '\n-모델명: ' + model_name + '\n-작업: ' + work + '\n-작업 분류: ' + work_division + '\n-작업위치: ' + location + '\n-요청 회사명: ' + company + '\n-작업내용:' + work_content + '\n-장비반출입: ' + device + '\n-장비 기종: ' + device_division + '\n-장비 수량: ' + str(device_count) + '\n-담당자: ' + manager + '\n-QR Code◀ '
+    if personal_computer == "반입" and work == "해당" and device == "반입":
+        msg = (
+            f"{name}님 안녕하세요.\n"
+            f"송도 IDC 센터에 방문하신 것을 환영합니다.\n"
+            f"-등록시간: {date}\n"
+            f"-방문위치: 인천광역시 연수구 하모니로177번길 20\n"
+            f"-방문목적: {object}\n"
+            f"-PC 반입: {personal_computer}\n"
+            f"-모델명: {model_name}\n"
+            f"-작업: {work}\n"
+            f"-작업 분류: {work_division}\n"
+            f"-작업위치: {location}\n"
+            f"-요청 회사명: {company}\n"
+            f"-작업내용: {work_content}\n"
+            f"-장비반출입: {device}\n"
+            f"-장비 기종: {device_division}\n"
+            f"-장비 수량: {device_count}\n"
+            f"-담당자: {manager}\n"
+            f"-QR Code◀"
+        )
+    elif personal_computer == "반입" and work == "해당" and device == "미반입":
+        msg = (
+            f"{name}님 안녕하세요.\n"
+            f"송도 IDC 센터에 방문하신 것을 환영합니다.\n"
+            f"-등록시간: {date}\n"
+            f"-방문위치: 인천광역시 연수구 하모니로177번길 20\n"
+            f"-방문목적: {object}\n"
+            f"-PC 반입: {personal_computer}\n"
+            f"-모델명: {model_name}\n"
+            f"-작업: {work}\n"
+            f"-작업 분류: {work_division}\n"
+            f"-작업위치: {location}\n"
+            f"-요청 회사명: {company}\n"
+            f"-작업내용: {work_content}\n"
+            f"-담당자: {manager}\n"
+            f"-QR Code◀"
+        )
+    elif personal_computer == "반입" and work == "해당 없음" and device == "반입":
+        msg = (
+            f"{name}님 안녕하세요.\n"
+            f"송도 IDC 센터에 방문하신 것을 환영합니다.\n"
+            f"-등록시간: {date}\n"
+            f"-방문위치: 인천광역시 연수구 하모니로177번길 20\n"
+            f"-방문목적: {object}\n"
+            f"-PC 반입: {personal_computer}\n"
+            f"-모델명: {model_name}\n"
+            f"-장비반출입: {device}\n"
+            f"-장비 기종: {device_division}\n"
+            f"-장비 수량: {device_count}\n"
+            f"-담당자: {manager}\n"
+            f"-QR Code◀"
+        )
+    elif personal_computer == "반입" and work == "해당 없음" and device == "미반입":
+        msg = (
+            f"{name}님 안녕하세요.\n"
+            f"송도 IDC 센터에 방문하신 것을 환영합니다.\n"
+            f"-등록시간: {date}\n"
+            f"-방문위치: 인천광역시 연수구 하모니로177번길 20\n"
+            f"-방문목적: {object}\n"
+            f"-PC 반입: {personal_computer}\n"
+            f"-모델명: {model_name}\n"
+            f"-담당자: {manager}\n"
+            f"-QR Code◀"
+        )
+    elif personal_computer == "미반입" and work == "해당" and device == "반입":
+        msg = (
+            f"{name}님 안녕하세요.\n"
+            f"송도 IDC 센터에 방문하신 것을 환영합니다.\n"
+            f"-등록시간: {date}\n"
+            f"-방문위치: 인천광역시 연수구 하모니로177번길 20\n"
+            f"-방문목적: {object}\n"
+            f"-작업: {work}\n"
+            f"-작업 분류: {work_division}\n"
+            f"-작업위치: {location}\n"
+            f"-요청 회사명: {company}\n"
+            f"-작업내용: {work_content}\n"
+            f"-장비반출입: {device}\n"
+            f"-장비 기종: {device_division}\n"
+            f"-장비 수량: {device_count}\n"
+            f"-담당자: {manager}\n"
+            f"-QR Code◀"
+        )
+    elif personal_computer == "미반입" and work == "해당" and device == "미반입":
+        msg = (
+            f"{name}님 안녕하세요.\n"
+            f"송도 IDC 센터에 방문하신 것을 환영합니다.\n"
+            f"-등록시간: {date}\n"
+            f"-방문위치: 인천광역시 연수구 하모니로177번길 20\n"
+            f"-방문목적: {object}\n"
+            f"-작업: {work}\n"
+            f"-작업 분류: {work_division}\n"
+            f"-작업위치: {location}\n"
+            f"-요청 회사명: {company}\n"
+            f"-작업내용: {work_content}\n"
+            f"-담당자: {manager}\n"
+            f"-QR Code◀"
+        )
+    elif personal_computer == "미반입" and work == "해당 없음" and device == "반입":
+        msg = (
+            f"{name}님 안녕하세요.\n"
+            f"송도 IDC 센터에 방문하신 것을 환영합니다.\n"
+            f"-등록시간: {date}\n"
+            f"-방문위치: 인천광역시 연수구 하모니로177번길 20\n"
+            f"-방문목적: {object}\n"
+            f"-장비반출입: {device}\n"
+            f"-장비 기종: {device_division}\n"
+            f"-장비 수량: {device_count}\n"
+            f"-담당자: {manager}\n"
+            f"-QR Code◀"
+        )
+    elif personal_computer == "미반입" and work == "해당 없음" and device == "미반입":
+        msg = (
+            f"{name}님 안녕하세요.\n"
+            f"송도 IDC 센터에 방문하신 것을 환영합니다.\n"
+            f"-등록시간: {date}\n"
+            f"-방문위치: 인천광역시 연수구 하모니로177번길 20\n"
+            f"-방문목적: {object}\n"
+            f"-담당자: {manager}\n"
+            f"-QR Code◀"
+        )
+
 
     insert_data = (datetime.now(), '1', '0', phone_num, '0322110290', '[내방객 출입 관리 시스템 사전 등록 승인]', msg, '2', 'I', 'D://CJAgent//qr_img.jpg')  # 삽입할 데이터를 튜플로 정의
     cursor.execute(insert_query, insert_data)  # 쿼리 실행 및 데이터 전달
@@ -1881,7 +2223,12 @@ def user_authenticated():
                 return redirect(url_for('user_profile_update', _method='POST'))
             else:
                 flash("비밀번호를 확인 후 다시 입력해주세요.")
-    return render_template('authenticated.html')
+                return redirect('authenticated')
+        else:
+            flash("다시 입력해주세요.")
+            return redirect('authenticated')
+    else:
+        return render_template('authenticated.html')
 
 
 # 유저 정보 변경 페이지
@@ -1915,8 +2262,8 @@ def user_profile_update():
                         flash("비밀번호는 대문자, 숫자, 특수문자가 포함되어야 합니다.")
                     elif re.search(r'(.)\1\1\1', new_password_1) or re.search(r'(\d)\1\1\1', new_password_1):
                         flash("비밀번호에 4자 이상의 반복문자나 반복숫자를 사용할 수 없습니다.")
-                    elif any(current_user.email[i:i+4].lower() in new_password_1.lower() for i in range(len(current_user.email)-3)):
-                        flash("비밀번호에 이메일과 연관된 부분이 연속된 4자리 이상으로 포함될 수 없습니다.")
+                    elif any(new_password_1.lower() for i in range(len(new_password_1)-3) or contains_consecutive(new_password_1, 4)):
+                        flash("비밀번호에 연속된 4자리 이상 문자를 포함될 수 없습니다.")
                     else:
                         # 비밀번호 수정
                         hashed_password = bcrypt.generate_password_hash(new_password_1)
@@ -1934,7 +2281,9 @@ def user_profile_update():
 
                         # 비밀번호 이력 보관
                         password_log = Password_log(hashed_password, user.id)
+                        password_change_log = Password_change_log(user.email, fomatting_time_korean, request.remote_addr, user.id)
                         db.session.add(password_log)
+                        db.session.add(password_change_log)
                         db.session.commit()
 
                         logout_user()
@@ -1958,8 +2307,8 @@ def user_profile_update():
                         flash("비밀번호는 대문자, 숫자, 특수문자가 포함되어야 합니다.")
                     elif re.search(r'(.)\1\1\1', new_password_1) or re.search(r'(\d)\1\1\1', new_password_1):
                         flash("비밀번호에 4자 이상의 반복문자나 반복숫자를 사용할 수 없습니다.")
-                    elif any(current_user.email[i:i+4].lower() in new_password_1.lower() for i in range(len(current_user.email)-3)) or contains_consecutive(new_password_1, 4):
-                        flash("비밀번호에 이메일과 연관된 부분이 연속된 4자리 이상으로 포함될 수 없습니다.")
+                    elif any(new_password_1.lower() for i in range(len(new_password_1)-3) or contains_consecutive(new_password_1, 4)):
+                        flash("비밀번호에 연속된 4자리 이상 문자를 포함될 수 없습니다.")
                     else:
                         # 비밀번호 수정
                         hashed_password = bcrypt.generate_password_hash(new_password_1)
@@ -1977,7 +2326,9 @@ def user_profile_update():
 
                         # 비밀번호 이력 보관
                         password_log = Password_log(hashed_password, user.id)
+                        password_change_log = Password_change_log(user.email, fomatting_time_korean, request.remote_addr, user.id)
                         db.session.add(password_log)
+                        db.session.add(password_change_log)
                         db.session.commit()
 
                         logout_user()
@@ -1985,6 +2336,7 @@ def user_profile_update():
                         return redirect('login')
                 else:
                     flash("비밀번호를 잘못 입력하셨습니다.")
+
     return render_template('user_profile_update.html')
 
 #===================================================================================
@@ -2116,15 +2468,15 @@ def user_delete():
         return "Error"
 
 #===================================================================================
-# qr_expired_date = datetime.now().strftime('%Y-%m-%d')
-# qr_data = "http://localhost:5000/?name=" + aes.encrypt(visitor.name) + "&date=" + aes.encrypt(qr_expired_date)
-# qr_img = qrcode.make(qr_data)
-# save_path = 'qrcode.png'
-# qr_img.save(save_path)
-# @app.route('/name=<name>&date=<date>', methods=['POST'])
-# def qrcode_authenticated():
-#     print("222222222222222222")
-#     return redirect('index')
+
+@app.route('/abcd', methods=['GET','POST'])
+def qrcode_authenticated():
+    qr_data = "https://opass.cj.net/abcd"
+    qr_img = qrcode.make(qr_data)
+    save_path = 'qrcode.jpg'
+    qr_img.save(save_path)
+    print("222222222222222222")
+    return render_template('form.html')
 
 @app.errorhandler(jinja2.exceptions.TemplateNotFound)
 def template_not_found(e):

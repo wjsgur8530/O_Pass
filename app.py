@@ -14,10 +14,10 @@ class User(db.Model):
     __tablename__ = "User"
 
     id = db.Column(db.Integer, primary_key=True)
-    username = db.Column(db.String(50), unique=False)
-    email = db.Column(db.String(50), unique=True)
-    password = db.Column(db.String(200), unique=False)
-    department = db.Column(db.String(50), unique=False)
+    username = db.Column(db.String(50), unique=False, nullable=False)
+    email = db.Column(db.String(50), unique=True, nullable=False)
+    password = db.Column(db.String(200), unique=False, nullable=False)
+    department = db.Column(db.String(50), unique=False, nullable=False)
     rank = db.Column(db.String(20), unique=False)
     login_attempts = db.Column(db.Integer, default=0)  # 로그인 시도 횟수
     login_blocked_until = db.Column(db.DateTime, nullable=True)  # 로그인 제한 종료 시간
@@ -27,11 +27,15 @@ class User(db.Model):
     attempts = db.Column(db.String(50), unique=False)
     authenticated = db.Column(db.String(30), unique=False)
     permission = db.Column(db.String(10))
+    approve = db.Column(db.Integer)
+    password_question = db.Column(db.String(200), unique=False, nullable=False)
+    password_hint_answer = db.Column(db.String(200), unique=False, nullable=False)
     user_info_id = db.relationship('User_log', backref='user_log')
     password_log_id = db.relationship('Password_log', backref='user_log')
+    password_change_log_id = db.relationship('Password_change_log', backref='user_log')
     login_failure_id = db.relationship('Login_failure_log', backref='user_log')
 
-    def __init__(self, username, email, password, department, rank, password_history, registered_at, password_changed_at, permission):
+    def __init__(self, username, email, password, department, rank, password_history, registered_at, password_changed_at, permission, approve, password_question, password_hint_answer):
         self.username = username
         self.email = email
         self.password = password
@@ -41,6 +45,9 @@ class User(db.Model):
         self.registered_at = registered_at
         self.password_changed_at = password_changed_at
         self.permission = permission
+        self.approve = approve
+        self.password_question = password_question
+        self.password_hint_answer = password_hint_answer
 
     # Flask-Login integration
     def is_authenticated(self):
@@ -100,6 +107,21 @@ class Password_log(db.Model):
 
     def __init__(self, password_log, user_id):
         self.password_log = password_log
+        self.user_id = user_id
+
+class Password_change_log(db.Model):
+    __tablename__ = "Password_change_log"
+
+    id = db.Column(db.Integer, primary_key=True)
+    email = db.Column(db.String(40), unique=False)
+    password_changed_at = db.Column(db.DateTime, nullable=False)
+    ip_address = db.Column(db.String(30), unique=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('User.id'))
+
+    def __init__(self, email, password_changed_at, ip_address, user_id):
+        self.email = email
+        self.password_changed_at = password_changed_at
+        self.ip_address = ip_address
         self.user_id = user_id
 
 class Account_log(db.Model):

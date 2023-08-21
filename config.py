@@ -19,8 +19,7 @@ def create_app():
     app.config['SESSION_TYPE'] = 'filesystem'
     app.config['SESSION_COOKIE_SECURE'] = True
     app.config['JSON_AS_ASCII'] = False
-    # app.config["PERMANENT_SESSION_LIFETIME"] = 1800 # 로그인 지속시간을 정합니다. 현재 1분
-
+    
     # ORM
     db.init_app(app)
     migrate.init_app(app, db)
