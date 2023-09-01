@@ -30,12 +30,14 @@ class User(db.Model):
     approve = db.Column(db.Integer)
     password_question = db.Column(db.String(200), unique=False, nullable=False)
     password_hint_answer = db.Column(db.String(200), unique=False, nullable=False)
+    ip_address = db.Column(db.String(30), unique=False)
     user_info_id = db.relationship('User_log', backref='user_log')
     password_log_id = db.relationship('Password_log', backref='user_log')
     password_change_log_id = db.relationship('Password_change_log', backref='user_log')
     login_failure_id = db.relationship('Login_failure_log', backref='user_log')
+    department_id = db.relationship('Department', backref='user_log')
 
-    def __init__(self, username, email, password, department, rank, password_history, registered_at, password_changed_at, permission, approve, password_question, password_hint_answer):
+    def __init__(self, username, email, password, department, rank, password_history, registered_at, password_changed_at, permission, approve, password_question, password_hint_answer, ip_address):
         self.username = username
         self.email = email
         self.password = password
@@ -48,6 +50,7 @@ class User(db.Model):
         self.approve = approve
         self.password_question = password_question
         self.password_hint_answer = password_hint_answer
+        self.ip_address = ip_address
 
     # Flask-Login integration
     def is_authenticated(self):
@@ -273,10 +276,12 @@ class Department(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     department_type = db.Column(db.String(50), unique=False)
     department_name = db.Column(db.String(50), unique=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('User.id'))
 
-    def __init__(self, department_type, department_name):
+    def __init__(self, department_type, department_name, user_id):
         self.department_type = department_type
         self.department_name = department_name
+        self.user_id = user_id
 
 class Rack(db.Model):
     __tablename__ = "Rack"

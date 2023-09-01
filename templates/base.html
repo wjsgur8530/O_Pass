@@ -187,11 +187,10 @@
             <a class="collapse-item" href="permission">권한</a>
             <a class="collapse-item" href="user_approve">회원가입 승인</a>
             {% elif current_user.rank == 'S' %}
-            <a class="collapse-item" href="departments">부서/소속 관리</a>
+            <a class="collapse-item" href="manage_rack_keys">랙키 관리</a>
             <a class="collapse-item" href="user_logs">로그인 로그</a>
             <a class="collapse-item" href="failure_logs">로그인 실패 로그</a>
             <a class="collapse-item" href="password_change_at">패스워드 변경 로그</a>
-            <a class="collapse-item" href="manage_rack_keys">랙키 관리</a>
             {% endif %}
           </div>
         </div>

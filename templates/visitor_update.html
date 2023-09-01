@@ -60,15 +60,15 @@
                 </div>
                 <div class="col-md-6">
                   <label for="inputName" class="form-label">이름</label>
-                  <input type="text" class="form-control" id="inputName" name="inputName">
+                  <input type="text" class="form-control" id="inputName" name="inputName" required>
                 </div>
                 <div class="col-6">
                   <label for="inputPhoneNumber" class="form-label">연락처</label>
-                  <input type="text" class="form-control" id="inputPhoneNumber" placeholder="(-)를 빼고 입력해주세요." name="inputPhoneNumber">
+                  <input type="text" class="form-control" id="inputPhoneNumber" placeholder="(-)를 빼고 입력해주세요." name="inputPhoneNumber" required>
                 </div>
                 <div class="col-md-4">
                   <label for="inputDepartment" class="form-label">소속</label>
-                  <select class="form-select" id="inputDepartment" name="inputDepartment">
+                  <select class="form-select" id="inputDepartment" name="inputDepartment" required>
                     {% for department_list in department_lists %}
                       <option value="{{department_list.department_name}}">{{department_list.department_name}}</option>
                     {% endfor %}
@@ -76,7 +76,7 @@
                 </div>
                 <div class="col-md-4">
                   <label for="inputObject" class="form-label">방문 목적</label>
-                  <select class="form-select" id="inputObject" name="inputObject">
+                  <select class="form-select" id="inputObject" name="inputObject" required>
                     <option value="업무 협의">업무 협의</option>
                     <option value="업무 요청">업무 요청</option>
                     <option value="단순 방문">단순 방문</option>
@@ -87,7 +87,7 @@
                 </div>
                 <div class="col-4">
                   <label for="inputManager" class="form-label">담당자</label>
-                  <input type="text" class="form-control" id="inputManager" placeholder="" name="inputManager">
+                  <input type="text" class="form-control" id="inputManager" placeholder="" name="inputManager" required>
                 </div>
                 <div class="col-12" style="display: flex;">
                   <div class="form-check">

@@ -29,6 +29,11 @@ import string
 import random
 import hashlib
 from apscheduler.schedulers.background import BackgroundScheduler
+import smtplib
+from email.mime.text import MIMEText
+import os
+import io
+
 
 # 암복호화 로직
 key = "avhejrghjawerjvawev"
@@ -77,7 +82,7 @@ def delete_old_records():
 
 scheduler = BackgroundScheduler(daemon=True)
 # 1년마다 데이터 삭제 작업 스케줄링
-scheduler.add_job(delete_old_records, trigger='interval', weeks=52)
+scheduler.add_job(delete_old_records, trigger='interval', days=1)
 scheduler.start()
 
 
@@ -156,7 +161,7 @@ def admin_page():
         username = '관리자'
         email = admin_email
         hashed_password = bcrypt.generate_password_hash(admin_password)
-        admin = User(username, email, hashed_password, 'Admin', 'M', hashed_password, current_timestamp, current_timestamp, "관리자", 1, "", "")
+        admin = User(username, email, hashed_password, 'Admin', 'M', hashed_password, current_timestamp, current_timestamp, "관리자", 1, "", "", request.remote_addr)
         db.session.add(admin)
         db.session.commit()
         flash("관리자 계정이 생성되었습니다.")
@@ -174,7 +179,7 @@ def admin2_page():
         username = '상황실'
         email = admin2_email
         hashed_password = bcrypt.generate_password_hash(admin2_password)
-        admin = User(username, email, hashed_password, 'Admin', 'S', hashed_password, current_timestamp, current_timestamp, "일반", 1, "", "")
+        admin = User(username, email, hashed_password, 'Admin', 'S', hashed_password, current_timestamp, current_timestamp, "일반", 1, "", "", request.remote_addr)
         db.session.add(admin)
         db.session.commit()
         flash("상황실 계정이 생성되었습니다.")
@@ -312,6 +317,10 @@ def manage_visitors():
         update_visitor.company = company
         update_visitor.work_content = work_content
 
+        # 수정하기 시 로그 남기기
+        privacy_log = Privacy_log("수정", current_user.id, request.remote_addr, current_timestamp, "내방객 수정", update_visitor.name)
+        db.session.add(privacy_log)
+
         db.session.commit()
         return redirect('manage_visitors')
     elif current_user.rank == 'M':
@@ -364,7 +373,8 @@ def manage_visitors():
                 visitor_count = [in_visitor, 0, 0, 0]
 
         # 내방객 등록 - 부서 목록
-        department_lists = Department.query.all()
+        
+        department_lists = Department.query.filter_by(user_id=current_user.id).all()
         return render_template('visitor_update.html', current_user=current_user, approve_visitors=approve_visitors, visitor_count=visitor_count, time=time, card_list=card_list, department_lists=department_lists, total_visitors=total_visitors, rack_key_list=rack_key_list)
     else:
         return render_template('404.html')
@@ -433,19 +443,19 @@ def manage_departments():
     if request.method == 'POST':
         department_type = request.form['select_department_type']
         department_name = request.form['add_department_name_value']
-        if Department.query.filter_by(department_name=department_name).first():
+        if Department.query.filter_by(user_id=current_user.id, department_name=department_name).first():
             flash('이미 부서가 존재합니다.')
             return redirect('departments')
-        department = Department(department_type, department_name)
+        department = Department(department_type, department_name, current_user.id)
         db.session.add(department)
         db.session.commit()
         return redirect('departments')
     else:
-        departments = Department.query.all()
-        department_subsidiary = Department.query.filter_by(department_type="계열사").count()
-        department_partner = Department.query.filter_by(department_type="협력사").count()
-        department_bp = Department.query.filter_by(department_type="BP").count()
-        department_etc = Department.query.filter_by(department_type="기타").count()
+        departments = Department.query.filter_by(user_id=current_user.id).all()
+        department_subsidiary = Department.query.filter_by(user_id=current_user.id, department_type="계열사").count()
+        department_partner = Department.query.filter_by(user_id=current_user.id, department_type="협력사").count()
+        department_bp = Department.query.filter_by(user_id=current_user.id, department_type="BP").count()
+        department_etc = Department.query.filter_by(user_id=current_user.id, department_type="기타").count()
         department_counts = [department_subsidiary, department_partner, department_bp, department_etc]
 
         return render_template('manage_department.html', departments=departments, department_counts=department_counts)
@@ -457,7 +467,7 @@ def ajax_department_delete():
     data = request.get_json()
     print(data['delete_id'])
     delete_id = data['delete_id']
-    department = Department.query.filter_by(id=delete_id).first()
+    department = Department.query.filter_by(id=delete_id, user_id=current_user.id).first()
     db.session.delete(department)
     db.session.commit()
     return jsonify()
@@ -469,18 +479,9 @@ def ajax_department_basic_create():
     # 출입 카드 DB Content 생성
     categories = ['CJ 올리브네트웍스', 'CJ(주)', 'CJ CGV', 'CJ 올리브영', 'CJ 프레시웨이', 'CJ 대한통운', 'CJ ENM', '디아이웨어']
     for category in categories:
-        department = Department('계열사', category)
+        department = Department('계열사', category, current_user.id)
         db.session.add(department)
         db.session.commit()
-    return jsonify(result = "success")
-
-# 부서 초기화 api
-@app.route('/api/ajax_department_reset', methods=['POST'])
-@login_required
-def ajax_department_reset():
-    # 부서 테이블 초기화
-    db.session.query(Department).delete()
-    db.session.commit()
     return jsonify(result = "success")
 
 #===================================================================================
@@ -598,7 +599,7 @@ def manage_cards():
 @app.route('/manage_rack_keys', methods=['GET', 'POST'])
 @login_required
 def manage_rack_keys():
-    if current_user.rank == 'M' or current_user == 'S':
+    if current_user.rank == 'M' or current_user.rank == 'S':
         keys = db.session.query(Rack.key_type).distinct().all()
         categories = []
         for key in keys:
@@ -689,7 +690,9 @@ def privacy_logs():
         approve_log = Privacy_log.query.filter_by(task_title='승인').all()
         reject_log = Privacy_log.query.filter_by(task_title='반려').all()
         change_log = Privacy_log.query.filter_by(task_title='수정').all()
-        return render_template('privacy_logs.html', register_log=register_log, approve_log=approve_log, reject_log=reject_log, change_log=change_log)
+        inquiry_log = Privacy_log.query.filter_by(task_title='조회').all()
+        delete_log= Privacy_log.query.filter_by(task_title='삭제').all() 
+        return render_template('privacy_logs.html', register_log=register_log, approve_log=approve_log, reject_log=reject_log, change_log=change_log, inquiry_log=inquiry_log, delete_log=delete_log)
     else:
         return render_template('404.html')
 
@@ -773,6 +776,20 @@ def contains_consecutive(string, length):
             return True
     return False
 
+def contains_decreasing(string, length):
+    for i in range(len(string) - length + 1):
+        if all(ord(string[i + j]) == ord(string[i]) - j for j in range(1, length)):
+            return True
+    return False
+
+def is_keyboard_consecutive(string, length):
+    keyboard_rows = ['qwertyuiop', 'asdfghjkl', 'zxcvbnm', 'poiuytrewq', 'lkjhgfdsa', 'mnbvcxz', 'qazwsxedcrfvtgbyhnujmikolp', 'polikujmyhntgbrfvedcwsxqaz', 'zaqxswcdevfrbgtnhymjukilop', 'plokimjunhybgtvfrcdexswzaq']
+    for row in keyboard_rows:
+        for i in range(len(row) - length + 1):
+            if row[i:i+length] in string:
+                return True
+    return False
+
 # 회원가입 개인정보 수집 동의
 @app.route('/policy-register', methods=['GET','POST'])
 def policy_register():
@@ -800,47 +817,56 @@ def register():
         user = User.query.filter_by(email=email).first()
         if user:
             flash("이미 가입된 이메일입니다.")
-        elif len(email) < 8 :
-            flash("이메일은 8자 이상이어야 합니다.")
-        elif len(email) > 20 :
+        elif len(email) < 3:
+            flash("이메일은 3자 이상이어야 합니다.")
+        elif len(email) > 20:
             flash("이메일은 20자 이하여야 합니다.")
-        elif re.search(r'(.)\1\1\1', email) or re.search(r'(\d)\1\1\1', email) or contains_consecutive(email, 4) == True:
+        elif re.search(r'(.)\1\1\1', email.lower()) or contains_consecutive(email, 4) or contains_decreasing(email, 4) or is_keyboard_consecutive(email.lower(), 4):
             flash("이메일에 4자 이상의 반복문자나 반복숫자를 사용할 수 없습니다.")
         elif len(username) < 2:
             flash("이름은 2자 이상이어야 합니다.")
         elif len(username) > 10:
             flash("이름은 10자 이하여야 합니다.")
-        elif password1 != password2 :
+        elif password1 != password2:
             flash("비밀번호와 비밀번호재입력이 서로 다릅니다.")
         elif len(password1) < 7:
             flash("비밀번호는 8자 이상이어야 합니다.")
-        elif len(password1) > 14:  # 비밀번호 길이 제한 추가
+        elif len(password1) > 14:
             flash("비밀번호는 14자 이하여야 합니다.")
-        elif not re.search(r'[A-Z]', password1) or not re.search(r'[a-z]', password1) or not re.search(r'\d', password1) or not re.search(r'[!@#$%^&*(),.?":{}|<>]', password1):
-            flash("비밀번호는 대문자, 숫자, 특수문자가 포함되어야 합니다.")
-        elif re.search(r'(.)\1\1\1', password1) or re.search(r'(\d)\1\1\1', password1):
-            flash("비밀번호에 4자 이상의 반복문자나 반복숫자를 사용할 수 없습니다.")
-        elif any(email[i:i+4].lower() in password1.lower() for i in range(len(email)-3)) or contains_consecutive(password1, 4):
-            flash("비밀번호에 이메일과 연관된 부분이 연속된 4자리 이상으로 포함될 수 없습니다.")
         else:
-            # 비밀번호 암호화
-            hashed_password = bcrypt.generate_password_hash(password1)
-            email = email + email_fix
-            user = User(username, email, hashed_password, department, rank, hashed_password, current_timestamp, current_timestamp, "일반", 0, password_question, password_hint_answer)
+            # 최소 3종류 이상 포함하는지 검사
+            categories = 0
+            if re.search(r'[A-Z]', password1):
+                categories += 1
+            if re.search(r'[a-z]', password1):
+                categories += 1
+            if re.search(r'\d', password1):
+                categories += 1
+            if re.search(r'[!@#$%^&*(),.?":{}|<>]', password1):
+                categories += 1
+            if categories < 4:
+                flash('비밀번호 3종 복잡도를 만족하지 않습니다.')
+            elif re.search(r'(.)\1{3,}', password1.lower()) or contains_consecutive(password1, 4) or contains_decreasing(password1, 4) or is_keyboard_consecutive(password1.lower(), 4):
+                flash('4자 이상의 연속 문자를 사용할 수 없습니다.')
+            else:
+                # 비밀번호 암호화
+                hashed_password = bcrypt.generate_password_hash(password1)
+                email = email + email_fix
+                user = User(username, email, hashed_password, department, rank, hashed_password, current_timestamp, current_timestamp, "일반", 0, password_question, password_hint_answer, request.remote_addr)
 
-            # 비밀번호 이력 보관
-            db.session.add(user)
-            db.session.commit()
+                # 비밀번호 이력 보관
+                db.session.add(user)
+                db.session.commit()
 
-            # 회원가입이 성공적으로 완료됨을 알리는 메시지 표시
-            flash("회원가입 완료되었습니다. 관리자 승인 후 로그인 가능합니다.")
-            return redirect('login')
-    else:
-        form_val = request.args.get('checkVal')
-        if form_val != SECRET_TOKEN:
-            return redirect('policy-register')
-        # GET 요청인 경우 회원가입 양식을 표시
-        return render_template('register.html')
+                # 회원가입이 성공적으로 완료됨을 알리는 메시지 표시
+                flash("회원가입 완료되었습니다. 관리자 승인 후 로그인 가능합니다.")
+                return redirect('login')
+
+    form_val = request.args.get('checkVal')
+    if form_val != SECRET_TOKEN:
+        return redirect('policy-register')
+    # GET 요청인 경우 회원가입 양식을 표시
+    return render_template('register.html')
 
 # 6개월 이상된 비밀번호 변경권고 코드 
 def check_password_change(user):
@@ -888,7 +914,6 @@ def login():
                 login_user(user)
                 # 비인가 접근 및 오남용 등에 대한 경고 문구, 로그인 시 이전 로그인 정보 표시
                 user_log = User_log(request.remote_addr, current_timestamp, user.id)
-                
                 
                 db.session.add(user_log)
                 db.session.commit()
@@ -977,13 +1002,31 @@ def logout():
     print('logout success!')
     return redirect(url_for('login'))
 
+# def random_string():
+#     new_pw_len = 10
+#     pw_candidate = string.ascii_letters
+#     new_pw = ""
+#     for i in range(new_pw_len):
+#         new_pw += random.choice(pw_candidate)
+#     print("\n생성된 랜덤 비밀번호", new_pw)
+#     return new_pw
+
 def random_string():
     new_pw_len = 10
-    pw_candidate = string.ascii_letters
+    pw_candidate = string.ascii_letters + string.digits + string.punctuation
     new_pw = ""
-    for i in range(new_pw_len):
-        new_pw += random.choice(pw_candidate)
-    print("\n생성된 랜덤 비밀번호", new_pw)
+    while True:
+        new_pw = ''.join(random.choice(pw_candidate) for _ in range(new_pw_len))
+        
+        # 조건 검사
+        if (len(new_pw) >= 8 and
+            any(c.isdigit() for c in new_pw) and
+            any(c.isalpha() for c in new_pw) and
+            any(c in string.punctuation for c in new_pw) and
+            not any(new_pw[i:i+4] == new_pw[i]*4 for i in range(len(new_pw)-3))):
+            break
+        
+    print("\n생성된 랜덤 비밀번호:", new_pw)
     return new_pw
 
 # 비밀번호 찾기 페이지
@@ -1013,6 +1056,41 @@ def password_forgot_answer_valid():
     user = User.query.filter_by(email=email, password_question=question, password_hint_answer=answer, approve=1).first()
     
     if user:
+        connect_to_database()
+        hash_password = random_string()
+        user.password = bcrypt.generate_password_hash(hash_password)
+        user.attempts = "attempts_password"
+        db.session.commit()
+        
+        email_subject = "[O`PASS] Send Password"
+        content_file_path = '/home/cjadmin/web/O_Pass/email_content.txt'
+
+        # 원본 파일 내용 읽기
+        with open(content_file_path, 'r') as file:
+            original_content = file.read()
+
+        # hash_password 값을 파일 내용 맨 앞에 추가
+        updated_content = '[   ' + hash_password + '   ]' + '\n\n' + original_content
+
+        # 수정된 내용을 파일에 다시 쓰기
+        with open(content_file_path, 'w') as file:
+            file.write(updated_content)
+
+        # 명령어 문자열 생성
+        command = (
+            f"cat '{content_file_path}' | mail -s '{email_subject}' {email} "
+        )
+
+        os.system(command)
+
+        # 다시 원본으로 교체
+        with open(content_file_path, 'w') as file:
+            file.write(original_content)
+        # try:
+        #     send_email(email, msg)
+        # except Exception as e:
+        #     print(f'메일 전송 오류: {e}')
+
         return jsonify(result = "success")
     else:
         return "No Answer"
@@ -1034,16 +1112,21 @@ def password_forgot_transfer_valid():
         user.password = bcrypt.generate_password_hash(hash_password)
         user.attempts = "attempts_password"
         db.session.commit()
+        
+        email_subject = "[O`PASS] Send Password"
+        content_file_path = '/home/cjadmin/web/O_Pass/email_content.txt'
 
-        insert_query = "INSERT INTO SMS_MSG (REQDATE, STATUS, TYPE, PHONE, CALLBACK, MSG) VALUES (%s, %s, %s, %s, %s, %s)"
-        insert_data = (datetime.now(), '1', '0', phone, '0322110290', '[CJ IDC O`PASS 비밀번호 임시 발급] 임시 비밀번호: ' + hash_password)
+        # 명령어 문자열 생성
+        command = (
+            f"cat '{content_file_path}' | mail -s '{email_subject} [   {hash_password}   ]' {email} "
+        )
+        os.system(command)
+        # try:
+        #     send_email(email, msg)
+        # except Exception as e:
+        #     print(f'메일 전송 오류: {e}')
 
-        cursor = app.mysql_conn.cursor()  # 커서 생성
-        cursor.execute(insert_query, insert_data)  # 쿼리 실행 및 데이터 전달
-        app.mysql_conn.commit()  # 변경 사항 커밋
-        cursor.close()  # 커서 닫기
-
-        flash('입력한 번호로 임시 비밀번호가 전송되었습니다. 임시 비밀번호로 로그인해주세요.')
+        flash('입력한 이메일로 임시 비밀번호가 전송되었습니다. 임시 비밀번호로 로그인해주세요.')
         return jsonify(result = "success")
     else:
         return "No Answer"
@@ -1128,7 +1211,7 @@ def visitor():
                 visitor.phone = aes.decrypt(visitor.phone)
 
             # 내방객 등록 - 부서 목록
-            department_lists = Department.query.all()
+            department_lists = Department.query.filter_by(user_id=current_user.id).all()
             print(department_lists)
 
             return render_template('visitor.html', department_lists=department_lists, visitor_info=visitor_info)
@@ -1139,7 +1222,7 @@ def visitor():
                 visitor.phone = aes.decrypt(visitor.phone)
 
             # 내방객 등록 - 부서 목록
-            department_lists = Department.query.all()
+            department_lists = Department.query.filter_by(user_id=current_user.id).all()
             print(department_lists)
 
             return render_template('visitor.html', department_lists=department_lists, visitor_info=visitor_info)
@@ -1157,7 +1240,7 @@ def ajax_approve():
     visitor = Visitor.query.filter_by(id=data['visitor_id']).first()
     visitor.approve = 1
     visitor.exit = 0
-    visitor.approve_date = datetime.now().strftime('%Y-%m-%d %H-%M-%S')
+    visitor.approve_date = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
     visitor.approve_log = current_user.id
 
     today = date.today()
@@ -1226,7 +1309,7 @@ def ajax_approve():
 @app.route('/api/ajax_deny', methods=['POST'])
 @login_required
 def ajax_deny():
-    current_timestamp = datetime.now().strftime('%Y-%m-%d %H-%M-%S')
+    current_timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
     data = request.get_json()
     print(data['visitor_id'])
     print(data['approve'])
@@ -1289,7 +1372,7 @@ def ajax_exit():
         return "Card None"
 
     if visitor.exit_date == None and visitor.exit == 0:
-        visitor.exit_date = datetime.now().strftime('%Y-%m-%d %H-%M-%S')
+        visitor.exit_date = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
         visitor.exit = 1
         visitor.card.card_status = "회수"
         visitor.card_id = None
@@ -1321,7 +1404,7 @@ def ajax_index_exit_checkbox():
             return "No Card"
 
         if visitor.exit_date == None and visitor.exit == 0:
-            visitor.exit_date = datetime.now().strftime('%Y-%m-%d %H-%M-%S')
+            visitor.exit_date = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
             visitor.exit = 1
             visitor.card.card_status = "회수"
             visitor.card_id = None
@@ -1348,7 +1431,7 @@ def ajax_visit_approve_checkbox():
         visitor = Visitor.query.filter_by(id=checked_data).first()
         visitor.approve = 1
         visitor.exit = 0
-        visitor.approve_date = datetime.now().strftime('%Y-%m-%d %H-%M-%S')
+        visitor.approve_date = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
         visitor.approve_log = current_user.id
 
         today = date.today()
@@ -1589,12 +1672,17 @@ def ajax_update_visit_recall_card_checkbox():
 @app.route('/api/ajax_update_manage_visit', methods=['POST'])
 @login_required
 def ajax_update_manage_visit():
+    current_timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
     data = request.get_json()
     visitor = data['update_btn']
     update_visitor = Visitor.query.filter_by(id=visitor).first()
     if update_visitor.card_id != None:
         return "Use Card"
     else:
+        # 개인정보 조회 로그 남기기
+        inquiry_log = Privacy_log("조회", current_user.id, request.remote_addr, current_timestamp, "내방객 조회", update_visitor.name)
+        db.session.add(inquiry_log)
+        db.session.commit()
         update_visitor_info = [update_visitor.id, update_visitor.name, aes.decrypt(update_visitor.department), update_visitor.object, aes.decrypt(update_visitor.phone), update_visitor.manager, update_visitor.device, update_visitor.remarks, update_visitor.location, update_visitor.work, update_visitor.company_type, update_visitor.company, update_visitor.work_content, update_visitor.personal_computer, update_visitor.model_name, update_visitor.serial_number, update_visitor.pc_reason, update_visitor.work_division, update_visitor.customer, update_visitor.device_division, update_visitor.device_count]
         
         return jsonify(response=update_visitor_info)
@@ -1604,11 +1692,16 @@ def ajax_update_manage_visit():
 @app.route('/api/ajax_delete_manage_visit', methods=['POST'])
 @login_required
 def ajax_delete_manage_visit():
+    current_timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
     data = request.get_json()
     visitor = data['delete_btn']
     delete_visitor = Visitor.query.filter_by(id=visitor).first()
     if delete_visitor.card_id != None:
         return "Use Card"
+    
+    # 삭제 로그 남기기
+    delete_log = Privacy_log("삭제", current_user.id, request.remote_addr, current_timestamp, "내방객 삭제", delete_visitor.name)
+    db.session.add(delete_log)
     db.session.delete(delete_visitor)
     db.session.commit()
     return jsonify()
@@ -1746,7 +1839,9 @@ def image_send_sms_current(name, date, object, location, manager, phone_num, dev
             f"-QR Code◀"
         )
 
-    insert_data = (datetime.now(), '1', '0', phone_num, '0322110290', '[내방객 출입 관리 시스템 현장 등록 승인]', msg, '2', 'I', 'D://CJAgent//qr_img.jpg')  # 삽입할 데이터를 튜플로 정의
+    qrcode_img = generate_qr_code(name, date)
+
+    insert_data = (datetime.now(), '1', '0', phone_num, '0322110290', '[내방객 출입 관리 시스템 현장 등록 승인]', msg, '2', 'I', qrcode_img)  # 삽입할 데이터를 튜플로 정의
     cursor.execute(insert_query, insert_data)  # 쿼리 실행 및 데이터 전달
     app.mysql_conn.commit()  # 변경 사항 커밋
     cursor.close()  # 커서 닫기
@@ -1878,8 +1973,9 @@ def image_send_sms_previous(name, date, object, location, manager, phone_num, de
             f"-QR Code◀"
         )
 
+    qrcode_img = generate_qr_code(name, date)
 
-    insert_data = (datetime.now(), '1', '0', phone_num, '0322110290', '[내방객 출입 관리 시스템 사전 등록 승인]', msg, '2', 'I', 'D://CJAgent//qr_img.jpg')  # 삽입할 데이터를 튜플로 정의
+    insert_data = (datetime.now(), '1', '0', phone_num, '0322110290', '[내방객 출입 관리 시스템 사전 등록 승인]', msg, '2', 'I', qrcode_img)  # 삽입할 데이터를 튜플로 정의
     cursor.execute(insert_query, insert_data)  # 쿼리 실행 및 데이터 전달
     app.mysql_conn.commit()  # 변경 사항 커밋
     cursor.close()  # 커서 닫기
@@ -2258,37 +2354,46 @@ def user_profile_update():
                         flash("비밀번호는 8자 이상이어야 합니다.")
                     elif len(new_password_1) > 14:
                         flash("비밀번호는 14자 이하여야 합니다.")
-                    elif not re.search(r'[A-Z]', new_password_1) or not re.search(r'[a-z]', new_password_1) or not re.search(r'\d', new_password_1) or not re.search(r'[!@#$%^&*(),.?":{}|<>]', new_password_1):
-                        flash("비밀번호는 대문자, 숫자, 특수문자가 포함되어야 합니다.")
-                    elif re.search(r'(.)\1\1\1', new_password_1) or re.search(r'(\d)\1\1\1', new_password_1):
-                        flash("비밀번호에 4자 이상의 반복문자나 반복숫자를 사용할 수 없습니다.")
-                    elif any(new_password_1.lower() for i in range(len(new_password_1)-3) or contains_consecutive(new_password_1, 4)):
-                        flash("비밀번호에 연속된 4자리 이상 문자를 포함될 수 없습니다.")
                     else:
-                        # 비밀번호 수정
-                        hashed_password = bcrypt.generate_password_hash(new_password_1)
-                        
-                        # 비밀번호 이력 확인
-                        confirm_password = Password_log.query.filter_by(user_id=user.id).order_by(Password_log.id.desc()).limit(3).all()
-                        for idx in confirm_password:
-                            if bcrypt.check_password_hash(idx.password_log, new_password_1):
-                                flash('최근 3개의 비밀번호는 사용하실 수 없습니다.')
-                                return redirect('profile_update')
+                        # 최소 3종류 이상 포함하는지 검사
+                        categories = 0
+                        if re.search(r'[A-Z]', new_password_1):
+                            categories += 1
+                        if re.search(r'[a-z]', new_password_1):
+                            categories += 1
+                        if re.search(r'\d', new_password_1):
+                            categories += 1
+                        if re.search(r'[!@#$%^&*(),.?":{}|<>]', new_password_1):
+                            categories += 1
+                        if categories < 4:
+                            flash('비밀번호 3종 복잡도를 만족하지 않습니다.')
+                        elif re.search(r'(.)\1{3,}', new_password_1.lower()) or contains_consecutive(new_password_1, 4) or contains_decreasing(new_password_1, 4) or is_keyboard_consecutive(new_password_1.lower(), 4):
+                            flash('4자 이상의 연속 문자를 사용할 수 없습니다.')
+                        else:
+                            # 비밀번호 수정
+                            hashed_password = bcrypt.generate_password_hash(new_password_1)
+                            
+                            # 비밀번호 이력 확인
+                            confirm_password = Password_log.query.filter_by(user_id=user.id).order_by(Password_log.id.desc()).limit(3).all()
+                            for idx in confirm_password:
+                                if bcrypt.check_password_hash(idx.password_log, new_password_1):
+                                    flash('최근 3개의 비밀번호는 사용하실 수 없습니다.')
+                                    return redirect('profile_update')
 
-                        user.password = hashed_password
-                        user.password_changed_at = current_time_korean
-                        user.attempts = None
+                            user.password = hashed_password
+                            user.password_changed_at = current_time_korean
+                            user.attempts = None
 
-                        # 비밀번호 이력 보관
-                        password_log = Password_log(hashed_password, user.id)
-                        password_change_log = Password_change_log(user.email, fomatting_time_korean, request.remote_addr, user.id)
-                        db.session.add(password_log)
-                        db.session.add(password_change_log)
-                        db.session.commit()
+                            # 비밀번호 이력 보관
+                            password_log = Password_log(hashed_password, user.id)
+                            password_change_log = Password_change_log(user.email, fomatting_time_korean, request.remote_addr, user.id)
+                            db.session.add(password_log)
+                            db.session.add(password_change_log)
+                            db.session.commit()
 
-                        logout_user()
-                        flash("비밀번호가 정상적으로 변경되었습니다.")
-                        return redirect('login')
+                            logout_user()
+                            flash("비밀번호가 정상적으로 변경되었습니다.")
+                            return redirect('login')
                     
             elif time_since_registration < timedelta(days=1):
                 flash("회원가입 후 최소 1일이 지나야 비밀번호를 수정할 수 있습니다.")
@@ -2303,37 +2408,46 @@ def user_profile_update():
                         flash("비밀번호는 8자 이상이어야 합니다.")
                     elif len(new_password_1) > 14:
                         flash("비밀번호는 14자 이하여야 합니다.")
-                    elif not re.search(r'[A-Z]', new_password_1) or not re.search(r'[a-z]', new_password_1) or not re.search(r'\d', new_password_1) or not re.search(r'[!@#$%^&*(),.?":{}|<>]', new_password_1):
-                        flash("비밀번호는 대문자, 숫자, 특수문자가 포함되어야 합니다.")
-                    elif re.search(r'(.)\1\1\1', new_password_1) or re.search(r'(\d)\1\1\1', new_password_1):
-                        flash("비밀번호에 4자 이상의 반복문자나 반복숫자를 사용할 수 없습니다.")
-                    elif any(new_password_1.lower() for i in range(len(new_password_1)-3) or contains_consecutive(new_password_1, 4)):
-                        flash("비밀번호에 연속된 4자리 이상 문자를 포함될 수 없습니다.")
                     else:
-                        # 비밀번호 수정
-                        hashed_password = bcrypt.generate_password_hash(new_password_1)
-                        print(hashed_password)
+                        # 최소 3종류 이상 포함하는지 검사
+                        categories = 0
+                        if re.search(r'[A-Z]', new_password_1):
+                            categories += 1
+                        if re.search(r'[a-z]', new_password_1):
+                            categories += 1
+                        if re.search(r'\d', new_password_1):
+                            categories += 1
+                        if re.search(r'[!@#$%^&*(),.?":{}|<>]', new_password_1):
+                            categories += 1
+                        if categories < 4:
+                            flash('비밀번호 3종 복잡도를 만족하지 않습니다.')
+                        elif re.search(r'(.)\1{3,}', new_password_1.lower()) or contains_consecutive(new_password_1, 4) or contains_decreasing(new_password_1, 4) or is_keyboard_consecutive(new_password_1.lower(), 4):
+                            flash('4자 이상의 연속 문자를 사용할 수 없습니다.')
+                        else:
+                            # 비밀번호 수정
+                            hashed_password = bcrypt.generate_password_hash(new_password_1)
+                            print(hashed_password)
 
-                        # 비밀번호 이력 확인
-                        confirm_password = Password_log.query.filter_by(user_id=user.id).order_by(Password_log.id.desc()).limit(3).all()
-                        for idx in confirm_password:
-                            if bcrypt.check_password_hash(idx.password_log, new_password_1):
-                                flash('최근 3개의 비밀번호는 사용하실 수 없습니다.')
-                                return redirect('profile_update')
-                            
-                        user.password = hashed_password
-                        user.password_changed_at = current_time_korean
+                            # 비밀번호 이력 확인
+                            confirm_password = Password_log.query.filter_by(user_id=user.id).order_by(Password_log.id.desc()).limit(3).all()
+                            for idx in confirm_password:
+                                if bcrypt.check_password_hash(idx.password_log, new_password_1):
+                                    flash('최근 3개의 비밀번호는 사용하실 수 없습니다.')
+                                    return redirect('profile_update')
+                                
+                            user.password = hashed_password
+                            user.password_changed_at = current_time_korean
 
-                        # 비밀번호 이력 보관
-                        password_log = Password_log(hashed_password, user.id)
-                        password_change_log = Password_change_log(user.email, fomatting_time_korean, request.remote_addr, user.id)
-                        db.session.add(password_log)
-                        db.session.add(password_change_log)
-                        db.session.commit()
+                            # 비밀번호 이력 보관
+                            password_log = Password_log(hashed_password, user.id)
+                            password_change_log = Password_change_log(user.email, fomatting_time_korean, request.remote_addr, user.id)
+                            db.session.add(password_log)
+                            db.session.add(password_change_log)
+                            db.session.commit()
 
-                        logout_user()
-                        flash("비밀번호가 정상적으로 변경되었습니다.")
-                        return redirect('login')
+                            logout_user()
+                            flash("비밀번호가 정상적으로 변경되었습니다.")
+                            return redirect('login')
                 else:
                     flash("비밀번호를 잘못 입력하셨습니다.")
 
@@ -2469,14 +2583,28 @@ def user_delete():
 
 #===================================================================================
 
-@app.route('/abcd', methods=['GET','POST'])
-def qrcode_authenticated():
-    qr_data = "https://opass.cj.net/abcd"
-    qr_img = qrcode.make(qr_data)
-    save_path = 'qrcode.jpg'
-    qr_img.save(save_path)
-    print("222222222222222222")
-    return render_template('form.html')
+def generate_qr_code(name, date):
+    # '%Y-%m-%d' 형식으로 날짜를 문자열로 변환
+    qr_date = str(date)
+    try:
+        qr_data = "https://opass.cj.net/qr_auth?id=" + aes.encrypt(name)
+        qr_img = qrcode.make(qr_data)
+        save_path = 'static/img/qrcode.jpg'
+        qr_img.save(save_path)
+    except Exception as e:
+        print(e)
+
+    return "QR Code generated"
+
+@app.route('/<id>/<date>')
+def authenticate(user_data):
+    # 여기서 user_data를 이용한 인증 로직 수행
+    # 예: 데이터베이스 조회, 비교 등
+
+    if user_data == "authenticated_user_data":
+        return "인증 성공"
+    else:
+        return "인증 실패"
 
 @app.errorhandler(jinja2.exceptions.TemplateNotFound)
 def template_not_found(e):
