@@ -50,15 +50,15 @@
                         <tbody>
                         <tr>
                             <th scope="row" colspan="2">1. 이름을 입력해주세요.</th>
-                            <td><input type="text" class="form-control col-xl-6" name="visitorName" id="visitorName" placeholder="이름을 입력해주세요."></td>
+                            <td><input type="text" class="form-control col-xl-6" name="visitorName" id="visitorName" placeholder="이름을 입력해주세요." required></td>
                         </tr>
                         <tr>
                             <th scope="row" colspan="2">2. 소속을 입력해주세요.</th>
-                            <td><input type="text" class="form-control col-xl-6" name="visitorDepartment" id="visitorDepartment" placeholder="소속을 입력해주세요."></td>
+                            <td><input type="text" class="form-control col-xl-6" name="visitorDepartment" id="visitorDepartment" placeholder="소속을 입력해주세요." required></td>
                         </tr>
                         <tr>
                             <th scope="row" colspan="2">3. 전화번호를 입력해주세요.</th>
-                            <td><input type="text" class="form-control col-xl-6" name="visitorPhone" id="visitorPhone" placeholder="(-)를 빼고 입력해주세요."></td>
+                            <td><input type="text" class="form-control col-xl-6" name="visitorPhone" id="visitorPhone" placeholder="(-)를 빼고 입력해주세요." required></td>
                         </tr>
                         <!-- <tr>
                             <th scope="row" colspan="2">5. 생년월일을 입력해주세요.</th>
@@ -66,12 +66,12 @@
                         </tr> -->
                         <tr>
                             <th scope="row" colspan="2">4. 담당자를 입력해주세요.</th>
-                            <td><input type="text" class="form-control col-xl-6" name="visitorManager" id="visitorManager" placeholder="담당자를 입력해주세요."></td>
+                            <td><input type="text" class="form-control col-xl-6" name="visitorManager" id="visitorManager" placeholder="담당자를 입력해주세요." required></td>
                         </tr>
                         <tr>
                             <th scope="row" colspan="2">5. 방문 목적을 입력해주세요.</th>
                             <td>
-                                <select class="form-select col-xl-6" name="visitorObject" id="visitorObject">
+                                <select class="form-select col-xl-6" name="visitorObject" id="visitorObject" required>
                                   <option value="업무 협의">업무 협의</option>
                                   <option value="업무 요청">업무 요청</option>
                                   <option value="단순 방문">단순 방문</option>
