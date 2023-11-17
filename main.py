@@ -1,10 +1,10 @@
 #!/usr/bin/env python
-from flask import Flask, flash, session, url_for, render_template, request, redirect, jsonify
+from flask import Flask, flash, session, url_for, render_template, request, redirect, jsonify, send_file
 from flask_session import Session
 from flask_sqlalchemy import SQLAlchemy
 from werkzeug.security import generate_password_hash, check_password_hash # Password Hash
 from flask_bcrypt import Bcrypt
-from app import User, Visitor, Card, User_log, Year, Month, Day, Department, Rack, Privacy, Password_log, Account_log, Login_failure_log, Permission_log, Privacy_log, Password_change_log
+from app import User, Visitor, Card, User_log, Year, Month, Day, Department, Rack, Privacy, Password_log, Account_log, Login_failure_log, Permission_log, Privacy_log, Password_change_log, Card_log, DeviceInfo
 from pycrypto import *
 import jinja2.exceptions
 from config import create_app, db
@@ -19,7 +19,7 @@ import openpyxl
 import json
 import pandas as pd
 from tabulate import tabulate
-from openpyxl.styles import Alignment
+from openpyxl.styles import Alignment, Font, PatternFill
 from openpyxl.utils import get_column_letter
 import re
 from flask.helpers import get_flashed_messages
@@ -161,7 +161,7 @@ def admin_page():
         username = '관리자'
         email = admin_email
         hashed_password = bcrypt.generate_password_hash(admin_password)
-        admin = User(username, email, hashed_password, 'Admin', 'M', hashed_password, current_timestamp, current_timestamp, "관리자", 1, "", "", request.remote_addr)
+        admin = User(username, email, hashed_password, 'Admin', hashed_password, current_timestamp, current_timestamp, "관리자", "", "", request.remote_addr, "관리자")
         db.session.add(admin)
         db.session.commit()
         flash("관리자 계정이 생성되었습니다.")
@@ -179,7 +179,7 @@ def admin2_page():
         username = '상황실'
         email = admin2_email
         hashed_password = bcrypt.generate_password_hash(admin2_password)
-        admin = User(username, email, hashed_password, 'Admin', 'S', hashed_password, current_timestamp, current_timestamp, "일반", 1, "", "", request.remote_addr)
+        admin = User(username, email, hashed_password, 'Admin', hashed_password, current_timestamp, current_timestamp, "일반", "", "", request.remote_addr, "일반")
         db.session.add(admin)
         db.session.commit()
         flash("상황실 계정이 생성되었습니다.")
@@ -257,7 +257,7 @@ def visualization_chart():
 @login_required
 def manage_visitors():
     current_timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-    if request.method == 'POST' and current_user.rank == 'M':
+    if request.method == 'POST' and current_user.permission == '관리자':
         update_id = request.form['inputUpdateNumber']
         name = request.form['inputName']
         department = request.form['inputDepartment']
@@ -323,7 +323,7 @@ def manage_visitors():
 
         db.session.commit()
         return redirect('manage_visitors')
-    elif current_user.rank == 'M':
+    elif current_user.permission == '관리자':
 
         # 타임 스탬프
         today_weekday = datetime.now().weekday()
@@ -341,6 +341,10 @@ def manage_visitors():
 
         # 출입 카드 목록
         card_list = Card.query.all()
+
+        # 카드 수정 목록
+        update_card_list = Card.query.with_entities(Card.card_type).distinct().all()
+
         # 랙 키 목록
         rack_key_list = Rack.query.all()
         if approve_visitors:
@@ -352,6 +356,13 @@ def manage_visitors():
             in_visitor = in_visitor.count()
             in_visitor_card_none = in_visitor_card_none.count()
             in_visitor = in_visitor - in_visitor_card_none
+
+            # 퇴실하지 않고 카드 받지 않은 방문객
+            no_exit_card_visitor = Visitor.query.filter_by(exit=0, card_id=None).count()
+
+            # 미반납 카드
+            total_card = Card.query.count()
+            no_return_card = Card.query.filter_by(card_status='불출').count()
 
             today = date.today()
             total_visitors = db.session.query(func.sum(Year.count)).scalar() # 총 방문객
@@ -375,7 +386,7 @@ def manage_visitors():
         # 내방객 등록 - 부서 목록
         
         department_lists = Department.query.filter_by(user_id=current_user.id).all()
-        return render_template('visitor_update.html', current_user=current_user, approve_visitors=approve_visitors, visitor_count=visitor_count, time=time, card_list=card_list, department_lists=department_lists, total_visitors=total_visitors, rack_key_list=rack_key_list)
+        return render_template('visitor_update.html', current_user=current_user, approve_visitors=approve_visitors, visitor_count=visitor_count, time=time, card_list=card_list, update_card_list=update_card_list, department_lists=department_lists, total_visitors=total_visitors, rack_key_list=rack_key_list, no_exit_card_visitor=no_exit_card_visitor, total_card=total_card, no_return_card=no_return_card)
     else:
         return render_template('404.html')
 #===================================================================================
@@ -383,7 +394,7 @@ def manage_visitors():
 @app.route('/rack_visitors', methods=['GET','POST'])
 @login_required
 def rack_visitors():
-    if request.method == 'GET' and current_user.rank == 'S':
+    if request.method == 'GET' and current_user.permission == '상황실':
         # 타임 스탬프
         today_weekday = datetime.now().weekday()
         weekdays = {0: "월요일", 1: "화요일", 2: "수요일", 3: "목요일", 4: "금요일", 5: "토요일", 6: "일요일"}
@@ -516,6 +527,7 @@ def visit_update():
         customer = request.form.get('inputUpdateCustomer')
         device_division = request.form.get('inputUpdateDeviceDivision')
         device_count = request.form.get('inputUpdateDeviceCount')
+        approval_team = request.form.get('inputUpdateApproval')
 
         update_visitor = Visitor.query.filter_by(id=update_id).first()
         update_visitor.name = name
@@ -553,6 +565,7 @@ def visit_update():
         update_visitor.company_type = company_type
         update_visitor.company = company
         update_visitor.work_content = work_content
+        update_visitor.approval_team = approval_team
 
         task_change = Privacy_log("수정", current_user.id, request.remote_addr, current_timestamp, "내방객 수정", update_visitor.name)
         db.session.add(task_change)
@@ -569,7 +582,7 @@ def visit_update():
 @app.route('/manage_cards', methods=['GET', 'POST'])
 @login_required
 def manage_cards():
-    if current_user.rank == 'M':
+    if current_user.permission == '관리자':
         cards = db.session.query(Card.card_type).distinct().all()
         categories = []
         for card in cards:
@@ -599,7 +612,7 @@ def manage_cards():
 @app.route('/manage_rack_keys', methods=['GET', 'POST'])
 @login_required
 def manage_rack_keys():
-    if current_user.rank == 'M' or current_user.rank == 'S':
+    if current_user.permission == '관리자' or current_user.permission == '상황실':
         keys = db.session.query(Rack.key_type).distinct().all()
         categories = []
         for key in keys:
@@ -629,17 +642,39 @@ def manage_rack_keys():
 @app.route('/manage_logs', methods=['GET', 'POST'])
 @login_required
 def manage_logs():
-    if current_user.rank == 'M':
+    if current_user.permission == '관리자':
         user_log = User_log.query.all()
+
         return render_template('manage_logs.html', user_log=user_log)
+    else:
+        return render_template('404.html')
+
+@app.route('/card_logs', methods=['GET', 'POST'])
+@login_required
+def card_logs():
+    formatted_date = datetime.now().strftime('%Y-%m-%d')
+    if current_user.permission == '관리자':
+        card_log = Card_log.query.all()
+
+        cards = Card_log.query.with_entities(Card_log.card_type).distinct().all()
+        categories = []
+        for card in cards:
+            categories.append(card[0])
+
+        card_counts = {}
+
+        for category in categories:
+            card_counts[f'{category}'] = Card_log.query.filter_by(card_type=category, formatted_date=formatted_date).order_by(func.cast(Card_log.card_num, Integer).asc()).all()
+            print(card_counts)
+        return render_template('card_logs.html', card_log=card_log, card_counts=card_counts)
     else:
         return render_template('404.html')
 
 @app.route('/user_logs', methods=['GET', 'POST'])
 @login_required
 def user_logs():
-    rank_list = ['G1','G2','G3','G4','G5','G6','G7','S','임원']
-    if current_user.rank in rank_list:
+    permission_list = ['일반', '상황실', '관리자']
+    if current_user.permission in permission_list:
         user_log = User_log.query.filter_by(user_id=current_user.id).all()
         return render_template('user_logs.html', user_log=user_log)
     else:
@@ -648,8 +683,8 @@ def user_logs():
 @app.route('/account_logs', methods=['GET', 'POST'])
 @login_required
 def account_logs():
-    if current_user.rank == 'M':
-        user = User.query.filter_by(approve=1).order_by(User.id).all()
+    if current_user.permission == '관리자':
+        user = User.query.filter_by().order_by(User.id).all()
         remove_user = Account_log.query.all()
         print(user)
         return render_template('account_logs.html', user=user, remove_user=remove_user)
@@ -659,8 +694,8 @@ def account_logs():
 @app.route('/permission', methods=['GET', 'POST'])
 @login_required
 def permission():
-    if current_user.rank == 'M':
-        user = User.query.filter_by(approve=1).order_by(User.id).all()
+    if current_user.permission == '관리자':
+        user = User.query.filter_by().order_by(User.id).all()
         permission = Permission_log.query.all()
         return render_template('permission.html', user=user, permission=permission)
     else:
@@ -675,7 +710,7 @@ def login_failure_logs():
 @app.route('/password_change_at', methods=['GET', 'POST'])
 @login_required
 def password_change_log():
-    if current_user.rank == 'M':
+    if current_user.permission == '관리자':
         password_change_log = Password_change_log.query.order_by(Password_change_log.id.desc()).all()
         return render_template('password_change_at.html', password_change_log=password_change_log)
     else:
@@ -685,7 +720,7 @@ def password_change_log():
 @app.route('/privacy_logs', methods=['GET', 'POST'])
 @login_required
 def privacy_logs():
-    if current_user.rank == 'M':
+    if current_user.permission == '관리자':
         register_log = Privacy_log.query.filter_by(task_title='등록').all()
         approve_log = Privacy_log.query.filter_by(task_title='승인').all()
         reject_log = Privacy_log.query.filter_by(task_title='반려').all()
@@ -693,15 +728,6 @@ def privacy_logs():
         inquiry_log = Privacy_log.query.filter_by(task_title='조회').all()
         delete_log= Privacy_log.query.filter_by(task_title='삭제').all() 
         return render_template('privacy_logs.html', register_log=register_log, approve_log=approve_log, reject_log=reject_log, change_log=change_log, inquiry_log=inquiry_log, delete_log=delete_log)
-    else:
-        return render_template('404.html')
-
-@app.route('/user_approve', methods=['GET', 'POST'])
-@login_required
-def user_approve():
-    if current_user.rank == 'M' or current_user.permission == '관리자':
-        approve_user = User.query.filter_by(approve=0).all()
-        return render_template('user_approve.html', approve_user=approve_user)
     else:
         return render_template('404.html')
 
@@ -741,26 +767,6 @@ def ajax_permission_change():
     db.session.commit()
     return jsonify()
 
-@app.route('/api/ajax_user_register_approve', methods=['POST'])
-@login_required
-def ajax_user_register_approve():
-    data = request.get_json()
-    user_id = data['user_id']
-    approve_user = User.query.filter_by(id=user_id, approve=0).first()
-    approve_user.approve = 1
-    db.session.commit()
-    return jsonify()
-
-@app.route('/api/ajax_user_register_deny', methods=['POST'])
-@login_required
-def ajax_user_register_deny():
-    data = request.get_json()
-    user_id = data['user_id']
-    deny_user = User.query.filter_by(id=user_id, approve=0).first()
-    db.session.delete(deny_user)
-    db.session.commit()
-    return jsonify()
-
 @app.route('/<pagename>')
 def admin(pagename):
     return render_template(pagename+'.html')
@@ -783,7 +789,7 @@ def contains_decreasing(string, length):
     return False
 
 def is_keyboard_consecutive(string, length):
-    keyboard_rows = ['qwertyuiop', 'asdfghjkl', 'zxcvbnm', 'poiuytrewq', 'lkjhgfdsa', 'mnbvcxz', 'qazwsxedcrfvtgbyhnujmikolp', 'polikujmyhntgbrfvedcwsxqaz', 'zaqxswcdevfrbgtnhymjukilop', 'plokimjunhybgtvfrcdexswzaq']
+    keyboard_rows = ['qwertyuiop', 'asdfghjkl', 'zxcvbnm', 'poiuytrewq', 'lkjhgfdsa', 'mnbvcxz', 'qazwsxedcrfvtgbyhnujmikolp', 'polikujmyhntgbrfvedcwsxqaz', 'zaqxswcdevfrbgtnhymjukilop', 'plokimjunhybgtvfrcdexswzaq', 'abcdefghijklmnopqrstuvwxyz', 'zyxwvutsrqponmlkjihgfedcba']
     for row in keyboard_rows:
         for i in range(len(row) - length + 1):
             if row[i:i+length] in string:
@@ -801,20 +807,20 @@ def register():
     current_timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
     if request.method == 'POST':
         # 폼으로부터 입력받은 데이터 가져오기
-        username = request.form['username']
-        email = request.form['email']
-        email_fix = request.form['email_fix']
-        password1 = request.form['password1']
-        password2 = request.form['password2']
-        department = request.form['registerDepartment']
-        rank = request.form['registerRank']
-        password_question = request.form['password_question']
-        password_hint_answer = request.form['password_hint']
+        username = request.form.get('username')
+        email = request.form.get('email')
+        email_fix = request.form.get('email_fix')
+        password1 = request.form.get('password1')
+        password2 = request.form.get('password2')
+        department = request.form.get('registerDepartment')
+        password_question = request.form.get('password_question')
+        password_hint_answer = request.form.get('password_hint')
 
         print(email)
         print(email_fix)
+        email_new = email + email_fix
         # 유효성 검사
-        user = User.query.filter_by(email=email).first()
+        user = User.query.filter_by(email=email_new).first()
         if user:
             flash("이미 가입된 이메일입니다.")
         elif len(email) < 3:
@@ -852,14 +858,14 @@ def register():
                 # 비밀번호 암호화
                 hashed_password = bcrypt.generate_password_hash(password1)
                 email = email + email_fix
-                user = User(username, email, hashed_password, department, rank, hashed_password, current_timestamp, current_timestamp, "일반", 0, password_question, password_hint_answer, request.remote_addr)
+                user = User(username, email, hashed_password, department, hashed_password, current_timestamp, current_timestamp, "일반", password_question, password_hint_answer, request.remote_addr, "일반")
 
                 # 비밀번호 이력 보관
                 db.session.add(user)
                 db.session.commit()
 
                 # 회원가입이 성공적으로 완료됨을 알리는 메시지 표시
-                flash("회원가입 완료되었습니다. 관리자 승인 후 로그인 가능합니다.")
+                flash("회원가입 완료되었습니다.")
                 return redirect('login')
 
     form_val = request.args.get('checkVal')
@@ -868,6 +874,87 @@ def register():
     # GET 요청인 경우 회원가입 양식을 표시
     return render_template('register.html')
 
+def generate_random_verification_code(email_address, otp_create_time):
+    # 6자리 랜덤 숫자 생성 (100000부터 999999 사이의 범위)
+    otp = random.randint(100000, 999999)
+    session[f'otp_{email_address}'] = otp  # 세션에 인증번호 저장
+    session[f'time_{email_address}'] = otp_create_time  # 인증번호 생성 시간 저장
+    return str(otp)
+
+@app.route('/api/register_email_valid', methods=['GET', 'POST'])
+def register_email_valid():
+    current_timestamp = datetime.now()
+    data = request.get_json()
+    email = data['email']
+    user = User.query.filter_by(email=email).first()
+    if user:
+        return "Use Email"
+    elif len(email) < 3:
+        return "Short"
+    elif len(email) > 20:
+        return "Long"
+    else:
+        random_auth_number = generate_random_verification_code(email, current_timestamp)
+        email_subject = "[O`PASS] Send Auth Number"
+        content_file_path = '/home/cjadmin/web/O_Pass/email_auth_number.txt'
+
+        with open(content_file_path, 'r') as file:
+            original_content = file.read()
+
+        updated_content = '[' + random_auth_number + ']' + '\n\n' + original_content
+
+        with open(content_file_path, 'w') as file:
+            file.write(updated_content)
+
+        command = (
+            f"cat '{content_file_path}' | mail -s '{email_subject}' {email} "
+        )
+        os.system(command)
+        
+        with open(content_file_path, 'w') as file:
+            file.write(original_content)
+
+        return jsonify(result=random_auth_number)
+
+@app.route('/api/register_auth_number_valid', methods=['POST'])
+def register_auth_number_valid():
+    # 현재 시간을 가져옵니다.
+    current_timestamp = datetime.now()
+    
+    data = request.get_json()
+    otp = data['otp']
+    email_address = data['email']
+    
+    session_otp = session.get(f'otp_{email_address}')  # 세션에 저장된 인증번호 가져오기
+    session_time = session.get(f'time_{email_address}')  # 세션에 저장된 생성 시간 가져오기
+
+    print(session_otp, session_time)
+
+    # session_time을 offset-naïve datetime 객체로 만듭니다.
+    session_time = session_time.replace(tzinfo=None)
+
+    different_time = current_timestamp - session_time
+
+    # 세션에 인증번호와 생성 시간이 저장되어 있지 않은 경우
+    if not session_otp or not session_time:
+        return "No Data"
+
+    # 시간이 만료된 경우
+    if different_time.total_seconds() > 300:
+    	# 세션에서 인증번호와 생성 시간을 삭제
+        session.pop(f'otp_{email_address}')  
+        session.pop(f'time_{email_address}')
+        return "Time Out"
+    
+    # 검증에 성공한 경우
+    if otp == str(session_otp):
+    	# 세션에서 인증번호와 생성 시간을 삭제
+        session.pop(f'otp_{email_address}')  
+        session.pop(f'time_{email_address}')
+        return jsonify(result="success")
+    else:
+        return "No Auth"
+    
 # 6개월 이상된 비밀번호 변경권고 코드 
 def check_password_change(user):
     if user.password_changed_at:
@@ -897,7 +984,7 @@ def login():
         email = request.form['email']
         password = request.form['password1']
 
-        user = User.query.filter_by(email=email, approve=1).first()
+        user = User.query.filter_by(email=email).first()
         if user:
             if user.login_blocked_until and user.login_blocked_until > datetime.now():
                 # 로그인이 제한된 경우
@@ -920,7 +1007,8 @@ def login():
 
                 current_login = User_log.query.filter_by(user_id=current_user.id).order_by(User_log.id.desc()).first()
                 # check_password_change(user) # 비밀번호 변경 주기 체크
-                if current_user.rank == 'M':
+                if current_user.permission == '관리자':
+                    print(session)
                     if current_login.login_timestamp:
                         flash('이전 로그인 일시: ' + str(current_login.login_timestamp) + " 접근 IP주소: " + current_login.ip_address)
                         if user.attempts == 'attempts_password':
@@ -930,7 +1018,7 @@ def login():
                         if user.attempts == 'attempts_password':
                             return redirect('authenticated')
                     return redirect(url_for('manage_visitors'))
-                elif current_user.rank == 'S':
+                elif current_user.permission == '상황실':
                     if current_login.login_timestamp:
                         flash('이전 로그인 일시: ' + str(current_login.login_timestamp) + " 접근 IP주소: " + current_login.ip_address)
                         if user.attempts == 'attempts_password':
@@ -1039,7 +1127,7 @@ def forgot_password():
 def password_forgot_email_valid():
     data = request.get_json()
     email = data['email']
-    user = User.query.filter_by(email=email, approve=1).first()
+    user = User.query.filter_by(email=email).first()
     
     if user:
         return jsonify(result = "success")
@@ -1053,7 +1141,7 @@ def password_forgot_answer_valid():
     email = data['email']
     question = data['question']
     answer = data['answer']
-    user = User.query.filter_by(email=email, password_question=question, password_hint_answer=answer, approve=1).first()
+    user = User.query.filter_by(email=email, password_question=question, password_hint_answer=answer).first()
     
     if user:
         connect_to_database()
@@ -1070,7 +1158,7 @@ def password_forgot_answer_valid():
             original_content = file.read()
 
         # hash_password 값을 파일 내용 맨 앞에 추가
-        updated_content = '[   ' + hash_password + '   ]' + '\n\n' + original_content
+        updated_content = '[' + hash_password + ']' + '\n\n' + original_content
 
         # 수정된 내용을 파일에 다시 쓰기
         with open(content_file_path, 'w') as file:
@@ -1104,7 +1192,7 @@ def password_forgot_transfer_valid():
     answer = data['answer']
     phone = data['phone']
 
-    user = User.query.filter_by(email=email, password_question=question, password_hint_answer=answer, approve=1).first()
+    user = User.query.filter_by(email=email, password_question=question, password_hint_answer=answer).first()
 
     if user:
         connect_to_database()
@@ -1152,6 +1240,7 @@ def visitor():
         device = request.form.get('inputDevice')
         remarks = request.form.get('inputRemarks')
         work = request.form.get('inputWork')
+        approval_team = request.form.get('inputApproval')
 
         if personal_computer:
             personal_computer = True
@@ -1166,16 +1255,22 @@ def visitor():
 
         if device:
             device = True
-            customer = request.form.get('inputCustomer')
-            device_division = request.form.get('inputDeviceDivision')
-            device_count = request.form.get('inputDeviceCount')
-            remarks = request.form.get('inputRemarks')
+            device_date = request.form.get('inputDeviceDate')
+            device_company = request.form.get('inputDeviceCompany')
+            device_department = request.form.get('inputDeviceDepartment')
+            device_request_manager = request.form.get('inputDeviceRequestManager')
+            device_manager = request.form.get('inputDeviceManager')
+            device_reason = request.form.get('inputDeviceReason')
+            device_remarks = request.form.get('inputDeviceRemarks')
         else:
             device = False
-            customer = None
-            device_division = None
-            device_count = None
-            remarks = None
+            device_date = None
+            device_company = None
+            device_department = None
+            device_request_manager = None
+            device_manager = None
+            device_reason = None
+            device_remarks = None
 
         if work:
             work = True
@@ -1196,7 +1291,7 @@ def visitor():
             # aes.encrypt(phone)
 
         # 내방객 등록하기 - 이름, 부서, 번호, 작업위치, 담당자, 장비체크, 비고, 방문목적, 등록시간, 승인, 사전/현장, 작업체크, 회사종류, 회사이름, 작업내용
-        visitor = Visitor(name, aes.encrypt(department), aes.encrypt(phone), location, manager, device, remarks, object, created_time, 0, "사전 등록", work, company_type, company_name, work_content, current_user.id, personal_computer, model_name, serial_number, reason, work_division, customer, device_division, device_count)
+        visitor = Visitor(name, aes.encrypt(department), aes.encrypt(phone), location, manager, device, object, created_time, 0, "사전 등록", work, company_type, company_name, work_content, current_user.username, personal_computer, model_name, serial_number, reason, work_division, device_date, device_company, device_department, device_request_manager, device_manager, device_reason, device_remarks, approval_team, None)
         task_change = Privacy_log("등록", current_user.id, request.remote_addr, current_timestamp, "내방객 등록", name)
         db.session.add(visitor)
         db.session.add(task_change)
@@ -1205,7 +1300,15 @@ def visitor():
     else:
         # GET - 승인되지 않은 방문객 정보
         if current_user.permission == '관리자':
-            visitor_info = Visitor.query.filter_by(approve=0)
+            visitor_info = Visitor.query.filter(
+                or_(
+                    Visitor.writer == current_user.username,
+                    and_(
+                        Visitor.approval_team == current_user.department,
+                        Visitor.approve == 0,
+                    )
+                )
+            )
             for visitor in visitor_info:
                 visitor.department = aes.decrypt(visitor.department)
                 visitor.phone = aes.decrypt(visitor.phone)
@@ -1216,7 +1319,7 @@ def visitor():
 
             return render_template('visitor.html', department_lists=department_lists, visitor_info=visitor_info)
         else:
-            visitor_info = Visitor.query.filter_by(approve=0, writer=current_user.id)
+            visitor_info = Visitor.query.filter_by(approve=0, writer=current_user.username)
             for visitor in visitor_info:
                 visitor.department = aes.decrypt(visitor.department)
                 visitor.phone = aes.decrypt(visitor.phone)
@@ -1227,7 +1330,41 @@ def visitor():
 
             return render_template('visitor.html', department_lists=department_lists, visitor_info=visitor_info)
 
+# 장비 반출입 페이지
+@app.route('/device_register', methods=['GET', 'POST'])
+@login_required
+def device_register():
+    if request.method == 'POST':
 
+        visitor_id = request.form['inputVisitor']
+        arrival_departure = request.form['inlineRadioOptions1']
+        purpose = request.form['inlineRadioOptions2']
+        location = request.form['inputLocation']
+        customer_info = request.form['inputCustomerInfo']
+        device_type = request.form['inputDeviceType']
+        quantity = request.form['inputQuantity']
+        serial_number = request.form['inputSerialNumber']
+        note = request.form.get('inputNote')
+
+        new_device = DeviceInfo(
+            arrival_departure=arrival_departure,
+            purpose=purpose,
+            location=location,
+            customer_info=customer_info,
+            device_type=device_type,
+            quantity=quantity,
+            serial_number=serial_number,
+            note=note,
+            visitor_id=visitor_id
+        )
+        db.session.add(new_device)
+        db.session.commit()
+        return redirect('device_register')
+    else:
+        visitor = Visitor.query.filter_by(device=1, writer=current_user.username)
+
+        result = db.session.query(Visitor, DeviceInfo).join(DeviceInfo, Visitor.id == DeviceInfo.visitor_id).filter(Visitor.writer == current_user.username).all()
+        return render_template('device_register.html', visitor=visitor, result=result)
 
 # 승인 버튼 클릭시 로직 ajax
 @app.route('/api/ajax_approve', methods=['POST'])
@@ -1293,11 +1430,11 @@ def ajax_approve():
 
     privacy_date = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
     if visitor.registry == "사전 등록":
-        image_send_sms_previous(visitor.name, visitor.approve_date, visitor.object, visitor.location, visitor.manager, aes.decrypt(visitor.phone), device, work, visitor.company, visitor.work_content, personal_computer, visitor.model_name, visitor.work_division, visitor.device_division, visitor.device_count)
-        privacy = Privacy(visitor.name, aes.encrypt(visitor.department), aes.encrypt(visitor.phone), visitor.manager, privacy_device, privacy_work, visitor.remarks, visitor.object, visitor.location, visitor.company_type, visitor.company, visitor.work_content, privacy_date, "사전 등록", visitor.personal_computer, visitor.model_name, visitor.serial_number, visitor.pc_reason, visitor.work_division, visitor.customer, visitor.device_division, visitor.device_count)
+        image_send_sms_previous(visitor.name, visitor.approve_date, visitor.object, visitor.location, visitor.manager, aes.decrypt(visitor.phone), device, work, visitor.company, visitor.work_content, personal_computer, visitor.model_name, visitor.work_division, visitor.device_date, visitor.device_company, visitor.device_department, visitor.device_request_manager, visitor.device_manager, visitor.device_reason)
+        privacy = Privacy(visitor.name, aes.encrypt(visitor.department), aes.encrypt(visitor.phone), visitor.manager, privacy_device, privacy_work, visitor.object, visitor.location, visitor.company_type, visitor.company, visitor.work_content, privacy_date, "사전 등록", visitor.personal_computer, visitor.model_name, visitor.serial_number, visitor.pc_reason, visitor.work_division, visitor.device_date, visitor.device_company, visitor.device_department, visitor.device_request_manager, visitor.device_manager, visitor.device_reason, visitor.device_remarks)
     else:
-        image_send_sms_current(visitor.name, visitor.approve_date, visitor.object, visitor.location, visitor.manager, aes.decrypt(visitor.phone), device, work, visitor.company, visitor.work_content, personal_computer, visitor.model_name, visitor.work_division, visitor.device_division, visitor.device_count)
-        privacy = Privacy(visitor.name, aes.encrypt(visitor.department), aes.encrypt(visitor.phone), visitor.manager, privacy_device, privacy_work, visitor.remarks, visitor.object, visitor.location, "", visitor.company, visitor.work_content, privacy_date, "현장 등록", visitor.personal_computer, visitor.model_name, visitor.serial_number, visitor.pc_reason, visitor.work_division, visitor.customer, visitor.device_division, visitor.device_count)
+        image_send_sms_current(visitor.name, visitor.approve_date, visitor.object, visitor.location, visitor.manager, aes.decrypt(visitor.phone), device, work, visitor.company, visitor.work_content, personal_computer, visitor.model_name, visitor.work_division, visitor.device_date, visitor.device_company, visitor.device_department, visitor.device_request_manager, visitor.device_manager, visitor.device_reason)
+        privacy = Privacy(visitor.name, aes.encrypt(visitor.department), aes.encrypt(visitor.phone), visitor.manager, privacy_device, privacy_work, visitor.object, visitor.location, "", visitor.company, visitor.work_content, privacy_date, "현장 등록", visitor.personal_computer, visitor.model_name, visitor.serial_number, visitor.pc_reason, visitor.work_division, visitor.device_date, visitor.device_company, visitor.device_department, visitor.device_request_manager, visitor.device_manager, visitor.device_reason, visitor.device_remarks)
     task_change = Privacy_log("승인", current_user.id, request.remote_addr, privacy_date, "내방객 승인", visitor.name)
     db.session.add(task_change)
 
@@ -1365,6 +1502,9 @@ def ajax_deny():
 @app.route('/api/ajax_exit', methods=['POST'])
 @login_required
 def ajax_exit():
+    formatted_date = datetime.now().strftime('%Y-%m-%d')
+    detail_date = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+
     data = request.get_json()
     visitor = Visitor.query.filter_by(id=data['exit_id']).first()
 
@@ -1372,13 +1512,38 @@ def ajax_exit():
         return "Card None"
 
     if visitor.exit_date == None and visitor.exit == 0:
-        visitor.exit_date = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+        card_type = visitor.card.card_type
+        card_num = visitor.card.card_num
+        card_name = visitor.card.card_type + visitor.card.card_num
+
+        visitor.exit_date = detail_date
         visitor.exit = 1
         visitor.card.card_status = "회수"
         visitor.card_id = None
         if visitor.work == 1 and visitor.rack_id:
             visitor.rack.key_status = "회수"
             visitor.rack_id = None
+        visitor.exit_log = current_user.id
+
+        # 카드 로그 찍기
+        card_log = Card_log(visitor.name, visitor.department, visitor.manager, detail_date, formatted_date, card_type, card_num, card_name)
+        db.session.add(card_log)
+
+        db.session.commit()
+    else:
+        return "Exit Error"
+
+    return jsonify(response = "success")
+
+# 내방객 관리 페이지 - 퇴실 갱신 로직 ajax
+@app.route('/api/ajax_re_exit', methods=['POST'])
+@login_required
+def ajax_re_exit():
+    data = request.get_json()
+    visitor = Visitor.query.filter_by(id=data['exit_id']).first()
+
+    if visitor.exit == 1:
+        visitor.exit_date = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
         visitor.exit_log = current_user.id
         db.session.commit()
     else:
@@ -1572,25 +1737,43 @@ def ajax_index_manager_update_checkbox():
         db.session.commit()
     return jsonify(result = "success")
 
-# 방문객 관리 페이지 - 비고 업데이트 체크 박스 api
-@app.route('/api/ajax_remarks_update_checkbox', methods=['POST'])
+# 방문객 관리 페이지 - 카드 업데이트 체크 박스 api
+@app.route('/api/ajax_cards_update_checkbox', methods=['POST'])
 @login_required
-def ajax_remarks_update_checkbox():
+def ajax_cards_update_checkbox():
     data = request.get_json()
-    remarks = data['remarks']
+    cards = data['cards']
+    card_type = data['card_types']
     data_length = len(data['checked_datas'])
-
+    print(cards)
+    print(card_type)
     if data_length < 1:
         return "No Select"
-    if remarks is None or remarks == "":
+    if data_length >= 2:
+        return "Multi Select"
+    if cards is None or cards == "":
         return "Error"
 
-    for checked_data in data['checked_datas']:
-        visitor = Visitor.query.filter_by(id=checked_data).first()
-        if visitor.exit == 1:
-            return "Exited"
-        visitor.remarks = remarks
-        db.session.commit()
+    card_id = Card.query.filter_by(card_type=card_type, card_num=cards, card_status='회수').first()
+    print(card_id)
+    if card_id:
+        select_card_id = card_id.id
+        card_visitor = Visitor.query.filter_by(card_id=select_card_id).first()
+        if card_visitor:
+            return "Use Card"
+        else:
+            for checked_data in data['checked_datas']:
+                visitor = Visitor.query.filter_by(id=checked_data).first()
+                if visitor.exit == 1:
+                    return "Exited"
+                visitor.card_id = select_card_id
+                
+                update_card = Card.query.filter_by(card_num=cards).first()
+                update_card.card_status = '불출'
+
+                db.session.commit()
+    else:
+        return "No Create Card"
     return jsonify(result = "success")
 
 # 상황실 방문객 관리 페이지 - 세부 작업 위치 업데이트 체크 박스 api
@@ -1618,6 +1801,7 @@ def ajax_detail_location_update_checkbox():
 @app.route('/api/ajax_index_card_checkbox', methods=['POST'])
 @login_required
 def ajax_index_card_checkbox():
+    current_timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
     data = request.get_json()
     card = data['card'].split(' ')
     print(card[0], card[1])
@@ -1640,6 +1824,7 @@ def ajax_index_card_checkbox():
             return "Use Card"
 
         visitor.card_id = card_table.id
+        visitor.entry_date = current_timestamp
         card_table.card_status = "불출"
         db.session.commit()
     return jsonify(result = "success")
@@ -1676,16 +1861,16 @@ def ajax_update_manage_visit():
     data = request.get_json()
     visitor = data['update_btn']
     update_visitor = Visitor.query.filter_by(id=visitor).first()
-    if update_visitor.card_id != None:
-        return "Use Card"
-    else:
-        # 개인정보 조회 로그 남기기
-        inquiry_log = Privacy_log("조회", current_user.id, request.remote_addr, current_timestamp, "내방객 조회", update_visitor.name)
-        db.session.add(inquiry_log)
-        db.session.commit()
-        update_visitor_info = [update_visitor.id, update_visitor.name, aes.decrypt(update_visitor.department), update_visitor.object, aes.decrypt(update_visitor.phone), update_visitor.manager, update_visitor.device, update_visitor.remarks, update_visitor.location, update_visitor.work, update_visitor.company_type, update_visitor.company, update_visitor.work_content, update_visitor.personal_computer, update_visitor.model_name, update_visitor.serial_number, update_visitor.pc_reason, update_visitor.work_division, update_visitor.customer, update_visitor.device_division, update_visitor.device_count]
-        
-        return jsonify(response=update_visitor_info)
+    # if update_visitor.card_id != None:
+    #     return "Use Card"
+    # else:
+    # 개인정보 조회 로그 남기기
+    inquiry_log = Privacy_log("조회", current_user.id, request.remote_addr, current_timestamp, "내방객 조회", update_visitor.name)
+    db.session.add(inquiry_log)
+    db.session.commit()
+    update_visitor_info = [update_visitor.id, update_visitor.name, aes.decrypt(update_visitor.department), update_visitor.object, aes.decrypt(update_visitor.phone), update_visitor.manager, update_visitor.device, update_visitor.location, update_visitor.work, update_visitor.company_type, update_visitor.company, update_visitor.work_content, update_visitor.personal_computer, update_visitor.model_name, update_visitor.serial_number, update_visitor.pc_reason, update_visitor.work_division, update_visitor.device_date, update_visitor.device_company, update_visitor.device_department, update_visitor.device_request_manager, update_visitor.device_manager, update_visitor.device_reason, update_visitor.device_remarks, update_visitor.approval_team]
+    
+    return jsonify(response=update_visitor_info)
 
 
 # 내방객 관리 페이지 - 방문객 삭제 api
@@ -1713,7 +1898,7 @@ def ajax_delete_manage_visit():
 #===================================================================================
 
 # MMS-IMAGE TEST SMS 문자 메세지 보내기 - 현장 등록 승인
-def image_send_sms_current(name, date, object, location, manager, phone_num, device, work, company, work_content, personal_computer, model_name, work_division, device_division, device_count):
+def image_send_sms_current(name, date, object, location, manager, phone_num, device, work, company, work_content, personal_computer, model_name, work_division, device_date, device_company, device_department, device_request_manager, device_manager, device_reason):
     connect_to_database()
     cursor = app.mysql_conn.cursor()  # 커서 생성
     insert_query = "INSERT INTO MMS_MSG (REQDATE, STATUS, TYPE, PHONE, CALLBACK, SUBJECT, MSG, FILE_CNT, FILE_TYPE1, FILE_PATH1) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)"
@@ -1733,8 +1918,12 @@ def image_send_sms_current(name, date, object, location, manager, phone_num, dev
             f"-요청 회사명: {company}\n"
             f"-작업내용: {work_content}\n"
             f"-장비반출입: {device}\n"
-            f"-장비 기종: {device_division}\n"
-            f"-장비 수량: {device_count}\n"
+            f"-장비 반출입 날짜: {device_date}\n"
+            f"-요청인 회사: {device_company}\n"
+            f"-요청인 부서: {device_department}\n"
+            f"-요청인: {device_request_manager}\n"
+            f"-장비 반출입 담당자: {device_manager}\n"
+            f"-반출입 사유: {device_reason}\n"
             f"-담당자: {manager}\n"
             f"-QR Code◀"
         )
@@ -1765,8 +1954,12 @@ def image_send_sms_current(name, date, object, location, manager, phone_num, dev
             f"-PC 반입: {personal_computer}\n"
             f"-모델명: {model_name}\n"
             f"-장비반출입: {device}\n"
-            f"-장비 기종: {device_division}\n"
-            f"-장비 수량: {device_count}\n"
+            f"-장비 반출입 날짜: {device_date}\n"
+            f"-요청인 회사: {device_company}\n"
+            f"-요청인 부서: {device_department}\n"
+            f"-요청인: {device_request_manager}\n"
+            f"-장비 반출입 담당자: {device_manager}\n"
+            f"-반출입 사유: {device_reason}\n"
             f"-담당자: {manager}\n"
             f"-QR Code◀"
         )
@@ -1795,8 +1988,12 @@ def image_send_sms_current(name, date, object, location, manager, phone_num, dev
             f"-요청 회사명: {company}\n"
             f"-작업내용: {work_content}\n"
             f"-장비반출입: {device}\n"
-            f"-장비 기종: {device_division}\n"
-            f"-장비 수량: {device_count}\n"
+            f"-장비 반출입 날짜: {device_date}\n"
+            f"-요청인 회사: {device_company}\n"
+            f"-요청인 부서: {device_department}\n"
+            f"-요청인: {device_request_manager}\n"
+            f"-장비 반출입 담당자: {device_manager}\n"
+            f"-반출입 사유: {device_reason}\n"
             f"-담당자: {manager}\n"
             f"-QR Code◀"
         )
@@ -1823,8 +2020,12 @@ def image_send_sms_current(name, date, object, location, manager, phone_num, dev
             f"-방문위치: 인천광역시 연수구 하모니로177번길 20\n"
             f"-방문목적: {object}\n"
             f"-장비반출입: {device}\n"
-            f"-장비 기종: {device_division}\n"
-            f"-장비 수량: {device_count}\n"
+            f"-장비 반출입 날짜: {device_date}\n"
+            f"-요청인 회사: {device_company}\n"
+            f"-요청인 부서: {device_department}\n"
+            f"-요청인: {device_request_manager}\n"
+            f"-장비 반출입 담당자: {device_manager}\n"
+            f"-반출입 사유: {device_reason}\n"
             f"-담당자: {manager}\n"
             f"-QR Code◀"
         )
@@ -1841,13 +2042,13 @@ def image_send_sms_current(name, date, object, location, manager, phone_num, dev
 
     qrcode_img = generate_qr_code(name, date)
 
-    insert_data = (datetime.now(), '1', '0', phone_num, '0322110290', '[내방객 출입 관리 시스템 현장 등록 승인]', msg, '2', 'I', qrcode_img)  # 삽입할 데이터를 튜플로 정의
+    insert_data = (datetime.now(), '1', '0', phone_num, '0322110290', '[내방객 출입 관리 시스템 현장 등록 승인]', msg, '2', 'I', "D:\O_Pass_v1\O_Pass\static\img\qrcode.jpg")  # 삽입할 데이터를 튜플로 정의
     cursor.execute(insert_query, insert_data)  # 쿼리 실행 및 데이터 전달
     app.mysql_conn.commit()  # 변경 사항 커밋
     cursor.close()  # 커서 닫기
 
 # MMS-IMAGE TEST SMS 문자 메세지 보내기 - 사전 등록 승인
-def image_send_sms_previous(name, date, object, location, manager, phone_num, device, work, company, work_content, personal_computer, model_name, work_division, device_division, device_count):
+def image_send_sms_previous(name, date, object, location, manager, phone_num, device, work, company, work_content, personal_computer, model_name, work_division, device_date, device_company, device_department, device_request_manager, device_manager, device_reason):
     connect_to_database()
     cursor = app.mysql_conn.cursor()  # 커서 생성
     insert_query = "INSERT INTO MMS_MSG (REQDATE, STATUS, TYPE, PHONE, CALLBACK, SUBJECT, MSG, FILE_CNT, FILE_TYPE1, FILE_PATH1) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)"
@@ -1867,8 +2068,12 @@ def image_send_sms_previous(name, date, object, location, manager, phone_num, de
             f"-요청 회사명: {company}\n"
             f"-작업내용: {work_content}\n"
             f"-장비반출입: {device}\n"
-            f"-장비 기종: {device_division}\n"
-            f"-장비 수량: {device_count}\n"
+            f"-장비 반출입 날짜: {device_date}\n"
+            f"-요청인 회사: {device_company}\n"
+            f"-요청인 부서: {device_department}\n"
+            f"-요청인: {device_request_manager}\n"
+            f"-장비 반출입 담당자: {device_manager}\n"
+            f"-반출입 사유: {device_reason}\n"
             f"-담당자: {manager}\n"
             f"-QR Code◀"
         )
@@ -1899,8 +2104,12 @@ def image_send_sms_previous(name, date, object, location, manager, phone_num, de
             f"-PC 반입: {personal_computer}\n"
             f"-모델명: {model_name}\n"
             f"-장비반출입: {device}\n"
-            f"-장비 기종: {device_division}\n"
-            f"-장비 수량: {device_count}\n"
+            f"-장비 반출입 날짜: {device_date}\n"
+            f"-요청인 회사: {device_company}\n"
+            f"-요청인 부서: {device_department}\n"
+            f"-요청인: {device_request_manager}\n"
+            f"-장비 반출입 담당자: {device_manager}\n"
+            f"-반출입 사유: {device_reason}\n"
             f"-담당자: {manager}\n"
             f"-QR Code◀"
         )
@@ -1929,8 +2138,12 @@ def image_send_sms_previous(name, date, object, location, manager, phone_num, de
             f"-요청 회사명: {company}\n"
             f"-작업내용: {work_content}\n"
             f"-장비반출입: {device}\n"
-            f"-장비 기종: {device_division}\n"
-            f"-장비 수량: {device_count}\n"
+            f"-장비 반출입 날짜: {device_date}\n"
+            f"-요청인 회사: {device_company}\n"
+            f"-요청인 부서: {device_department}\n"
+            f"-요청인: {device_request_manager}\n"
+            f"-장비 반출입 담당자: {device_manager}\n"
+            f"-반출입 사유: {device_reason}\n"
             f"-담당자: {manager}\n"
             f"-QR Code◀"
         )
@@ -1957,8 +2170,12 @@ def image_send_sms_previous(name, date, object, location, manager, phone_num, de
             f"-방문위치: 인천광역시 연수구 하모니로177번길 20\n"
             f"-방문목적: {object}\n"
             f"-장비반출입: {device}\n"
-            f"-장비 기종: {device_division}\n"
-            f"-장비 수량: {device_count}\n"
+            f"-장비 반출입 날짜: {device_date}\n"
+            f"-요청인 회사: {device_company}\n"
+            f"-요청인 부서: {device_department}\n"
+            f"-요청인: {device_request_manager}\n"
+            f"-장비 반출입 담당자: {device_manager}\n"
+            f"-반출입 사유: {device_reason}\n"
             f"-담당자: {manager}\n"
             f"-QR Code◀"
         )
@@ -1975,7 +2192,7 @@ def image_send_sms_previous(name, date, object, location, manager, phone_num, de
 
     qrcode_img = generate_qr_code(name, date)
 
-    insert_data = (datetime.now(), '1', '0', phone_num, '0322110290', '[내방객 출입 관리 시스템 사전 등록 승인]', msg, '2', 'I', qrcode_img)  # 삽입할 데이터를 튜플로 정의
+    insert_data = (datetime.now(), '1', '0', phone_num, '0322110290', '[내방객 출입 관리 시스템 사전 등록 승인]', msg, '2', 'I', "D:\O_Pass_v1\O_Pass\static\img\qrcode.jpg")  # 삽입할 데이터를 튜플로 정의
     cursor.execute(insert_query, insert_data)  # 쿼리 실행 및 데이터 전달
     app.mysql_conn.commit()  # 변경 사항 커밋
     cursor.close()  # 커서 닫기
@@ -2006,7 +2223,11 @@ def ajax_manage_qrcode_send():
         work = "해당 없음"
     else:
         work = "해당"
-    image_send_sms_previous(qrcode_visitor.name, qrcode_visitor.approve_date, qrcode_visitor.object, qrcode_visitor.location, qrcode_visitor.manager, aes.decrypt(qrcode_visitor.phone), device, work, qrcode_visitor.company, qrcode_visitor.work_content, personal_computer, qrcode_visitor.model_name, qrcode_visitor.work_division, qrcode_visitor.device_division, qrcode_visitor.device_count)
+    
+    if qrcode_visitor.registry == "사전 등록":
+        image_send_sms_previous(qrcode_visitor.name, qrcode_visitor.approve_date, qrcode_visitor.object, qrcode_visitor.location, qrcode_visitor.manager, aes.decrypt(qrcode_visitor.phone), device, work, qrcode_visitor.company, qrcode_visitor.work_content, personal_computer, qrcode_visitor.model_name, qrcode_visitor.work_division, qrcode_visitor.device_date, qrcode_visitor.device_company, qrcode_visitor.device_department, qrcode_visitor.device_request_manager, qrcode_visitor.device_manager, qrcode_visitor.device_reason)
+    else:
+        image_send_sms_current(qrcode_visitor.name, qrcode_visitor.approve_date, qrcode_visitor.object, qrcode_visitor.location, qrcode_visitor.manager, aes.decrypt(qrcode_visitor.phone), device, work, qrcode_visitor.company, qrcode_visitor.work_content, personal_computer, qrcode_visitor.model_name, qrcode_visitor.work_division, qrcode_visitor.device_date, qrcode_visitor.device_company, qrcode_visitor.device_department, qrcode_visitor.device_request_manager, qrcode_visitor.device_manager, qrcode_visitor.device_reason)
     return jsonify()
 
 #===================================================================================
@@ -2014,82 +2235,335 @@ def ajax_manage_qrcode_send():
 
 #===================================================================================
 
-# # Excel 다운로드 api
-# @app.route('/api/ajax_excel_download', methods=['GET', 'POST'])
-# @login_required
-# def ajax_excel_download():
-#     data = request.get_json()
-#     start_date = data['start_date_val']
-#     end_date = data['end_date_val']
+# Excel 다운로드 api
+@app.route('/api/ajax_excel_download_1', methods=['GET', 'POST'])
+@login_required
+def ajax_excel_download_1():
+    data = request.get_json()
+    select_option = data['excel_option_val']
+    option_text = data['option_text_val']
+    start_date = data['start_date_val']
+    end_date = data['end_date_val']
 
-#     if start_date == '' or end_date == '':
-#         return "No Date"
-#     if start_date > end_date:
-#         return "Date Error"
+    print(select_option, option_text, start_date, end_date)
+    if option_text == '':
+        return "No Input"
+    if start_date == '' or end_date == '':
+        return "No Date"
+    if start_date > end_date:
+        return "Date Error"
 
-#     # 내방객 점검 일지
-#     file_name = '일일 점검 양식.xlsx'
+    # 내방객 점검 일지
+    file_name = 'excel.xlsx'
     
-#     # 파일 읽기
-#     workbook = openpyxl.load_workbook(file_name)  # 기존 파일을 로드합니다.
-#     sheet = workbook.active
-#     # 데이터 쓰기
-#     if start_date == end_date:
-#         # If start_date and end_date are the same, include only a single day
-#         start_datetime = datetime.strptime(start_date, '%Y-%m-%d')
-#         start_datetime_str = start_datetime.strftime('%Y-%m-%d')
-#         exited_visitors = Visitor.query.filter(
-#             and_(
-#                 Visitor.approve_date >= start_datetime_str,
-#                 Visitor.approve_date < (start_datetime + timedelta(days=1)).strftime('%Y-%m-%d'),
-#                 Visitor.exit_date >= start_datetime_str,
-#                 Visitor.exit_date < (start_datetime + timedelta(days=1)).strftime('%Y-%m-%d')
-#             )
-#         )
-#     else:
-#         # Include the range between start_date and end_date
-#         start_datetime = datetime.strptime(start_date, '%Y-%m-%d')
-#         end_datetime = datetime.strptime(end_date, '%Y-%m-%d')
-#         start_datetime_str = start_datetime.strftime('%Y-%m-%d')
-#         end_datetime_str = end_datetime.strftime('%Y-%m-%d')
-#         if start_datetime != end_datetime:
-#             end_datetime += timedelta(days=1)  # Add one day to include the end_date
-#         exited_visitors = Visitor.query.filter(
-#             and_(
-#                 Visitor.approve_date >= start_datetime_str,
-#                 Visitor.approve_date <= end_datetime.strftime('%Y-%m-%d'),
-#                 Visitor.exit_date >= start_datetime_str,
-#                 Visitor.exit_date <= end_datetime.strftime('%Y-%m-%d')
-#             )
-#         )
+    # 파일 읽기
+    workbook = openpyxl.load_workbook(file_name)  # 기존 파일을 로드합니다.
+    sheet = workbook.active
+    # 데이터 쓰기
+    if select_option == 'name':
+        if start_date == end_date:
+            # If start_date and end_date are the same, include only a single day
+            start_datetime = datetime.strptime(start_date, '%Y-%m-%d')
+            start_datetime_str = start_datetime.strftime('%Y-%m-%d')
+            exited_visitors = Visitor.query.filter(
+                and_(
+                    Visitor.exit_date >= start_datetime_str,
+                    Visitor.exit_date < (start_datetime + timedelta(days=1)).strftime('%Y-%m-%d'),
+                    Visitor.name == option_text
+                )
+            )
+        else:
+            # Include the range between start_date and end_date
+            start_datetime = datetime.strptime(start_date, '%Y-%m-%d')
+            end_datetime = datetime.strptime(end_date, '%Y-%m-%d')
+            start_datetime_str = start_datetime.strftime('%Y-%m-%d')
+            end_datetime_str = end_datetime.strftime('%Y-%m-%d')
+            if start_datetime != end_datetime:
+                end_datetime += timedelta(days=1)  # Add one day to include the end_date
+            exited_visitors = Visitor.query.filter(
+                and_(
+                    Visitor.exit_date >= start_datetime_str,
+                    Visitor.exit_date <= end_datetime.strftime('%Y-%m-%d'),
+                    Visitor.name == option_text
+                )
+            )
+    elif select_option == 'department':
+        if start_date == end_date:
+            # If start_date and end_date are the same, include only a single day
+            start_datetime = datetime.strptime(start_date, '%Y-%m-%d')
+            start_datetime_str = start_datetime.strftime('%Y-%m-%d')
+            exited_visitors = Visitor.query.filter(
+                and_(
+                    Visitor.exit_date >= start_datetime_str,
+                    Visitor.exit_date < (start_datetime + timedelta(days=1)).strftime('%Y-%m-%d'),
+                    Visitor.department == aes.encrypt(option_text)
+                )
+            )
+        else:
+            # Include the range between start_date and end_date
+            start_datetime = datetime.strptime(start_date, '%Y-%m-%d')
+            end_datetime = datetime.strptime(end_date, '%Y-%m-%d')
+            start_datetime_str = start_datetime.strftime('%Y-%m-%d')
+            end_datetime_str = end_datetime.strftime('%Y-%m-%d')
+            if start_datetime != end_datetime:
+                end_datetime += timedelta(days=1)  # Add one day to include the end_date
+            exited_visitors = Visitor.query.filter(
+                and_(
+                    Visitor.exit_date >= start_datetime_str,
+                    Visitor.exit_date <= end_datetime.strftime('%Y-%m-%d'),
+                    Visitor.department == aes.encrypt(option_text)
+                )
+            )
+    elif select_option == 'phone':
+        if start_date == end_date:
+            # If start_date and end_date are the same, include only a single day
+            start_datetime = datetime.strptime(start_date, '%Y-%m-%d')
+            start_datetime_str = start_datetime.strftime('%Y-%m-%d')
+            exited_visitors = Visitor.query.filter(
+                and_(
+                    Visitor.exit_date >= start_datetime_str,
+                    Visitor.exit_date < (start_datetime + timedelta(days=1)).strftime('%Y-%m-%d'),
+                    Visitor.phone == aes.encrypt(option_text)
+                )
+            )
+        else:
+            # Include the range between start_date and end_date
+            start_datetime = datetime.strptime(start_date, '%Y-%m-%d')
+            end_datetime = datetime.strptime(end_date, '%Y-%m-%d')
+            start_datetime_str = start_datetime.strftime('%Y-%m-%d')
+            end_datetime_str = end_datetime.strftime('%Y-%m-%d')
+            if start_datetime != end_datetime:
+                end_datetime += timedelta(days=1)  # Add one day to include the end_date
+            exited_visitors = Visitor.query.filter(
+                and_(
+                    Visitor.exit_date >= start_datetime_str,
+                    Visitor.exit_date <= end_datetime.strftime('%Y-%m-%d'),
+                    Visitor.phone == aes.encrypt(option_text)
+                )
+            )
+    elif select_option == 'manager':
+        if start_date == end_date:
+            # If start_date and end_date are the same, include only a single day
+            start_datetime = datetime.strptime(start_date, '%Y-%m-%d')
+            start_datetime_str = start_datetime.strftime('%Y-%m-%d')
+            exited_visitors = Visitor.query.filter(
+                and_(
+                    Visitor.exit_date >= start_datetime_str,
+                    Visitor.exit_date < (start_datetime + timedelta(days=1)).strftime('%Y-%m-%d'),
+                    Visitor.manager == option_text
+                )
+            )
+        else:
+            # Include the range between start_date and end_date
+            start_datetime = datetime.strptime(start_date, '%Y-%m-%d')
+            end_datetime = datetime.strptime(end_date, '%Y-%m-%d')
+            start_datetime_str = start_datetime.strftime('%Y-%m-%d')
+            end_datetime_str = end_datetime.strftime('%Y-%m-%d')
+            if start_datetime != end_datetime:
+                end_datetime += timedelta(days=1)  # Add one day to include the end_date
+            exited_visitors = Visitor.query.filter(
+                and_(
+                    Visitor.exit_date >= start_datetime_str,
+                    Visitor.exit_date <= end_datetime.strftime('%Y-%m-%d'),
+                    Visitor.manager == option_text
+                )
+            )
+    else:
+        return "No Data"
 
-#     for row_num, exited_visitor in enumerate(exited_visitors, 18):
-#         if exited_visitor.work == 1:
-#             work = 'O'
-#         else:
-#             work = 'X'
+    # 열 너비 설정 (A, B, C 순서로 30)
+    column_widths = [5, 10, 20, 20, 15, 15, 15, 15, 15, 10, 15, 20, 20, 10, 15, 20, 15, 18, 15, 10, 15, 15, 15, 15]  # 각 열의 너비를 30으로 설정
 
-#         if exited_visitor.device == 1:
-#             device = 'O'
-#         else:
-#             device = 'X'
-#         row = (
-#             exited_visitor.id, exited_visitor.approve_date, exited_visitor.exit_date,
-#             exited_visitor.department, exited_visitor.phone, exited_visitor.manager,
-#             work, exited_visitor.location, exited_visitor.detail_location,
-#             exited_visitor.company_type, exited_visitor.company, exited_visitor.work_content,
-#             device, "", exited_visitor.remarks
-#         )
-#         sheet.append(row)
+    for col_num, width in enumerate(column_widths, 1):
+        col_letter = get_column_letter(col_num)
+        sheet.column_dimensions[col_letter].width = width
 
-#         for col_num, _ in enumerate(row, 1):
-#             col_letter = get_column_letter(col_num)
-#             cell = sheet[col_letter + str(row_num)]
-#             cell.alignment = Alignment(horizontal='center', vertical='center')
+    # 헤더 생성
+    header = ["No", "등록", "출입 시간", "퇴실 시간", "이름", "소속", "전화번호", "담당자", "방문목적",
+            "PC 반입", "모델명", "시리얼번호", "반입사유", "작업", "작업 분류", "작업 내용", "작업 위치",
+            "작업 요청 회사 타입", "작업 요청 회사명", "장비 반입", "고객사", "장비 분류", "장비 수량", "비고"]
+    
+    # 헤더 추가
+    sheet.append(header)
 
-#     sheet['A6'] = '일시: ' + start_date + ' ~ ' + end_date
-#     workbook.save('excel/' + start_date + '-' + end_date + ' 내방객 출입점검 일지1.xlsx')
-#     return jsonify(result="success")
+    # A1 셀 가운데 정렬
+    sheet['A1'].alignment = Alignment(horizontal='center', vertical='center')
+
+    for row_num, exited_visitor in enumerate(exited_visitors, 2):
+        # 이름에서 두 번째 글자를 '*'로 마스킹 처리
+        name = exited_visitor.name
+        phone = aes.decrypt(exited_visitor.phone)
+        department = aes.decrypt(exited_visitor.department)
+        personal_computer = exited_visitor.personal_computer
+        work = exited_visitor.work
+        device = exited_visitor.device
+        if len(name) >= 2:
+            masked_name = name[0] + '*' + name[2:]
+        else:
+            masked_name = name
+        if len(phone) >= 5:
+            masked_phone = phone[:3] + '****' + phone[7:]
+        else:
+            masked_phone = phone
+        if personal_computer == 1:
+            personal_computer = 'O'
+        else:
+            personal_computer = 'X'
+        if work == 1:
+            work = 'O'
+        else:
+            work = 'X'
+        if device == 1:
+            device = 'O'
+        else:
+            device = 'X'
+        
+        row = (
+            row_num-1, exited_visitor.registry, exited_visitor.approve_date, exited_visitor.exit_date, masked_name, department, masked_phone, 
+            exited_visitor.manager, exited_visitor.object, personal_computer, exited_visitor.model_name, exited_visitor.serial_number, exited_visitor.pc_reason,
+            work, exited_visitor.work_division, exited_visitor.work_content, exited_visitor.location, exited_visitor.company_type, exited_visitor.company,
+            device, exited_visitor.customer, exited_visitor.device_division, exited_visitor.device_count, exited_visitor.remarks,
+        )
+        sheet.append(row)
+
+        # 헤더를 A1부터 순서대로 열 갯수만큼 가운데 정렬하면서 추가
+        for col_num, header_text in enumerate(header, 1):
+            col_letter = get_column_letter(col_num)
+            cell = sheet[col_letter + '1']
+            cell.value = header_text
+            cell.alignment = Alignment(horizontal='center', vertical='center')
+
+            # 헤더 스타일 설정
+            cell.font = Font(color='FFFFFFFF', bold=True)  # 글자색을 하얀색으로, 볼드체로 설정
+            cell.fill = PatternFill(start_color='FF808080', end_color='FF808080', fill_type='solid')  # 배경색을 진한 회색으로 설정
+
+        for col_num, _ in enumerate(row, 1):
+            col_letter = get_column_letter(col_num)
+            cell = sheet[col_letter + str(row_num)]
+            cell.alignment = Alignment(horizontal='center', vertical='center')
+
+    workbook.save(start_date + '-' + end_date + '.xlsx')
+    return jsonify(result="success")
+
+@app.route('/api/ajax_excel_download_2', methods=['GET', 'POST'])
+@login_required
+def ajax_excel_download_2():
+    data = request.get_json()
+    start_date = data['start_date_val']
+    end_date = data['end_date_val']
+
+    print(start_date, end_date)
+    if start_date == '' or end_date == '':
+        return "No Date"
+    if start_date > end_date:
+        return "Date Error"
+
+    # 내방객 점검 일지
+    file_name = 'excel.xlsx'
+    
+    # 파일 읽기
+    workbook = openpyxl.load_workbook(file_name)  # 기존 파일을 로드합니다.
+    sheet = workbook.active
+    # 데이터 쓰기
+    if start_date == end_date:
+        # If start_date and end_date are the same, include only a single day
+        start_datetime = datetime.strptime(start_date, '%Y-%m-%d')
+        start_datetime_str = start_datetime.strftime('%Y-%m-%d')
+        exited_visitors = Visitor.query.filter(
+            and_(
+                Visitor.exit_date >= start_datetime_str,
+                Visitor.exit_date < (start_datetime + timedelta(days=1)).strftime('%Y-%m-%d')
+            )
+        )
+    else:
+        # Include the range between start_date and end_date
+        start_datetime = datetime.strptime(start_date, '%Y-%m-%d')
+        end_datetime = datetime.strptime(end_date, '%Y-%m-%d')
+        start_datetime_str = start_datetime.strftime('%Y-%m-%d')
+        end_datetime_str = end_datetime.strftime('%Y-%m-%d')
+        if start_datetime != end_datetime:
+            end_datetime += timedelta(days=1)  # Add one day to include the end_date
+        exited_visitors = Visitor.query.filter(
+            and_(
+                Visitor.exit_date >= start_datetime_str,
+                Visitor.exit_date <= end_datetime.strftime('%Y-%m-%d')
+            )
+        )
+
+    # 열 너비 설정 (A, B, C 순서로 30)
+    column_widths = [5, 10, 20, 20, 15, 15, 15, 15, 15, 10, 15, 20, 20, 10, 15, 20, 15, 18, 15, 10, 15, 15, 15, 15]  # 각 열의 너비를 30으로 설정
+
+    for col_num, width in enumerate(column_widths, 1):
+        col_letter = get_column_letter(col_num)
+        sheet.column_dimensions[col_letter].width = width
+
+    # 헤더 생성
+    header = ["No", "등록", "출입 시간", "퇴실 시간", "이름", "소속", "전화번호", "담당자", "방문목적",
+            "PC 반입", "모델명", "시리얼번호", "반입사유", "작업", "작업 분류", "작업 내용", "작업 위치",
+            "작업 요청 회사 타입", "작업 요청 회사명", "장비 반입", "고객사", "장비 분류", "장비 수량", "비고"]
+    
+    # 헤더 추가
+    sheet.append(header)
+
+    # A1 셀 가운데 정렬
+    sheet['A1'].alignment = Alignment(horizontal='center', vertical='center')
+
+    for row_num, exited_visitor in enumerate(exited_visitors, 2):
+        # 이름에서 두 번째 글자를 '*'로 마스킹 처리
+        name = exited_visitor.name
+        phone = aes.decrypt(exited_visitor.phone)
+        department = aes.decrypt(exited_visitor.department)
+        personal_computer = exited_visitor.personal_computer
+        work = exited_visitor.work
+        device = exited_visitor.device
+        if len(name) >= 2:
+            masked_name = name[0] + '*' + name[2:]
+        else:
+            masked_name = name
+        if len(phone) >= 5:
+            masked_phone = phone[:3] + '****' + phone[7:]
+        else:
+            masked_phone = phone
+        if personal_computer == 1:
+            personal_computer = 'O'
+        else:
+            personal_computer = 'X'
+        if work == 1:
+            work = 'O'
+        else:
+            work = 'X'
+        if device == 1:
+            device = 'O'
+        else:
+            device = 'X'
+        
+        row = (
+            row_num-1, exited_visitor.registry, exited_visitor.approve_date, exited_visitor.exit_date, masked_name, department, masked_phone, 
+            exited_visitor.manager, exited_visitor.object, personal_computer, exited_visitor.model_name, exited_visitor.serial_number, exited_visitor.pc_reason,
+            work, exited_visitor.work_division, exited_visitor.work_content, exited_visitor.location, exited_visitor.company_type, exited_visitor.company,
+            device, exited_visitor.customer, exited_visitor.device_division, exited_visitor.device_count, exited_visitor.remarks,
+        )
+        sheet.append(row)
+
+        # 헤더를 A1부터 순서대로 열 갯수만큼 가운데 정렬하면서 추가
+        for col_num, header_text in enumerate(header, 1):
+            col_letter = get_column_letter(col_num)
+            cell = sheet[col_letter + '1']
+            cell.value = header_text
+            cell.alignment = Alignment(horizontal='center', vertical='center')
+
+            # 헤더 스타일 설정
+            cell.font = Font(color='FFFFFFFF', bold=True)  # 글자색을 하얀색으로, 볼드체로 설정
+            cell.fill = PatternFill(start_color='FF808080', end_color='FF808080', fill_type='solid')  # 배경색을 진한 회색으로 설정
+
+        for col_num, _ in enumerate(row, 1):
+            col_letter = get_column_letter(col_num)
+            cell = sheet[col_letter + str(row_num)]
+            cell.alignment = Alignment(horizontal='center', vertical='center')
+
+    workbook.save(start_date + '-' + end_date + '.xlsx')
+    
+    return jsonify(result="success")
 
 #===================================================================================
 
@@ -2291,12 +2765,10 @@ def ajax_key_reset():
 def user_profile():
     if request.method == 'POST':
         department = request.form['current_department']
-        rank = request.form['current_rank']
 
         user = User.query.filter_by(email=current_user.email).first()
-        if department and rank:
+        if department:
             user.department = department
-            user.rank = rank
             db.session.commit()
             flash("프로필이 업데이트 되었습니다.")
             return redirect('profile')
@@ -2461,6 +2933,7 @@ def form_input():
     if request.method == 'POST':
         date = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
         # 필수 입력
+        approval_team = request.form['visitorApproval']
         name = request.form['visitorName']
         department = request.form['visitorDepartment']
         phone = request.form['visitorPhone']
@@ -2481,10 +2954,13 @@ def form_input():
         location = request.form.get('visitorLocation')
         company = request.form.get('visitorCompanyName')
 
-        customer = request.form.get('visitorCustomer')
-        device_division = request.form.get('visitorDeviceDivision')
-        device_count = request.form.get('visitorDeviceCount')
-        remarks = request.form.get('visitorRemarks')
+        device_date = request.form.get('visitorDeviceDate')
+        device_company = request.form.get('visitorDeviceCompany')
+        device_department = request.form.get('visitorDeviceDepartment')
+        device_request_manager = request.form.get('visitorDeviceRequestManager')
+        device_manager = request.form.get('visitorDeviceManager')
+        device_reason = request.form.get('visitorDeviceReason')
+        device_remarks = request.form.get('visitorDeviceRemarks')
 
         if personal_computer == '반입':
             personal_computer = True
@@ -2501,8 +2977,8 @@ def form_input():
         else:
             device = False
 
-        privacy = Privacy(name, aes.encrypt(department), aes.encrypt(phone), manager, device, work, remarks, object, location, "", company, work_content, date, "현장 등록", personal_computer, model_name, serial_number, pc_reason, work_division, customer, device_division, device_count)
-        visitor = Visitor(name, aes.encrypt(department), aes.encrypt(phone), location, manager, device, remarks, object, date, 0, "현장 등록", work, "", company, work_content, 0, personal_computer, model_name, serial_number, pc_reason, work_division, customer, device_division, device_count)
+        privacy = Privacy(name, aes.encrypt(department), aes.encrypt(phone), manager, device, work, object, location, "", company, work_content, date, "현장 등록", personal_computer, model_name, serial_number, pc_reason, work_division, device_date, device_company, device_department, device_request_manager, device_manager, device_reason, device_remarks)
+        visitor = Visitor(name, aes.encrypt(department), aes.encrypt(phone), location, manager, device, object, date, 0, "현장 등록", work, "", company, work_content, "현장 방문객", personal_computer, model_name, serial_number, pc_reason, work_division, device_date, device_company, device_department, device_request_manager, device_manager, device_reason, device_remarks, approval_team, None)
         db.session.add(privacy)
         db.session.add(visitor)
         db.session.commit()
@@ -2584,27 +3060,559 @@ def user_delete():
 #===================================================================================
 
 def generate_qr_code(name, date):
-    # '%Y-%m-%d' 형식으로 날짜를 문자열로 변환
-    qr_date = str(date)
     try:
-        qr_data = "https://opass.cj.net/qr_auth?id=" + aes.encrypt(name)
+        qr_data = "https://opass.cj.net/qr_auth?id=" + name + "&date=" + date
         qr_img = qrcode.make(qr_data)
         save_path = 'static/img/qrcode.jpg'
+
+        # 파일이 이미 존재하는 경우 덮어쓰기
+        if os.path.exists(save_path):
+            os.remove(save_path)
+
         qr_img.save(save_path)
     except Exception as e:
         print(e)
 
     return "QR Code generated"
 
-@app.route('/<id>/<date>')
-def authenticate(user_data):
-    # 여기서 user_data를 이용한 인증 로직 수행
-    # 예: 데이터베이스 조회, 비교 등
+@app.route('/qr_auth')
+def authenticate():
+    current_timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+    name = request.args.get('id')
+    date = request.args.get('date')
 
-    if user_data == "authenticated_user_data":
-        return "인증 성공"
+    visitor = Visitor.query.filter_by(name=name, approve_date=date).order_by(Visitor.id.desc()).first()
+
+    if visitor:
+        visitor.entry_date = current_timestamp
+        db.session.commit()
+        visitor_info = [visitor.registry, visitor.name, aes.decrypt(visitor.department), visitor.manager, visitor.created_date, visitor.approve_date, visitor.personal_computer,
+                        visitor.model_name, visitor.serial_number, visitor.pc_reason, visitor.work, visitor.work_division, visitor.work_content, visitor.location, visitor.company_type, visitor.company,
+                        visitor.device, visitor.customer, visitor.device_division, visitor.device_count, visitor.remarks, visitor.entry_date]
+        return render_template('user_authenticated.html', visitor=visitor_info)
     else:
         return "인증 실패"
+
+@app.route('/process_pc', methods=['GET','POST'])
+def process_pc():
+    if request.method == "POST":
+        
+        start_date = request.form.get('start_date')
+        end_date = request.form.get('end_date')
+
+        select_option = request.form.get('select_excel_option')
+        option_text = request.form.get('select_option_text')
+
+        if select_option == 'name':
+            if start_date == end_date:
+                # If start_date and end_date are the same, include only a single day
+                start_datetime = datetime.strptime(start_date, '%Y-%m-%d')
+                start_datetime_str = start_datetime.strftime('%Y-%m-%d')
+                exited_visitors = Visitor.query.filter(
+                    and_(
+                        Visitor.exit_date >= start_datetime_str,
+                        Visitor.exit_date < (start_datetime + timedelta(days=1)).strftime('%Y-%m-%d'),
+                        Visitor.name == option_text,
+                        Visitor.personal_computer == 1,
+                        Visitor.exit == 1,
+                    )
+                )
+            else:
+                # Include the range between start_date and end_date
+                start_datetime = datetime.strptime(start_date, '%Y-%m-%d')
+                end_datetime = datetime.strptime(end_date, '%Y-%m-%d')
+                start_datetime_str = start_datetime.strftime('%Y-%m-%d')
+                end_datetime_str = end_datetime.strftime('%Y-%m-%d')
+                if start_datetime != end_datetime:
+                    end_datetime += timedelta(days=1)  # Add one day to include the end_date
+                exited_visitors = Visitor.query.filter(
+                    and_(
+                        Visitor.exit_date >= start_datetime_str,
+                        Visitor.exit_date <= end_datetime.strftime('%Y-%m-%d'),
+                        Visitor.name == option_text,
+                        Visitor.personal_computer == 1,
+                        Visitor.exit == 1,
+                    )
+                )
+        elif select_option == 'department':
+            if start_date == end_date:
+                # If start_date and end_date are the same, include only a single day
+                start_datetime = datetime.strptime(start_date, '%Y-%m-%d')
+                start_datetime_str = start_datetime.strftime('%Y-%m-%d')
+                exited_visitors = Visitor.query.filter(
+                    and_(
+                        Visitor.exit_date >= start_datetime_str,
+                        Visitor.exit_date < (start_datetime + timedelta(days=1)).strftime('%Y-%m-%d'),
+                        Visitor.department == aes.encrypt(option_text),
+                        Visitor.personal_computer == 1,
+                        Visitor.exit == 1
+                    )
+                )
+            else:
+                # Include the range between start_date and end_date
+                start_datetime = datetime.strptime(start_date, '%Y-%m-%d')
+                end_datetime = datetime.strptime(end_date, '%Y-%m-%d')
+                start_datetime_str = start_datetime.strftime('%Y-%m-%d')
+                end_datetime_str = end_datetime.strftime('%Y-%m-%d')
+                if start_datetime != end_datetime:
+                    end_datetime += timedelta(days=1)  # Add one day to include the end_date
+                exited_visitors = Visitor.query.filter(
+                    and_(
+                        Visitor.exit_date >= start_datetime_str,
+                        Visitor.exit_date <= end_datetime.strftime('%Y-%m-%d'),
+                        Visitor.department == aes.encrypt(option_text),
+                        Visitor.personal_computer == 1,
+                        Visitor.exit == 1
+                    )
+                )
+        elif select_option == 'phone':
+            if start_date == end_date:
+                # If start_date and end_date are the same, include only a single day
+                start_datetime = datetime.strptime(start_date, '%Y-%m-%d')
+                start_datetime_str = start_datetime.strftime('%Y-%m-%d')
+                exited_visitors = Visitor.query.filter(
+                    and_(
+                        Visitor.exit_date >= start_datetime_str,
+                        Visitor.exit_date < (start_datetime + timedelta(days=1)).strftime('%Y-%m-%d'),
+                        Visitor.phone == aes.encrypt(option_text),
+                        Visitor.personal_computer == 1,
+                        Visitor.exit == 1
+                    )
+                )
+            else:
+                # Include the range between start_date and end_date
+                start_datetime = datetime.strptime(start_date, '%Y-%m-%d')
+                end_datetime = datetime.strptime(end_date, '%Y-%m-%d')
+                start_datetime_str = start_datetime.strftime('%Y-%m-%d')
+                end_datetime_str = end_datetime.strftime('%Y-%m-%d')
+                if start_datetime != end_datetime:
+                    end_datetime += timedelta(days=1)  # Add one day to include the end_date
+                exited_visitors = Visitor.query.filter(
+                    and_(
+                        Visitor.exit_date >= start_datetime_str,
+                        Visitor.exit_date <= end_datetime.strftime('%Y-%m-%d'),
+                        Visitor.phone == aes.encrypt(option_text),
+                        Visitor.personal_computer == 1,
+                        Visitor.exit == 1
+                    )
+                )
+        elif select_option == 'manager':
+            if start_date == end_date:
+                # If start_date and end_date are the same, include only a single day
+                start_datetime = datetime.strptime(start_date, '%Y-%m-%d')
+                start_datetime_str = start_datetime.strftime('%Y-%m-%d')
+                exited_visitors = Visitor.query.filter(
+                    and_(
+                        Visitor.exit_date >= start_datetime_str,
+                        Visitor.exit_date < (start_datetime + timedelta(days=1)).strftime('%Y-%m-%d'),
+                        Visitor.manager == option_text,
+                        Visitor.personal_computer == 1,
+                        Visitor.exit == 1
+                    )
+                )
+            else:
+                # Include the range between start_date and end_date
+                start_datetime = datetime.strptime(start_date, '%Y-%m-%d')
+                end_datetime = datetime.strptime(end_date, '%Y-%m-%d')
+                start_datetime_str = start_datetime.strftime('%Y-%m-%d')
+                end_datetime_str = end_datetime.strftime('%Y-%m-%d')
+                if start_datetime != end_datetime:
+                    end_datetime += timedelta(days=1)  # Add one day to include the end_date
+                exited_visitors = Visitor.query.filter(
+                    and_(
+                        Visitor.exit_date >= start_datetime_str,
+                        Visitor.exit_date <= end_datetime.strftime('%Y-%m-%d'),
+                        Visitor.manager == option_text,
+                        Visitor.personal_computer == 1,
+                        Visitor.exit == 1
+                    )
+                )
+        else:
+            if start_date == end_date:
+                # If start_date and end_date are the same, include only a single day
+                start_datetime = datetime.strptime(start_date, '%Y-%m-%d')
+                start_datetime_str = start_datetime.strftime('%Y-%m-%d')
+                exited_visitors = Visitor.query.filter(
+                    and_(
+                        Visitor.exit_date >= start_datetime_str,
+                        Visitor.exit_date < (start_datetime + timedelta(days=1)).strftime('%Y-%m-%d'),
+                        Visitor.personal_computer == 1,
+                        Visitor.exit == 1
+                    )
+                )
+            else:
+                # Include the range between start_date and end_date
+                start_datetime = datetime.strptime(start_date, '%Y-%m-%d')
+                end_datetime = datetime.strptime(end_date, '%Y-%m-%d')
+                start_datetime_str = start_datetime.strftime('%Y-%m-%d')
+                end_datetime_str = end_datetime.strftime('%Y-%m-%d')
+                if start_datetime != end_datetime:
+                    end_datetime += timedelta(days=1)  # Add one day to include the end_date
+                exited_visitors = Visitor.query.filter(
+                    and_(
+                        Visitor.exit_date >= start_datetime_str,
+                        Visitor.exit_date <= end_datetime.strftime('%Y-%m-%d'),
+                        Visitor.personal_computer == 1,
+                        Visitor.exit == 1
+                    )
+                )
+
+        department = []
+        phone = []
+        for visitor in exited_visitors:
+            department.append(aes.decrypt(visitor.department))
+            phone.append(aes.decrypt(visitor.phone))
+
+        zip_data = zip(exited_visitors, department, phone)
+
+        print(select_option, option_text, start_date, end_date)
+        return render_template('process_pc.html', zip_data=zip_data)
+    else:
+        department = []
+        phone = []
+        visit_info = Visitor.query.filter_by(personal_computer=1, exit=1).all()
+
+        for visitor in visit_info:
+            department.append(aes.decrypt(visitor.department))
+            phone.append(aes.decrypt(visitor.phone))
+
+        zip_data = zip(visit_info, department, phone)
+
+        return render_template('process_pc.html', zip_data=zip_data)
+
+@app.route('/process_work_plan', methods=['GET','POST'])
+def process_work_plan():
+    if request.method == "POST":
+        
+        start_date = request.form.get('start_date')
+        end_date = request.form.get('end_date')
+
+        select_option = request.form.get('select_excel_option')
+        option_text = request.form.get('select_option_text')
+
+        if select_option == 'name':
+            if start_date == end_date:
+                # If start_date and end_date are the same, include only a single day
+                start_datetime = datetime.strptime(start_date, '%Y-%m-%d')
+                start_datetime_str = start_datetime.strftime('%Y-%m-%d')
+                exited_visitors = Visitor.query.filter(
+                    and_(
+                        Visitor.exit_date >= start_datetime_str,
+                        Visitor.exit_date < (start_datetime + timedelta(days=1)).strftime('%Y-%m-%d'),
+                        Visitor.name == option_text,
+                        Visitor.work == 1,
+                        Visitor.exit == 1,
+                    )
+                )
+            else:
+                # Include the range between start_date and end_date
+                start_datetime = datetime.strptime(start_date, '%Y-%m-%d')
+                end_datetime = datetime.strptime(end_date, '%Y-%m-%d')
+                start_datetime_str = start_datetime.strftime('%Y-%m-%d')
+                end_datetime_str = end_datetime.strftime('%Y-%m-%d')
+                if start_datetime != end_datetime:
+                    end_datetime += timedelta(days=1)  # Add one day to include the end_date
+                exited_visitors = Visitor.query.filter(
+                    and_(
+                        Visitor.exit_date >= start_datetime_str,
+                        Visitor.exit_date <= end_datetime.strftime('%Y-%m-%d'),
+                        Visitor.name == option_text,
+                        Visitor.work == 1,
+                        Visitor.exit == 1,
+                    )
+                )
+        elif select_option == 'department':
+            if start_date == end_date:
+                # If start_date and end_date are the same, include only a single day
+                start_datetime = datetime.strptime(start_date, '%Y-%m-%d')
+                start_datetime_str = start_datetime.strftime('%Y-%m-%d')
+                exited_visitors = Visitor.query.filter(
+                    and_(
+                        Visitor.exit_date >= start_datetime_str,
+                        Visitor.exit_date < (start_datetime + timedelta(days=1)).strftime('%Y-%m-%d'),
+                        Visitor.department == aes.encrypt(option_text),
+                        Visitor.work == 1,
+                        Visitor.exit == 1
+                    )
+                )
+            else:
+                # Include the range between start_date and end_date
+                start_datetime = datetime.strptime(start_date, '%Y-%m-%d')
+                end_datetime = datetime.strptime(end_date, '%Y-%m-%d')
+                start_datetime_str = start_datetime.strftime('%Y-%m-%d')
+                end_datetime_str = end_datetime.strftime('%Y-%m-%d')
+                if start_datetime != end_datetime:
+                    end_datetime += timedelta(days=1)  # Add one day to include the end_date
+                exited_visitors = Visitor.query.filter(
+                    and_(
+                        Visitor.exit_date >= start_datetime_str,
+                        Visitor.exit_date <= end_datetime.strftime('%Y-%m-%d'),
+                        Visitor.department == aes.encrypt(option_text),
+                        Visitor.work == 1,
+                        Visitor.exit == 1
+                    )
+                )
+        elif select_option == 'phone':
+            if start_date == end_date:
+                # If start_date and end_date are the same, include only a single day
+                start_datetime = datetime.strptime(start_date, '%Y-%m-%d')
+                start_datetime_str = start_datetime.strftime('%Y-%m-%d')
+                exited_visitors = Visitor.query.filter(
+                    and_(
+                        Visitor.exit_date >= start_datetime_str,
+                        Visitor.exit_date < (start_datetime + timedelta(days=1)).strftime('%Y-%m-%d'),
+                        Visitor.phone == aes.encrypt(option_text),
+                        Visitor.work == 1,
+                        Visitor.exit == 1
+                    )
+                )
+            else:
+                # Include the range between start_date and end_date
+                start_datetime = datetime.strptime(start_date, '%Y-%m-%d')
+                end_datetime = datetime.strptime(end_date, '%Y-%m-%d')
+                start_datetime_str = start_datetime.strftime('%Y-%m-%d')
+                end_datetime_str = end_datetime.strftime('%Y-%m-%d')
+                if start_datetime != end_datetime:
+                    end_datetime += timedelta(days=1)  # Add one day to include the end_date
+                exited_visitors = Visitor.query.filter(
+                    and_(
+                        Visitor.exit_date >= start_datetime_str,
+                        Visitor.exit_date <= end_datetime.strftime('%Y-%m-%d'),
+                        Visitor.phone == aes.encrypt(option_text),
+                        Visitor.work == 1,
+                        Visitor.exit == 1
+                    )
+                )
+        elif select_option == 'manager':
+            if start_date == end_date:
+                # If start_date and end_date are the same, include only a single day
+                start_datetime = datetime.strptime(start_date, '%Y-%m-%d')
+                start_datetime_str = start_datetime.strftime('%Y-%m-%d')
+                exited_visitors = Visitor.query.filter(
+                    and_(
+                        Visitor.exit_date >= start_datetime_str,
+                        Visitor.exit_date < (start_datetime + timedelta(days=1)).strftime('%Y-%m-%d'),
+                        Visitor.manager == option_text,
+                        Visitor.work == 1,
+                        Visitor.exit == 1
+                    )
+                )
+            else:
+                # Include the range between start_date and end_date
+                start_datetime = datetime.strptime(start_date, '%Y-%m-%d')
+                end_datetime = datetime.strptime(end_date, '%Y-%m-%d')
+                start_datetime_str = start_datetime.strftime('%Y-%m-%d')
+                end_datetime_str = end_datetime.strftime('%Y-%m-%d')
+                if start_datetime != end_datetime:
+                    end_datetime += timedelta(days=1)  # Add one day to include the end_date
+                exited_visitors = Visitor.query.filter(
+                    and_(
+                        Visitor.exit_date >= start_datetime_str,
+                        Visitor.exit_date <= end_datetime.strftime('%Y-%m-%d'),
+                        Visitor.manager == option_text,
+                        Visitor.work == 1,
+                        Visitor.exit == 1
+                    )
+                )
+        else:
+            if start_date == end_date:
+                # If start_date and end_date are the same, include only a single day
+                start_datetime = datetime.strptime(start_date, '%Y-%m-%d')
+                start_datetime_str = start_datetime.strftime('%Y-%m-%d')
+                exited_visitors = Visitor.query.filter(
+                    and_(
+                        Visitor.exit_date >= start_datetime_str,
+                        Visitor.exit_date < (start_datetime + timedelta(days=1)).strftime('%Y-%m-%d'),
+                        Visitor.work == 1,
+                        Visitor.exit == 1
+                    )
+                )
+            else:
+                # Include the range between start_date and end_date
+                start_datetime = datetime.strptime(start_date, '%Y-%m-%d')
+                end_datetime = datetime.strptime(end_date, '%Y-%m-%d')
+                start_datetime_str = start_datetime.strftime('%Y-%m-%d')
+                end_datetime_str = end_datetime.strftime('%Y-%m-%d')
+                if start_datetime != end_datetime:
+                    end_datetime += timedelta(days=1)  # Add one day to include the end_date
+                exited_visitors = Visitor.query.filter(
+                    and_(
+                        Visitor.exit_date >= start_datetime_str,
+                        Visitor.exit_date <= end_datetime.strftime('%Y-%m-%d'),
+                        Visitor.work == 1,
+                        Visitor.exit == 1
+                    )
+                )
+
+        department = []
+        phone = []
+        for visitor in exited_visitors:
+            department.append(aes.decrypt(visitor.department))
+            phone.append(aes.decrypt(visitor.phone))
+
+        zip_data = zip(exited_visitors, department, phone)
+
+        print(select_option, option_text, start_date, end_date)
+        return render_template('process_work_plan.html', zip_data=zip_data)
+    else:
+        department = []
+        phone = []
+        visit_info = Visitor.query.filter_by(work=1, exit=1).all()
+
+        for visitor in visit_info:
+            department.append(aes.decrypt(visitor.department))
+            phone.append(aes.decrypt(visitor.phone))
+
+        zip_data = zip(visit_info, department, phone)
+
+        return render_template('process_work_plan.html', zip_data=zip_data)
+
+@app.route('/process_device', methods=['GET','POST'])
+def process_device():
+    if request.method == 'POST':
+        start_date = request.form.get('start_date')
+        end_date = request.form.get('end_date')
+
+        select_option = request.form.get('select_excel_option')
+        option_text = request.form.get('select_option_text')
+
+        if select_option == 'name':
+            if start_date == end_date:
+                # If start_date and end_date are the same, include only a single day
+                start_datetime = datetime.strptime(start_date, '%Y-%m-%d')
+                start_datetime_str = start_datetime.strftime('%Y-%m-%d')
+                result = db.session.query(Visitor, DeviceInfo).join(DeviceInfo, Visitor.id == DeviceInfo.visitor_id).filter(
+                    Visitor.exit_date >= start_datetime_str,
+                    Visitor.exit_date < (start_datetime + timedelta(days=1)).strftime('%Y-%m-%d'),
+                    Visitor.name == option_text,
+                    Visitor.device == 1, 
+                    Visitor.exit == 1
+                ).all()
+            else:
+                # Include the range between start_date and end_date
+                start_datetime = datetime.strptime(start_date, '%Y-%m-%d')
+                end_datetime = datetime.strptime(end_date, '%Y-%m-%d')
+                start_datetime_str = start_datetime.strftime('%Y-%m-%d')
+                end_datetime_str = end_datetime.strftime('%Y-%m-%d')
+                if start_datetime != end_datetime:
+                    end_datetime += timedelta(days=1)  # Add one day to include the end_date
+                result = db.session.query(Visitor, DeviceInfo).join(DeviceInfo, Visitor.id == DeviceInfo.visitor_id).filter(
+                    Visitor.exit_date >= start_datetime_str,
+                    Visitor.exit_date <= end_datetime.strftime('%Y-%m-%d'),
+                    Visitor.name == option_text,
+                    Visitor.device == 1, 
+                    Visitor.exit == 1
+                ).all()
+        elif select_option == 'department':
+            if start_date == end_date:
+                # If start_date and end_date are the same, include only a single day
+                start_datetime = datetime.strptime(start_date, '%Y-%m-%d')
+                start_datetime_str = start_datetime.strftime('%Y-%m-%d')
+                result = db.session.query(Visitor, DeviceInfo).join(DeviceInfo, Visitor.id == DeviceInfo.visitor_id).filter(
+                    Visitor.exit_date >= start_datetime_str,
+                    Visitor.exit_date < (start_datetime + timedelta(days=1)).strftime('%Y-%m-%d'),
+                    Visitor.department == aes.encrypt(option_text),
+                    Visitor.device == 1, 
+                    Visitor.exit == 1
+                ).all()
+            else:
+                # Include the range between start_date and end_date
+                start_datetime = datetime.strptime(start_date, '%Y-%m-%d')
+                end_datetime = datetime.strptime(end_date, '%Y-%m-%d')
+                start_datetime_str = start_datetime.strftime('%Y-%m-%d')
+                end_datetime_str = end_datetime.strftime('%Y-%m-%d')
+                if start_datetime != end_datetime:
+                    end_datetime += timedelta(days=1)  # Add one day to include the end_date
+                result = db.session.query(Visitor, DeviceInfo).join(DeviceInfo, Visitor.id == DeviceInfo.visitor_id).filter(
+                    Visitor.exit_date >= start_datetime_str,
+                    Visitor.exit_date <= end_datetime.strftime('%Y-%m-%d'),
+                    Visitor.department == aes.encrypt(option_text),
+                    Visitor.device == 1, 
+                    Visitor.exit == 1
+                ).all()
+        elif select_option == 'phone':
+            if start_date == end_date:
+                # If start_date and end_date are the same, include only a single day
+                start_datetime = datetime.strptime(start_date, '%Y-%m-%d')
+                start_datetime_str = start_datetime.strftime('%Y-%m-%d')
+                result = db.session.query(Visitor, DeviceInfo).join(DeviceInfo, Visitor.id == DeviceInfo.visitor_id).filter(
+                    Visitor.exit_date >= start_datetime_str,
+                    Visitor.exit_date < (start_datetime + timedelta(days=1)).strftime('%Y-%m-%d'),
+                    Visitor.phone == aes.encrypt(option_text),
+                    Visitor.device == 1, 
+                    Visitor.exit == 1
+                ).all()
+            else:
+                # Include the range between start_date and end_date
+                start_datetime = datetime.strptime(start_date, '%Y-%m-%d')
+                end_datetime = datetime.strptime(end_date, '%Y-%m-%d')
+                start_datetime_str = start_datetime.strftime('%Y-%m-%d')
+                end_datetime_str = end_datetime.strftime('%Y-%m-%d')
+                if start_datetime != end_datetime:
+                    end_datetime += timedelta(days=1)  # Add one day to include the end_date
+                result = db.session.query(Visitor, DeviceInfo).join(DeviceInfo, Visitor.id == DeviceInfo.visitor_id).filter(
+                    Visitor.exit_date >= start_datetime_str,
+                    Visitor.exit_date <= end_datetime.strftime('%Y-%m-%d'),
+                    Visitor.phone == aes.encrypt(option_text),
+                    Visitor.device == 1, 
+                    Visitor.exit == 1
+                ).all()
+        elif select_option == 'manager':
+            if start_date == end_date:
+                # If start_date and end_date are the same, include only a single day
+                start_datetime = datetime.strptime(start_date, '%Y-%m-%d')
+                start_datetime_str = start_datetime.strftime('%Y-%m-%d')
+                result = db.session.query(Visitor, DeviceInfo).join(DeviceInfo, Visitor.id == DeviceInfo.visitor_id).filter(
+                    Visitor.exit_date >= start_datetime_str,
+                    Visitor.exit_date < (start_datetime + timedelta(days=1)).strftime('%Y-%m-%d'),
+                    Visitor.manager == option_text,
+                    Visitor.device == 1, 
+                    Visitor.exit == 1
+                ).all()
+            else:
+                # Include the range between start_date and end_date
+                start_datetime = datetime.strptime(start_date, '%Y-%m-%d')
+                end_datetime = datetime.strptime(end_date, '%Y-%m-%d')
+                start_datetime_str = start_datetime.strftime('%Y-%m-%d')
+                end_datetime_str = end_datetime.strftime('%Y-%m-%d')
+                if start_datetime != end_datetime:
+                    end_datetime += timedelta(days=1)  # Add one day to include the end_date
+                result = db.session.query(Visitor, DeviceInfo).join(DeviceInfo, Visitor.id == DeviceInfo.visitor_id).filter(
+                    Visitor.exit_date >= start_datetime_str,
+                    Visitor.exit_date <= end_datetime.strftime('%Y-%m-%d'),
+                    Visitor.manager == option_text,
+                    Visitor.device == 1, 
+                    Visitor.exit == 1
+                ).all()
+        else:
+            if start_date == end_date:
+                # If start_date and end_date are the same, include only a single day
+                start_datetime = datetime.strptime(start_date, '%Y-%m-%d')
+                start_datetime_str = start_datetime.strftime('%Y-%m-%d')
+                result = db.session.query(Visitor, DeviceInfo).join(DeviceInfo, Visitor.id == DeviceInfo.visitor_id).filter(
+                    Visitor.exit_date >= start_datetime_str,
+                    Visitor.exit_date < (start_datetime + timedelta(days=1)).strftime('%Y-%m-%d'),
+                    Visitor.device == 1, 
+                    Visitor.exit == 1
+                ).all()
+            else:
+                # Include the range between start_date and end_date
+                start_datetime = datetime.strptime(start_date, '%Y-%m-%d')
+                end_datetime = datetime.strptime(end_date, '%Y-%m-%d')
+                start_datetime_str = start_datetime.strftime('%Y-%m-%d')
+                end_datetime_str = end_datetime.strftime('%Y-%m-%d')
+                if start_datetime != end_datetime:
+                    end_datetime += timedelta(days=1)  # Add one day to include the end_date
+                result = db.session.query(Visitor, DeviceInfo).join(DeviceInfo, Visitor.id == DeviceInfo.visitor_id).filter(
+                    Visitor.exit_date >= start_datetime_str,
+                    Visitor.exit_date <= end_datetime.strftime('%Y-%m-%d'),
+                    Visitor.device == 1, 
+                    Visitor.exit == 1
+                ).all()
+        return render_template('process_device.html', result=result)
+    else:
+        result = db.session.query(Visitor, DeviceInfo).join(DeviceInfo, Visitor.id == DeviceInfo.visitor_id).filter(Visitor.device == 1, Visitor.exit == 1).all()
+        return render_template('process_device.html', result=result)
 
 @app.errorhandler(jinja2.exceptions.TemplateNotFound)
 def template_not_found(e):

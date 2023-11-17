@@ -284,14 +284,14 @@
                         </div>
                       </th>
                       <th scope="col">No</th>
-                      <th scope="col"><span class="text-success"><랙키></span> / <span class="text-primary"><카드></span> / 등록 구분 / 방문 목적 / 방문객 / 소속 / 번호 / 담당자 / 승인 시간 / 퇴실 시간 / <span class="text-danger"><퇴실></span></th>
+                      <th scope="col"><span class="text-success"><랙키></span> / <span class="text-primary"><카드></span> / 등록 구분 / 방문 목적 / 방문객 / 소속 / 번호 / 담당자 / 출입 시간 / 퇴실 시간 / <span class="text-danger"><퇴실></span></th>
                     </tr>
                   </thead>
                   <tfoot>
                     <tr>
                       <th scope="col">#</th>
                       <th scope="col">No</th>
-                      <th scope="col"><span class="text-success"><랙키></span> / <span class="text-primary"><카드></span> / 등록 구분 / 방문 목적 / 방문객 / 소속 / 번호 / 담당자 / 승인 시간 / 퇴실 시간 / <span class="text-danger"><퇴실></span></th>
+                      <th scope="col"><span class="text-success"><랙키></span> / <span class="text-primary"><카드></span> / 등록 구분 / 방문 목적 / 방문객 / 소속 / 번호 / 담당자 / 출입 시간 / 퇴실 시간 / <span class="text-danger"><퇴실></span></th>
                     </tr>
                   </tfoot>
                   <tbody id="table_tbody">
@@ -314,9 +314,11 @@
                                 <li class="list-group-item bg-success text-white">{{approve_visitor.rack.key_type}}{{approve_visitor.rack.key_num}}</li>
                                 {% endif %}
                                 {% if approve_visitor.card_id != None %}
-                                <li class="list-group-item bg-primary text-white">{{approve_visitor.card.card_type}}{{approve_visitor.card.card_num}}</li>
+                                <li class="list-group-item bg-primary text-white mr-1">{{approve_visitor.card.card_type}}{{approve_visitor.card.card_num}}</li>
                                 {% endif %}
 
+                                <li class="list-group-item" style="border-left:3px solid gray;">결재: {{approve_visitor.approval_team}}</li>
+                                <li class="list-group-item">등록: {{approve_visitor.writer}}</li>
                                 <li class="list-group-item">{{approve_visitor.registry}}</li>
                                 <li class="list-group-item">{{approve_visitor.object}}</li>
                                 <li class="list-group-item">
@@ -335,7 +337,10 @@
                                   {% endif %}
                                 </li>
                                 <li class="list-group-item">{{approve_visitor.manager}}</li>
-                                <li class="list-group-item">{{approve_visitor.approve_date}}</li>
+                                {% if approve_visitor.entry_date != None %}
+                                  <li class="list-group-item">{{approve_visitor.entry_date}}</li>
+                                {% else %}
+                                {% endif %}
                                 {% if approve_visitor.exit_date != None %}
                                   <li class="list-group-item">{{approve_visitor.exit_date}}</li>
                                   <li class="list-group-item bg-danger text-white">퇴실</li>
@@ -413,20 +418,24 @@
                                       {% endif %}
                                     </li>
                                     {% if approve_visitor.device == 1 %}
-                                    <li class="list-group-item"><b>고객사</b></li>
-                                    <li class="list-group-item">{{approve_visitor.customer}}</li>
-                                    <li class="list-group-item"><b>장비 기종 / 장비 수량</b></li>
-                                    <li class="list-group-item">{{approve_visitor.device_division}} / {{approve_visitor.device_count}}</li>
-                                    <li class="list-group-item"><b>비고</b></li>
-                                    <li class="list-group-item">{{approve_visitor.remarks}}</li>
-                                    {% else %}
-                                    <li class="list-group-item"><b>고객사</b></li>
-                                    <li class="list-group-item"></li>
-                                    <li class="list-group-item"><b>장비 기종 / 장비 수량</b></li>
-                                    <li class="list-group-item"></li>
-                                    <li class="list-group-item"><b>비고</b></li>
-                                    <li class="list-group-item"></li>
-                                    {% endif %}
+                                      <li class="list-group-item"><b>장비 반출입 날짜</b></li>
+                                      <li class="list-group-item">{{approve_visitor.device_date}}</li>
+                                      <li class="list-group-item"><b>요청자(회사, 부서, 담당자)</b></li>
+                                      <li class="list-group-item">{{approve_visitor.device_company}} / {{approve_visitor.device_department}} / {{approve_visitor.device_request_manager}}</li>
+                                      <li class="list-group-item"><b>장비 반출입 수행자(데이터센터 담당자) / 반출입 사유</b></li>
+                                      <li class="list-group-item">{{approve_visitor.device_manager}} / {{approve_visitor.device_reason}}</li>
+                                      <li class="list-group-item"><b>기타사항</b></li>
+                                      <li class="list-group-item">{{approve_visitor.device_remarks}}</li>
+                                      {% else %}
+                                      <li class="list-group-item"><b>장비 반출입 날짜</b></li>
+                                      <li class="list-group-item"></li>
+                                      <li class="list-group-item"><b>요청자(회사, 부서, 담당자)</b></li>
+                                      <li class="list-group-item"></li>
+                                      <li class="list-group-item"><b>장비 반출입 수행자(데이터센터 담당자) / 반출입 사유</b></li>
+                                      <li class="list-group-item"></li>
+                                      <li class="list-group-item"><b>기타사항</b></li>
+                                      <li class="list-group-item"></li>
+                                      {% endif %}
                                   </ul>
                                 </div>
                               </div>

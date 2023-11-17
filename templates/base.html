@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ko">
 
 <head>
   {% block head %}
@@ -33,6 +33,8 @@
   <link href="https://fonts.googleapis.com/css2?family=Merriweather:wght@700&display=swap" rel="stylesheet">
   <!-- Noto Sans 사용법: font-family: 'Noto Sans KR', sans-serif; -->
 
+  <!-- DateTime CSS -->
+
   <!-- 새로운 favicon 지정 -->
   <link rel="icon" type="static/img/CJ_logo.svg.png" href="{{ url_for('static', filename='img/CJ_logo.svg.png')}}">
 
@@ -58,7 +60,7 @@
     <!-- Sidebar -->
     <ul class="navbar-nav sidebar sidebar-dark accordion toggled" id="accordionSidebar" style="background-color: #343a40;">
       
-      {% if current_user.rank == 'M' %}
+      {% if current_user.permission == '관리자' %}
       <!-- Sidebar - Brand -->
       <a class="sidebar-brand d-flex align-items-center justify-content-center" href="manage_visitors">
         <div class="sidebar-brand-icon">
@@ -67,7 +69,7 @@
         </div>
         <div class="sidebar-brand-text mx-3">IDC O`Pass</div>
       </a>
-      {% elif current_user.rank == 'S' %}
+      {% elif current_user.permission == '상황실' %}
       <!-- Sidebar - Brand -->
       <a class="sidebar-brand d-flex align-items-center justify-content-center" href="rack_visitors">
         <div class="sidebar-brand-icon">
@@ -95,8 +97,8 @@
         Main
       </div>
       {% endif %}
-      {% set allowed_ranks = ['G1', 'G2', 'G3', 'G4', 'G5', 'G6', 'G7', '임원', '기타'] %}
-      {% if current_user.rank in allowed_ranks %}
+      {% set allowed_permission = ['일반', '상황실'] %}
+      {% if current_user.permission in allowed_permission %}
       <!-- Nav Item - Dashboard -->
       <li class="nav-item">
         <a class="nav-link" href="index">
@@ -107,7 +109,7 @@
 
       {% if current_user.attempts != 'attempts_password' %}
 
-      {% if current_user.rank == 'M' %}
+      {% if current_user.permission == '관리자' %}
       <!-- Nav Item - Dashboard -->
       <li class="nav-item">
         <a class="nav-link" href="manage_visitors">
@@ -116,7 +118,7 @@
       </li>
       {% endif %}
 
-      {% if current_user.rank == 'S' %}
+      {% if current_user.permission == '상황실' %}
       <!-- Nav Item - Dashboard -->
       <li class="nav-item">
         <a class="nav-link" href="rack_visitors">
@@ -125,11 +127,17 @@
       </li>
       {% endif %}
 
-      {% if current_user.rank in allowed_ranks or current_user.rank == 'M' %}
+      {% if current_user.permission in allowed_permission or current_user.permission == '관리자' %}
       <li class="nav-item">
         <a class="nav-link" href="visit">
           <i class="fas fa-fw fa-user"></i>
           <span>Visitor</span></a>
+      </li>
+
+      <li class="nav-item">
+        <a class="nav-link" href="device_register">
+          <i class="fas fa-fw fa-robot"></i>
+          <span>Device</span></a>
       </li>
 
       <!-- Divider -->
@@ -152,6 +160,38 @@
 
       <!-- Divider -->
       <hr class="sidebar-divider">
+      
+
+      {% if current_user.is_authenticated %}
+      <!-- Heading -->
+      <div class="sidebar-heading">
+        Export
+      </div>
+
+      <!-- Nav Item - Pages Collapse Menu -->
+      <li class="nav-item">
+        <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseGrid" aria-expanded="true" aria-controls="collapseThree">
+          <i class="fas fa-fw fa-book"></i>
+          <span>Process</span>
+        </a>
+        <div id="collapseGrid" class="collapse" aria-labelledby="headingThree" data-parent="#accordionSidebar">
+          <div class="bg-white py-2 collapse-inner rounded">
+            <h6 class="collapse-header">List Export:</h6>
+            {% if current_user.permission == '관리자' or current_user.permission in allowed_permission %}
+            <a class="collapse-item" href="process_pc">노트북 반출입</a>
+            <a class="collapse-item" href="process_work_plan">사전 작업 계획</a>
+            <a class="collapse-item" href="process_device">장비 반출입</a>
+            {% elif current_user.permission == '상황실' %}
+            <a class="collapse-item" href="manage_rack_keys">랙키 관리</a>
+            <a class="collapse-item" href="user_logs">로그인 로그</a>
+            <a class="collapse-item" href="failure_logs">로그인 실패 로그</a>
+            <a class="collapse-item" href="password_change_at">패스워드 변경 로그</a>
+            {% endif %}
+          </div>
+        </div>
+      </li>
+      {% endif %}
+      <hr class="sidebar-divider">
       {% if current_user.is_authenticated %}
       <!-- Heading -->
       <div class="sidebar-heading">
@@ -167,17 +207,15 @@
         <div id="collapseManagements" class="collapse" aria-labelledby="headingTwo" data-parent="#accordionSidebar">
           <div class="bg-white py-2 collapse-inner rounded">
             <h6 class="collapse-header">Custom Managements:</h6>
-            {% if current_user.rank in allowed_ranks %}
+            {% if current_user.permission in allowed_permission %}
             <a class="collapse-item" href="departments">부서/소속 관리</a>
             <a class="collapse-item" href="user_logs">로그인 로그</a>
             <a class="collapse-item" href="failure_logs">로그인 실패 로그</a>
             <a class="collapse-item" href="password_change_at">패스워드 변경 로그</a>
-            {% if current_user.permission == '관리자' %}
-            <a class="collapse-item" href="user_approve">회원가입 승인</a>
-            {% endif %}
-            {% elif current_user.rank == 'M' %}
+            {% elif current_user.permission == '관리자' %}
             <a class="collapse-item" href="departments">부서/소속 관리</a>
             <a class="collapse-item" href="manage_cards">카드 관리</a>
+            <a class="collapse-item" href="card_logs">카드 로그</a>
             <a class="collapse-item" href="manage_rack_keys">랙키 관리</a>
             <a class="collapse-item" href="manage_logs">로그인 로그</a>
             <a class="collapse-item" href="failure_logs">로그인 실패 로그</a>
@@ -185,8 +223,7 @@
             <a class="collapse-item" href="account_logs">계정 로그</a>
             <a class="collapse-item" href="privacy_logs">기밀/개인정보 로그</a>
             <a class="collapse-item" href="permission">권한</a>
-            <a class="collapse-item" href="user_approve">회원가입 승인</a>
-            {% elif current_user.rank == 'S' %}
+            {% elif current_user.permission == '상황실' %}
             <a class="collapse-item" href="manage_rack_keys">랙키 관리</a>
             <a class="collapse-item" href="user_logs">로그인 로그</a>
             <a class="collapse-item" href="failure_logs">로그인 실패 로그</a>
@@ -309,7 +346,7 @@
             <li class="nav-item dropdown no-arrow">
               <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                 {% if current_user.is_authenticated %}
-                <span class="d-none d-lg-inline small" style="padding: 5px 10px; border-radius: 15px 0 0 15px; background: #343a40; color: white;">{{ current_user.rank }}</span>
+                <span class="d-none d-lg-inline small" style="padding: 5px 10px; border-radius: 15px 0 0 15px; background: #343a40; color: white;">G</span>
                 <span class="mr-2 d-none d-lg-inline small" style="padding: 5px 10px; border-radius: 0 15px 15px 0; background: #f8f9fa; color: #343a40;">{{ current_user.username }}님</span>
                 {% else %}
                 <span class="mr-2 d-none d-lg-inline text-gray-600 small">로그인 해주세요.</span>

@@ -26,7 +26,6 @@
         
             #modalBody, #modalBodyUpdate {
               width: 800px;
-              height: 720px;
               padding: 30px 30px;
               margin: 0 auto;
               border: 1px solid #777;
@@ -60,14 +59,23 @@
                     <!-- 팝업 내용 -->
                 <h3 class="heading_title" style="text-align:center">내방객 등록하기</h3>
                 <form class="row g-3" method="post" action="/visit" enctype="multipart/form-data">
-                    <div class="col-md-6">
-                      <label for="inputName" class="form-label">이름</label>
+                  <div class="col-4">
+                    <label for="inputApproval" class="form-label">결재선</label>
+                      <select class="form-select" id="inputApproval" name="inputApproval" required>
+                        <option value="Admin">일반 방문</option>
+                        <option value="Infra N/W">Infra N/W</option>
+                        <option value="Infra Ops">Infra Ops</option>
+                        <option value="Infra Tech Lab">Infra Tech Lab</option>
+                      </select>
+                  </div>
+                    <div class="col-md-4">
+                      <label for="inputName" class="form-label">내방객 이름</label>
                       <input type="text" class="form-control" id="inputName" name="inputName" required>
                       <div class="invalid-feedback">
                         이름을 입력해주세요.
                       </div>
                     </div>
-                    <div class="col-6">
+                    <div class="col-4">
                       <label for="inputPhoneNumber" class="form-label">연락처</label>
                       <input type="text" class="form-control" id="inputPhoneNumber" placeholder="(-)를 빼고 입력해주세요." name="inputPhoneNumber" required>
                     </div>
@@ -97,7 +105,7 @@
                       <div class="form-check">
                         <input class="form-check-input" type="checkbox" id="gridCheck_3" value="1" name="inputPC" onchange="toggleInputs_pc()">
                         <label class="form-check-label" for="gridCheck_3">
-                        PC 반입
+                        노트북 반입
                         </label>
                       </div>
                       <div class="form-check ml-2">
@@ -122,7 +130,7 @@
                       <input type="text" class="form-control" id="inputSerialNumber" placeholder="etc. XY0XX0" disabled="true" name="inputSerialNumber">
                     </div>
                     <div class="col-6">
-                      <label for="inputReason" class="form-label">PC 반입 사유</label>
+                      <label for="inputReason" class="form-label">노트북 반입 사유(포트 사용 시: 사용 표기)</label>
                       <input type="text" class="form-control" id="inputReason" placeholder="" disabled="true" name="inputReason">
                     </div>
                     <div class="col-3">
@@ -140,7 +148,7 @@
                       <input type="text" class="form-control" id="inputContent" disabled="true" name="inputContent">
                     </div>
                     <div class="col-6">
-                      <label for="inputLocation" class="form-label">작업 위치</label>
+                      <label for="inputLocation" class="form-label">작업 위치(랙 위치도 기입)</label>
                       <input type="text" class="form-control" id="inputLocation" placeholder="etc. 4층 전산실" disabled="true" name="inputLocation">
                     </div>
                     <div class="col-6">
@@ -153,21 +161,35 @@
                       <input type="text" class="form-control" id="inputCompanyName" disabled="true" name="inputCompanyName">
                       </div>
                     </div>
-                    <div class="col-md-3">
-                      <label for="inputCustomer" class="form-label">고객사</label>
-                      <input type="text" class="form-control" id="inputCustomer" disabled="true" name="inputCustomer" placeholder="etc. 고객사명">
+                    <h6>[요청자]</h6>
+                    <div class="col-md-12">
+                      <label for="inputDeviceDate" class="form-label">일자</label>
+                      <input type="text" class="form-control" id="inputDeviceDate" disabled="true" name="inputDeviceDate" placeholder="etc. 기간 YYYY년 MM월 DD일 ~ YYYY년 MM월 DD일">
+                    </div>
+                    <div class="col-md-5">
+                      <label for="inputDeviceCompany" class="form-label">회사명</label>
+                      <input type="text" class="form-control" id="inputDeviceCompany" disabled="true" name="inputDeviceCompany">
                     </div>
                     <div class="col-md-4">
-                      <label for="inputDeviceDivision" class="form-label">장비 기종</label>
-                      <input type="text" class="form-control" id="inputDeviceDivision" disabled="true" name="inputDeviceDivision" placeholder="etc. 기종, 파트">
-                    </div>
-                    <div class="col-md-2">
-                      <label for="inputDeviceCount" class="form-label">수량</label>
-                      <input type="text" class="form-control" id="inputDeviceCount" disabled="true" name="inputDeviceCount" placeholder="etc. 1">
+                      <label for="inputDeviceDepartment" class="form-label">부서명</label>
+                      <input type="text" class="form-control" id="inputDeviceDepartment" disabled="true" name="inputDeviceDepartment">
                     </div>
                     <div class="col-md-3">
-                      <label for="inputRemarks" class="form-label">비고</label>
-                      <input type="text" class="form-control" id="inputRemarks" disabled="true" name="inputRemarks">
+                      <label for="inputDeviceRequestManager" class="form-label">담당자</label>
+                      <input type="text" class="form-control" id="inputDeviceRequestManager" disabled="true" name="inputDeviceRequestManager">
+                    </div>
+                    <h6>[장비/파트 반출입 수행자 (데이터센터 근무자)] / 반입, 반출 사유</h6>
+                    <div class="col-md-3">
+                      <label for="inputDeviceManager" class="form-label">담당자</label>
+                      <input type="text" class="form-control" id="inputDeviceManager" disabled="true" name="inputDeviceManager">
+                    </div>
+                    <div class="col-md-9">
+                      <label for="inputDeviceReason" class="form-label">반입/반출 사유</label>
+                      <input type="text" class="form-control" id="inputDeviceReason" disabled="true" name="inputDeviceReason">
+                    </div>
+                    <div class="col-md-12">
+                      <label for="inputDeviceRemarks" class="form-label">기타사항</label>
+                      <input type="text" class="form-control" id="inputDeviceRemarks" disabled="true" name="inputDeviceRemarks">
                     </div>
                     <div class="col-12">
                       <button type="submit" class="btn btn-primary">등록하기</button>
@@ -190,11 +212,20 @@
                         <label for="inputUpdateNumber" class="form-label">#</label>
                         <input type="text" class="form-control" id="inputUpdateNumber" name="inputUpdateNumber">
                       </div>
-                      <div class="col-md-6">
+                      <div class="col-4">
+                        <label for="inputUpdateApproval" class="form-label">결재선</label>
+                          <select class="form-select" id="inputUpdateApproval" name="inputUpdateApproval" required>
+                            <option value="Admin">일반 방문</option>
+                            <option value="Infra N/W">Infra N/W</option>
+                            <option value="Infra Ops">Infra Ops</option>
+                            <option value="Infra Tech Lab">Infra Tech Lab</option>
+                          </select>
+                      </div>
+                      <div class="col-md-4">
                         <label for="inputUpdateName" class="form-label">이름</label>
                         <input type="text" class="form-control" id="inputUpdateName" name="inputUpdateName" required>
                       </div>
-                      <div class="col-6">
+                      <div class="col-4">
                         <label for="inputUpdatePhoneNumber" class="form-label">연락처</label>
                         <input type="text" class="form-control" id="inputUpdatePhoneNumber" placeholder="(-)를 빼고 입력해주세요." name="inputUpdatePhoneNumber" required>
                       </div>
@@ -224,7 +255,7 @@
                         <div class="form-check">
                           <input class="form-check-input" type="checkbox" id="gridCheck_6" value="1" name="inputUpdatePC" onchange="toggleUpdateInputs_pc()">
                           <label class="form-check-label" for="gridCheck_6">
-                          PC 반입
+                          노트북 반입
                           </label>
                         </div>
                         <div class="form-check ml-2">
@@ -249,7 +280,7 @@
                         <input type="text" class="form-control" id="inputUpdateSerialNumber" placeholder="etc. XY0XX0" disabled="true" name="inputUpdateSerialNumber">
                       </div>
                       <div class="col-6">
-                        <label for="inputUpdateReason" class="form-label">PC 반입 사유</label>
+                        <label for="inputUpdateReason" class="form-label">노트북 반입 사유</label>
                         <input type="text" class="form-control" id="inputUpdateReason" placeholder="" disabled="true" name="inputUpdateReason">
                       </div>
                       <div class="col-3">
@@ -267,7 +298,7 @@
                         <input type="text" class="form-control" id="inputUpdateContent" disabled="true" name="inputUpdateContent">
                       </div>
                       <div class="col-6">
-                        <label for="inputUpdateLocation" class="form-label">작업 위치</label>
+                        <label for="inputUpdateLocation" class="form-label">작업 위치(랙 위치도 기입)</label>
                         <input type="text" class="form-control" id="inputUpdateLocation" placeholder="etc. 4층 전산실" disabled="true" name="inputUpdateLocation">
                       </div>
                       <div class="col-6">
@@ -280,22 +311,36 @@
                         <input type="text" class="form-control" id="inputUpdateCompanyName" disabled="true" name="inputUpdateCompanyName">
                         </div>
                       </div>
-                      <div class="col-md-3">
-                        <label for="inputUpdateCustomer" class="form-label">고객사</label>
-                        <input type="text" class="form-control" id="inputUpdateCustomer" disabled="true" name="inputUpdateCustomer" placeholder="etc. 고객사명">
-                      </div>
-                      <div class="col-md-4">
-                        <label for="inputUpdateDeviceDivision" class="form-label">장비 기종</label>
-                        <input type="text" class="form-control" id="inputUpdateDeviceDivision" disabled="true" name="inputUpdateDeviceDivision" placeholder="etc. 기종, 파트">
-                      </div>
-                      <div class="col-md-2">
-                        <label for="inputUpdateDeviceCount" class="form-label">수량</label>
-                        <input type="text" class="form-control" id="inputUpdateDeviceCount" disabled="true" name="inputUpdateDeviceCount" placeholder="etc. 1">
-                      </div>
-                      <div class="col-md-3">
-                        <label for="inputUpdateRemarks" class="form-label">비고</label>
-                        <input type="text" class="form-control" id="inputUpdateRemarks" disabled="true" name="inputUpdateRemarks">
-                      </div>
+                      <h6>[요청자]</h6>
+                    <div class="col-md-12">
+                      <label for="inputUpdateDeviceDate" class="form-label">일자</label>
+                      <input type="text" class="form-control" id="inputUpdateDeviceDate" disabled="true" name="inputUpdateDeviceDate" placeholder="etc. 기간 YYYY년 MM월 DD일 ~ YYYY년 MM월 DD일">
+                    </div>
+                    <div class="col-md-5">
+                      <label for="inputUpdateDeviceCompany" class="form-label">회사명</label>
+                      <input type="text" class="form-control" id="inputUpdateDeviceCompany" disabled="true" name="inputUpdateDeviceCompany">
+                    </div>
+                    <div class="col-md-4">
+                      <label for="inputUpdateDeviceDepartment" class="form-label">부서명</label>
+                      <input type="text" class="form-control" id="inputUpdateDeviceDepartment" disabled="true" name="inputUpdateDeviceDepartment">
+                    </div>
+                    <div class="col-md-3">
+                      <label for="inputUpdateDeviceRequestManager" class="form-label">담당자</label>
+                      <input type="text" class="form-control" id="inputUpdateDeviceRequestManager" disabled="true" name="inputUpdateDeviceRequestManager">
+                    </div>
+                    <h6>[장비/파트 반출입 수행자 (데이터센터 근무자)] / 반입, 반출 사유</h6>
+                    <div class="col-md-3">
+                      <label for="inputUpdateDeviceManager" class="form-label">담당자</label>
+                      <input type="text" class="form-control" id="inputUpdateDeviceManager" disabled="true" name="inputUpdateDeviceManager">
+                    </div>
+                    <div class="col-md-9">
+                      <label for="inputUpdateDeviceReason" class="form-label">반입/반출 사유</label>
+                      <input type="text" class="form-control" id="inputUpdateDeviceReason" disabled="true" name="inputUpdateDeviceReason">
+                    </div>
+                    <div class="col-md-12">
+                      <label for="inputUpdateDeviceRemarks" class="form-label">기타사항</label>
+                      <input type="text" class="form-control" id="inputUpdateDeviceRemarks" disabled="true" name="inputUpdateDeviceRemarks">
+                    </div>
                       <div class="col-12">
                         <button type="submit" class="btn btn-success">수정하기</button>
                       </div>
@@ -307,10 +352,10 @@
           <!-- Page Heading -->
           <div class="d-sm-flex align-items-center justify-content-end mb-4" id="popup">
             <div id="btnWrap">
-              {% if current_user.permission == '관리자' %}
+              <!-- {% if current_user.permission == '관리자' %}
               <button type="button" class="btn btn-success btn-sm" id="approve_checkbox"><i class="fas fa-check fa-sm text-white-50"></i> 승인(체크 선택 승인)</button>
               <button type="button" class="btn btn-danger btn-sm" id="deny_checkbox"><i class="fas fa-ban fa-sm text-white-50"></i> 반려(체크 선택 반려)</button>
-              {% endif %}
+              {% endif %} -->
               <button class="d-none d-sm-inline-block btn btn-sm btn-primary shadow-sm" id="popupBtn"><i class="fas fa-plus fa-sm text-white-50"></i> 내방객 등록</button>
             </div>
           </div>
@@ -351,7 +396,7 @@
                         <tr>
                           <th scope="col" style="width:40px;">#</th>
                           <th scope="col" style="width:40px;">No</th>
-                          <th>등록 구분 / 방문 목적 / 방문객 / 방문객 소속 / 번호 / 담당자 / 등록 시간</th>
+                          <th>결재팀 / 등록인 / 등록 구분 / 방문 목적 / 방문객 / 방문객 소속 / 번호 / 담당자 / 등록 시간</th>
                         </tr>
                       </thead>
                       <tfoot>
@@ -376,7 +421,10 @@
                                   <div class="accordion-item">
                                     <h2 class="accordion-header" id="heading{{visitor.id}}">
                                       <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse{{visitor.id}}" aria-expanded="true" aria-controls="collapse{{visitor.id}}">
+                                        {% if visitor.writer == current_user.username %}
                                         <ul class="list-group list-group-horizontal">
+                                          <li class="list-group-item" style="border-left:3px solid green;">결재: {{visitor.approval_team}}</li>
+                                          <li class="list-group-item">등록: {{visitor.writer}}</li>
                                           <li class="list-group-item">{{visitor.registry}}</li>
                                           <li class="list-group-item">{{visitor.object}}</li>
                                           <li class="list-group-item">
@@ -397,6 +445,31 @@
                                           <li class="list-group-item">{{visitor.manager}}</li>
                                           <li class="list-group-item">{{visitor.created_date}}</li>
                                         </ul>
+                                        {% else %}
+                                        <ul class="list-group list-group-horizontal">
+                                          <li class="list-group-item" style="border-left:3px solid dodgerblue;">결재: {{visitor.approval_team}}</li>
+                                          <li class="list-group-item">등록: {{visitor.writer}}</li>
+                                          <li class="list-group-item">{{visitor.registry}}</li>
+                                          <li class="list-group-item">{{visitor.object}}</li>
+                                          <li class="list-group-item">
+                                            {% if visitor.name|length > 1 %}
+                                                {{ visitor.name[0] + '*' + visitor.name[2:] }}
+                                            {% else %}
+                                                {{ visitor.name }}
+                                            {% endif %}
+                                          </li>
+                                          <li class="list-group-item">{{visitor.department}}</li>
+                                          <li class="list-group-item">
+                                            {% if visitor.phone|length > 6 %}
+                                                {{ visitor.phone[:3] + '****' + visitor.phone[7:]}}
+                                            {% else %}
+                                                {{ visitor.phone }}
+                                            {% endif %}
+                                          </li>
+                                          <li class="list-group-item">{{visitor.manager}}</li>
+                                          <li class="list-group-item">{{visitor.created_date}}</li>
+                                        </ul>
+                                        {% endif %}
                                       </button>
                                     </h2>
                                     <div id="collapse{{visitor.id}}" class="accordion-collapse collapse" aria-labelledby="heading{{visitor.id}}" data-bs-parent="#accordionExample">
@@ -404,7 +477,7 @@
                                         <div class="row">
                                           <div class="col-xl-4">
                                             <ul class="list-group list-group-vertical">
-                                              <li class="list-group-item"><b>PC 반입</b></li>
+                                              <li class="list-group-item"><b>노트북 반입</b></li>
                                               <li class="list-group-item">
                                                 {% if visitor.personal_computer == 1 %}
                                                 O
@@ -479,27 +552,31 @@
                                                 {% endif %}
                                               </li>
                                               {% if visitor.device == 1 %}
-                                                <li class="list-group-item"><b>고객사</b></li>
-                                                <li class="list-group-item">{{visitor.customer}}</li>
-                                                <li class="list-group-item"><b>장비 기종 / 장비 수량</b></li>
-                                                <li class="list-group-item">{{visitor.device_division}} / {{visitor.device_count}}</li>
-                                                <li class="list-group-item"><b>비고</b></li>
-                                                <li class="list-group-item">{{visitor.remarks}}</li>
+                                                <li class="list-group-item"><b>장비 반출입 날짜</b></li>
+                                                <li class="list-group-item">{{visitor.device_date}}</li>
+                                                <li class="list-group-item"><b>요청자(회사, 부서, 담당자)</b></li>
+                                                <li class="list-group-item">{{visitor.device_company}} / {{visitor.device_department}} / {{visitor.device_request_manager}}</li>
+                                                <li class="list-group-item"><b>장비 반출입 수행자(데이터센터 담당자) / 반출입 사유</b></li>
+                                                <li class="list-group-item">{{visitor.device_manager}} / {{visitor.device_reason}}</li>
+                                                <li class="list-group-item"><b>기타사항</b></li>
+                                                <li class="list-group-item">{{visitor.device_remarks}}</li>
                                               {% else %}
-                                                <li class="list-group-item"><b>고객사</b></li>
+                                                <li class="list-group-item"><b>장비 반출입 날짜</b></li>
                                                 <li class="list-group-item"></li>
-                                                <li class="list-group-item"><b>장비 기종 / 장비 수량</b></li>
+                                                <li class="list-group-item"><b>요청자(회사, 부서, 담당자)</b></li>
                                                 <li class="list-group-item"></li>
-                                                <li class="list-group-item"><b>비고</b></li>
+                                                <li class="list-group-item"><b>장비 반출입 수행자(데이터센터 담당자) / 반출입 사유</b></li>
+                                                <li class="list-group-item"></li>
+                                                <li class="list-group-item"><b>기타사항</b></li>
                                                 <li class="list-group-item"></li>
                                               {% endif %}
                                             </ul>
                                           </div>
                                         </div>
                                         <div style="text-align: right;">
-                                          {% if current_user.permission == '관리자' %}
+                                          {% if current_user.permission == '관리자' and current_user.department == visitor.approval_team %}
                                           <div class="btn-group mt-4">
-                                            <button class="btn_group btn btn-success mr-2 btn-sm" type="button" id="approve_btn{{visitor.id}}" value="{{visitor.id}}">승인</button>
+                                            <button class="btn_group btn btn-primary mr-2 btn-sm" type="button" id="approve_btn{{visitor.id}}" value="{{visitor.id}}">승인</button>
                                             <button class="btn_group btn btn-danger mr-4 btn-sm" type="button" id="deny_btn{{visitor.id}}" value="{{visitor.id}}">반려</button>
                                             <button class="btn_group btn btn-success btn-sm" type="button" id="update_btn{{visitor.id}}" value="{{visitor.id}}">수정</button>
                                           </div>
@@ -597,10 +674,13 @@
                                 var inputCompanyName = document.getElementById('inputUpdateCompanyName');
                                 var inputContent = document.getElementById('inputUpdateContent');
 
-                                var inputCustomer = document.getElementById('inputUpdateCustomer');
-                                var inputDeviceDivision = document.getElementById('inputUpdateDeviceDivision');
-                                var inputDeviceCount = document.getElementById('inputUpdateDeviceCount');
-                                var inputRemarks = document.getElementById('inputUpdateRemarks');
+                                var inputDeviceDate = document.getElementById('inputUpdateDeviceDate');
+                                var inputDeviceCompany = document.getElementById('inputUpdateDeviceCompany');
+                                var inputDeviceDepartment = document.getElementById('inputUpdateDeviceDepartment');
+                                var inputDeviceRequestManager = document.getElementById('inputUpdateDeviceRequestManager');
+                                var inputDeviceManager = document.getElementById('inputUpdateDeviceManager');
+                                var inputDeviceReason = document.getElementById('inputUpdateDeviceReason');
+                                var inputDeviceRemarks = document.getElementById('inputUpdateDeviceRemarks');
 
                                 var update_id = response.response[0];
                                 var name = response.response[1];
@@ -609,22 +689,26 @@
                                 var phone = response.response[4];
                                 var manager = response.response[5];
                                 var device = response.response[6];
-                                var remarks = response.response[7];
-                                var location = response.response[8];
-                                var work = response.response[9];
-                                var company_type = response.response[10];
-                                var company = response.response[11];
-                                var work_content = response.response[12];
-                                var personal_computer = response.response[13];
-                                var model_name = response.response[14];
-                                var serial_number = response.response[15];
-                                var pc_reason = response.response[16];
-                                var work_division = response.response[17];
-                                var customer = response.response[18];
-                                var device_division = response.response[19];
-                                var device_count = response.response[20];
+                                var location = response.response[7];
+                                var work = response.response[8];
+                                var company_type = response.response[9];
+                                var company = response.response[10];
+                                var work_content = response.response[11];
+                                var personal_computer = response.response[12];
+                                var model_name = response.response[13];
+                                var serial_number = response.response[14];
+                                var pc_reason = response.response[15];
+                                var work_division = response.response[16];
+                                var device_date = response.response[17];
+                                var device_company = response.response[18];
+                                var device_department = response.response[19];
+                                var device_request_manager = response.response[20];
+                                var device_manager = response.response[21];
+                                var device_reason = response.response[22];
+                                var device_remarks = response.response[23];
+                                var approval_team = response.response[24];
 
-                                
+                                document.getElementById("inputUpdateApproval").value = approval_team;
                                 document.getElementById("inputUpdateNumber").value = update_id;
                                 document.getElementById("inputUpdateName").value = name;
                                 document.getElementById("inputUpdateDepartment").value = department;
@@ -677,24 +761,36 @@
                                 }
                                 if (device == true) {
                                   document.getElementById('gridCheck_4').checked = true;
-                                  document.getElementById("inputUpdateCustomer").value = customer;
-                                  document.getElementById("inputUpdateDeviceDivision").value = device_division;
-                                  document.getElementById("inputUpdateDeviceCount").value = device_count;
-                                  document.getElementById("inputUpdateRemarks").value = remarks;
-                                  inputCustomer.disabled = false;
-                                  inputDeviceDivision.disabled = false;
-                                  inputDeviceCount.disabled = false;
-                                  inputRemarks.disabled = false;
+                                  document.getElementById("inputUpdateDeviceDate").value = device_date;
+                                  document.getElementById("inputUpdateDeviceCompany").value = device_company;
+                                  document.getElementById("inputUpdateDeviceDepartment").value = device_department;
+                                  document.getElementById("inputUpdateDeviceRequestManager").value = device_request_manager;
+                                  document.getElementById("inputUpdateDeviceManager").value = device_manager;
+                                  document.getElementById("inputUpdateDeviceReason").value = device_reason;
+                                  document.getElementById("inputUpdateDeviceRemarks").value = device_remarks;
+                                  inputDeviceDate.disabled = false;
+                                  inputDeviceCompany.disabled = false;
+                                  inputDeviceDepartment.disabled = false;
+                                  inputDeviceRequestManager.disabled = false;
+                                  inputDeviceManager.disabled = false;
+                                  inputDeviceReason.disabled = false;
+                                  inputDeviceRemarks.disabled = false;
                                 } else {
                                   document.getElementById('gridCheck_4').checked = false;
-                                  document.getElementById("inputUpdateCustomer").value = null;
-                                  document.getElementById("inputUpdateDeviceDivision").value = null;
-                                  document.getElementById("inputUpdateDeviceCount").value = null;
-                                  document.getElementById("inputUpdateRemarks").value = null;
-                                  inputCustomer.disabled = true;
-                                  inputDeviceDivision.disabled = true;
-                                  inputDeviceCount.disabled = true;
-                                  inputRemarks.disabled = true;
+                                  document.getElementById("inputUpdateDeviceDate").value = null;
+                                  document.getElementById("inputUpdateDeviceCompany").value = null;
+                                  document.getElementById("inputUpdateDeviceDepartment").value = null;
+                                  document.getElementById("inputUpdateDeviceRequestManager").value = null;
+                                  document.getElementById("inputUpdateDeviceManager").value = null;
+                                  document.getElementById("inputUpdateDeviceReason").value = null;
+                                  document.getElementById("inputUpdateDeviceRemarks").value = null;
+                                  inputDeviceDate.disabled = true;
+                                  inputDeviceCompany.disabled = true;
+                                  inputDeviceDepartment.disabled = true;
+                                  inputDeviceRequestManager.disabled = true;
+                                  inputDeviceManager.disabled = true;
+                                  inputDeviceReason.disabled = true;
+                                  inputDeviceRemarks.disabled = true;
                                 }
                               }
                               $(document).ready(function() {
@@ -770,21 +866,30 @@
 <script>
     function toggleInputs() {
         var checkbox = document.getElementById('gridCheck');
-        var inputCustomer = document.getElementById('inputCustomer')
-        var inputDeviceDivision = document.getElementById('inputDeviceDivision')
-        var inputDeviceCount = document.getElementById('inputDeviceCount')
-        var inputRemarks = document.getElementById('inputRemarks');
+        var inputDeviceDate = document.getElementById('inputDeviceDate')
+        var inputDeviceCompany = document.getElementById('inputDeviceCompany')
+        var inputDeviceDepartment = document.getElementById('inputDeviceDepartment')
+        var inputDeviceRequestManager = document.getElementById('inputDeviceRequestManager');
+        var inputDeviceManager = document.getElementById('inputDeviceManager');
+        var inputDeviceReason = document.getElementById('inputDeviceReason');
+        var inputDeviceRemarks = document.getElementById('inputDeviceRemarks');
 
         if (checkbox.checked) {
-          inputCustomer.disabled = false;
-          inputDeviceDivision.disabled = false;
-          inputDeviceCount.disabled = false;
-          inputRemarks.disabled = false;
+          inputDeviceDate.disabled = false;
+          inputDeviceCompany.disabled = false;
+          inputDeviceDepartment.disabled = false;
+          inputDeviceRequestManager.disabled = false;
+          inputDeviceManager.disabled = false;
+          inputDeviceReason.disabled = false;
+          inputDeviceRemarks.disabled = false;
         } else {
-          inputCustomer.disabled = true;
-          inputDeviceDivision.disabled = true;
-          inputDeviceCount.disabled = true;
-          inputRemarks.disabled = true;
+          inputDeviceDate.disabled = true;
+          inputDeviceCompany.disabled = true;
+          inputDeviceDepartment.disabled = true;
+          inputDeviceRequestManager.disabled = true;
+          inputDeviceManager.disabled = true;
+          inputDeviceReason.disabled = true;
+          inputDeviceRemarks.disabled = true;
         }
     }
 </script>
@@ -792,21 +897,30 @@
 <script>
   function toggleUpdateInputs() {
       var checkbox = document.getElementById('gridCheck_4');
-      var inputCustomer = document.getElementById('inputUpdateCustomer');
-      var inputDeviceDivision = document.getElementById('inputUpdateDeviceDivision');
-      var inputDeviceCount = document.getElementById('inputUpdateDeviceCount');
-      var inputRemarks = document.getElementById('inputUpdateRemarks');
+      var inputUpdateDeviceDate = document.getElementById('inputUpdateDeviceDate')
+      var inputUpdateDeviceCompany = document.getElementById('inputUpdateDeviceCompany')
+      var inputUpdateDeviceDepartment = document.getElementById('inputUpdateDeviceDepartment')
+      var inputUpdateDeviceRequestManager = document.getElementById('inputUpdateDeviceRequestManager');
+      var inputUpdateDeviceManager = document.getElementById('inputUpdateDeviceManager');
+      var inputUpdateDeviceReason = document.getElementById('inputUpdateDeviceReason');
+      var inputUpdateDeviceRemarks = document.getElementById('inputUpdateDeviceRemarks');
 
       if (checkbox.checked) {
-        inputCustomer.disabled = false;
-        inputDeviceDivision.disabled = false;
-        inputDeviceCount.disabled = false;
-        inputRemarks.disabled = false;
+        inputUpdateDeviceDate.disabled = false;
+        inputUpdateDeviceCompany.disabled = false;
+        inputUpdateDeviceDepartment.disabled = false;
+        inputUpdateDeviceRequestManager.disabled = false;
+        inputUpdateDeviceManager.disabled = false;
+        inputUpdateDeviceReason.disabled = false;
+        inputUpdateDeviceRemarks.disabled = false;
       } else {
-        inputCustomer.disabled = true;
-        inputDeviceDivision.disabled = true;
-        inputDeviceCount.disabled = true;
-        inputRemarks.disabled = true;
+        inputUpdateDeviceDate.disabled = true;
+        inputUpdateDeviceCompany.disabled = true;
+        inputUpdateDeviceDepartment.disabled = true;
+        inputUpdateDeviceRequestManager.disabled = true;
+        inputUpdateDeviceManager.disabled = true;
+        inputUpdateDeviceReason.disabled = true;
+        inputUpdateDeviceRemarks.disabled = true;
       }
   }
 </script>

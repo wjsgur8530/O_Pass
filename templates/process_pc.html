@@ -1,0 +1,183 @@
+{% extends "base.html" %} {% block title %}Sample{% endblock %} 
+{% block content %}
+        <!-- Begin Page Content -->
+        <div class="container-fluid">
+          <div class="row">
+
+          <div class="row">
+
+            <div class="col-lg-12">
+              {% if current_user.permission == '관리자' %}
+                <form action="/process_pc" method="POST">
+                <div class="mb-3" style="display:flex; justify-content: flex-end;">
+                    <div class="form-check form-switch mr-2" style="display: flex; justify-content: center; align-items: center;">
+                      <input class="form-check-input" type="checkbox" id="selectDateRadioSwitch">
+                    </div>
+                    <div>
+                      <select name="select_excel_option" id="select_excel_option" class="form-select" style="display:none;" disabled>
+                        <option value="name">이름</option>
+                        <option value="department">소속</option>
+                        <option value="phone">전화번호</option>
+                        <option value="manager">담당자</option>
+                      </select>
+                    </div>
+                    <div>
+                      <input type="text" class="form-control" name="select_option_text" id="select_option_text" style="display:none;" disabled>
+                    </div>
+                    <input type="date" name="start_date" id="start_date" class="form-control col-xl-1 ml-2" id="start_date" required>
+                    <input type="date" name="end_date" id="end_date" class="form-control col-xl-1 ml-2" id="end_date" required>
+                    <button class="d-none d-sm-inline-block btn btn-sm btn-primary shadow-sm ml-2" type="submit" id="excel_download_btn" name="excel_download_btn" style="height:38px;"><i class="fas fa-plus fa-sm text-white-50"></i> 조건 검색</button>
+                    <button class="d-none d-sm-inline-block btn btn-sm btn-success shadow-sm ml-2" type="button" onclick="exportTableToExcel('dataTable', 'visitor_data')">엑셀 다운로드</button>
+                  </form>
+                  {% endif %}
+                </div>
+                
+
+              <!-- DataTales Example -->
+              <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                  <h6 class="m-0 font-weight-bold text-primary">PC 반출입 목록</h6>
+                </div>
+                <div class="card-body">
+                  <div class="table-responsive">
+                    <table class="table table-bordered" id="dataTable" width="100%" cellspacing="0" style="text-align: center;">
+                      <thead>
+                        <tr>
+                          <th>No</th>
+                          <th>등록</th>
+                          <th>출입 시간</th>
+                          <th>퇴실 시간</th>
+                          <th>이름</th>
+                          <th>소속</th>
+                          <th>전화번호</th>
+                          <th>담당자</th>
+                          <th>방문목적</th>
+                          <th>PC 반입</th>
+                          <th>모델명</th>
+                          <th>시리얼번호</th>
+                          <th>반입사유</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {% for visitor, department_name, phone_number in zip_data %}
+                        <tr>
+                          <td>{{loop.index}}</td>
+                          <td>{{visitor.registry}}</td>
+                          <td>{{visitor.approve_date}}</td>
+                          <td>{{visitor.exit_date}}</td>
+                          <td>
+                            {% if visitor.name|length > 1 %}
+                                {{ visitor.name[0] + '*' + visitor.name[2:] }}
+                            {% else %}
+                                {{ visitor.name }}
+                            {% endif %}
+                          </td>
+                          <td>{{department_name}}</td>
+                          <td>
+                            {% if phone_number|length > 6 %}
+                                {{ phone_number[:3] + '****' + phone_number[7:]}}
+                            {% else %}
+                                {{ phone_number }}
+                            {% endif %}
+                          </td>
+                          <td>{{visitor.manager}}</td>
+                          <td>{{visitor.object}}</td>
+                          <td>
+                            {% if visitor.personal_computer == 1 %}
+                            O
+                            {% else %}
+                            X
+                            {% endif %}
+                          </td>
+                          {% if visitor.personal_computer == 1 %}
+                            <td>{% if visitor.model_name is none %}</td>{% else %}{{ visitor.model_name }}{% endif %}</td>
+                            <td>{% if visitor.serial_number is none %}</td>{% else %}{{ visitor.serial_number }}{% endif %}</td>
+                            <td>{% if visitor.pc_reason is none %}</td>{% else %}{{ visitor.pc_reason }}{% endif %}</td>
+                          {% else %}
+                            <td></td>
+                            <td></td>
+                            <td></td>
+                          {% endif %}
+
+                        </tr>
+                        {% endfor %}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+            </div>
+        </div>
+        <!-- /.container-fluid -->
+
+      </div>
+      <!-- End of Main Content -->
+      <script src="https://unpkg.com/tableexport/dist/tableexport.min.js"></script>
+      <script>
+        function exportTableToExcel(tableId, filename = ''){
+          var downloadLink;
+          var dataType = 'application/vnd.ms-excel';
+          var tableSelect = document.getElementById(tableId);
+          var tableHTML = tableSelect.outerHTML.replace(/ /g, '%20');
+      
+          // Specify file name
+          filename = filename ? filename + '.xls' : 'excel_data.xls';
+      
+          // Create download link element
+          downloadLink = document.createElement("a");
+      
+          document.body.appendChild(downloadLink);
+      
+          if(navigator.msSaveOrOpenBlob){
+            var blob = new Blob(['\ufeff', tableHTML], { type: dataType });
+            navigator.msSaveOrOpenBlob(blob, filename);
+          } else {
+            // Create a link to the file
+            downloadLink.href = 'data:' + dataType + ', ' + tableHTML;
+      
+            // Setting the file name
+            downloadLink.download = filename;
+      
+            // Apply styles for the Excel file
+            downloadLink.style.display = 'none';
+            downloadLink.style.textAlign = 'center';
+      
+            //triggering the function
+            document.body.appendChild(downloadLink);
+            downloadLink.click();
+      
+            // Remove the link from the DOM
+            document.body.removeChild(downloadLink);
+          }
+        }
+      </script>
+
+<script>
+    $(document).ready(function() {
+      // selectDateRadioSwitch 체크박스 변경 이벤트를 감지
+      $('#selectDateRadioSwitch').change(function() {
+        if ($(this).is(':checked')) {
+          $('#select_excel_option').css('display', 'block');
+          $('#select_option_text').css('display', 'block');
+          $('#select_excel_option').prop('disabled', false); // 활성화
+          $('#select_option_text').prop('disabled', false);  // 활성화
+        } else {
+          $('#select_excel_option').css('display', 'none');
+          $('#select_option_text').css('display', 'none');
+          $('#select_excel_option').prop('disabled', true);  // 비활성화
+          $('#select_option_text').prop('disabled', true);   // 비활성화
+        }
+      });
+    });
+  </script>
+{% endblock %}
+
+{% block js %}
+    {{ super() }}
+    <!-- Page level plugins -->
+    <script src="{{ url_for('static', filename='vendor/datatables/jquery.dataTables.min.js')}}"></script>
+    <script src="{{ url_for('static', filename='vendor/datatables/dataTables.bootstrap4.min.js')}}"></script>
+
+    <!-- Page level custom scripts -->
+    <script src="{{ url_for('static', filename='js/demo/datatables-demo.js')}}"></script>
+{% endblock %}

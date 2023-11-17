@@ -18,7 +18,6 @@ class User(db.Model):
     email = db.Column(db.String(50), unique=True, nullable=False)
     password = db.Column(db.String(200), unique=False, nullable=False)
     department = db.Column(db.String(50), unique=False, nullable=False)
-    rank = db.Column(db.String(20), unique=False)
     login_attempts = db.Column(db.Integer, default=0)  # 로그인 시도 횟수
     login_blocked_until = db.Column(db.DateTime, nullable=True)  # 로그인 제한 종료 시간
     registered_at = db.Column(db.DateTime, nullable=False)
@@ -27,7 +26,7 @@ class User(db.Model):
     attempts = db.Column(db.String(50), unique=False)
     authenticated = db.Column(db.String(30), unique=False)
     permission = db.Column(db.String(10))
-    approve = db.Column(db.Integer)
+    role = db.Column(db.String(20))
     password_question = db.Column(db.String(200), unique=False, nullable=False)
     password_hint_answer = db.Column(db.String(200), unique=False, nullable=False)
     ip_address = db.Column(db.String(30), unique=False)
@@ -37,20 +36,19 @@ class User(db.Model):
     login_failure_id = db.relationship('Login_failure_log', backref='user_log')
     department_id = db.relationship('Department', backref='user_log')
 
-    def __init__(self, username, email, password, department, rank, password_history, registered_at, password_changed_at, permission, approve, password_question, password_hint_answer, ip_address):
+    def __init__(self, username, email, password, department, password_history, registered_at, password_changed_at, permission, password_question, password_hint_answer, ip_address, role):
         self.username = username
         self.email = email
         self.password = password
         self.department = department
-        self.rank = rank
         self.password_history = password_history
         self.registered_at = registered_at
         self.password_changed_at = password_changed_at
         self.permission = permission
-        self.approve = approve
         self.password_question = password_question
         self.password_hint_answer = password_hint_answer
         self.ip_address = ip_address
+        self.role = role
 
     # Flask-Login integration
     def is_authenticated(self):
@@ -178,9 +176,9 @@ class Visitor(db.Model):
     manager = db.Column(db.String(30), unique=False, nullable=False)
     device = db.Column(db.Boolean(), unique=False)
     work = db.Column(db.Boolean(), unique=False)
-    remarks = db.Column(db.String(50), unique=False, nullable=True)
     object = db.Column(db.String(50), unique=False)
     created_date = db.Column(db.DateTime, unique=False)
+    entry_date = db.Column(db.DateTime, unique=False)
     approve_date = db.Column(db.DateTime, unique=False)
     exit_date = db.Column(db.DateTime, unique=False, nullable=True)
     exit = db.Column(db.Boolean(), unique=False, nullable=True)
@@ -194,25 +192,29 @@ class Visitor(db.Model):
     location = db.Column(db.String(50), unique=False, nullable=True)
     company_type = db.Column(db.String(50), unique=False, nullable=True)
     company = db.Column(db.String(50), unique=False, nullable=True)
-    customer = db.Column(db.String(50), unique=False, nullable=True)
-    device_division = db.Column(db.String(50), unique=False, nullable=True)
-    device_count = db.Column(db.String(50), unique=False, nullable=True)
+    device_date = db.Column(db.String(50), unique=False, nullable=True)
+    device_company = db.Column(db.String(50), unique=False, nullable=True)
+    device_department = db.Column(db.String(50), unique=False, nullable=True)
+    device_request_manager = db.Column(db.String(50), unique=False, nullable=True)
+    device_manager = db.Column(db.String(50), unique=False, nullable=True)
+    device_reason = db.Column(db.String(50), unique=False, nullable=True)
+    device_remarks = db.Column(db.String(50), unique=False, nullable=True)
     registry = db.Column(db.String(50), unique=False, nullable=True)
-    writer = db.Column(db.Integer)
+    writer = db.Column(db.String(50), unique=False, nullable=True)
     card_id = db.Column(db.Integer, db.ForeignKey('Card.id'))
     rack_id = db.Column(db.Integer, db.ForeignKey('Rack.id'))
     cards = db.relationship('Card', backref='visitor')
     rack_keys = db.relationship('Rack', backref='visitor_rack')
+    approval_team = db.Column(db.String(50), unique=False, nullable=True)
 
     # 이름, 부서, 번호, 작업위치, 담당자, 장비체크, 비고, 방문목적, 등록시간, 승인, 사전/현장, 작업체크, 회사종류, 회사이름, 작업내용
-    def __init__(self, name, department, phone, location, manager, device, remarks, object, created_time, approve, registry, work, company_type, company, work_content, writer, personal_computer, model_name, serial_number, pc_reason, work_division, customer, device_division, device_count):
+    def __init__(self, name, department, phone, location, manager, device, object, created_time, approve, registry, work, company_type, company, work_content, writer, personal_computer, model_name, serial_number, pc_reason, work_division, device_date, device_company, device_department, device_request_manager, device_manager, device_reason, device_remarks, approval_team, entry_date):
         self.name = name
         self.department = department
         self.phone = phone
         self.location = location
         self.manager = manager
         self.device = device
-        self.remarks = remarks
         self.approve = approve
         self.object = object
         self.created_date = created_time
@@ -227,9 +229,42 @@ class Visitor(db.Model):
         self.serial_number = serial_number
         self.pc_reason = pc_reason
         self.work_division = work_division
-        self.customer = customer
-        self.device_division = device_division
-        self.device_count = device_count
+        self.device_date = device_date
+        self.device_company = device_company
+        self.device_department = device_department
+        self.device_request_manager = device_request_manager
+        self.device_manager = device_manager
+        self.device_reason = device_reason
+        self.device_remarks = device_remarks
+        self.approval_team = approval_team
+        self.entry_date = entry_date
+
+class DeviceInfo(db.Model):
+    __tablename__ = "DeviceInfo"
+
+    id = db.Column(db.Integer, primary_key=True)
+
+    arrival_departure = db.Column(db.String(255))
+    purpose = db.Column(db.String(255))
+    location = db.Column(db.String(255))
+    customer_info = db.Column(db.String(255))
+    device_type = db.Column(db.String(255))
+    quantity = db.Column(db.Integer)
+    serial_number = db.Column(db.String(255))
+    note = db.Column(db.String(255))
+    visitor_id = db.Column(db.Integer, db.ForeignKey('Visitor.id'))
+    visitor = db.relationship('Visitor', backref='visitor')
+
+    def __init__(self, arrival_departure, purpose, location, customer_info, device_type, quantity, serial_number, note, visitor_id):
+        self.arrival_departure = arrival_departure
+        self.purpose = purpose
+        self.location = location
+        self.customer_info = customer_info
+        self.device_type = device_type
+        self.quantity = quantity
+        self.serial_number = serial_number
+        self.note = note
+        self.visitor_id = visitor_id
 
 class Card(db.Model):
     __tablename__ = "Card"
@@ -244,6 +279,29 @@ class Card(db.Model):
         self.card_type = card_type
         self.card_num = card_num
         self.card_status = card_status
+
+class Card_log(db.Model):
+    __tablename__ = "Card_log"
+
+    id = db.Column(db.Integer, primary_key=True)
+    visitor_name = db.Column(db.String(30), unique=False, nullable=False)
+    department = db.Column(db.String(30), unique=False, nullable=False)
+    manager = db.Column(db.String(30), unique=False, nullable=False)
+    exited_date = db.Column(db.DateTime, unique=False)
+    formatted_date = db.Column(db.DateTime, unique=False)
+    card_type = db.Column(db.String(50), unique=False)
+    card_num = db.Column(db.String(50), unique=False, nullable=True)
+    card_name = db.Column(db.String(50), unique=False, nullable=True)
+
+    def __init__(self, visitor_name, department, manager, exited_date, formatted_date, card_type, card_num, card_name):
+        self.visitor_name = visitor_name
+        self.department = department
+        self.manager = manager
+        self.exited_date = exited_date
+        self.formatted_date = formatted_date
+        self.card_type = card_type
+        self.card_num = card_num
+        self.card_name = card_name
 
 class Year(db.Model):
     __tablename__ = "Year"
@@ -275,7 +333,7 @@ class Department(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     department_type = db.Column(db.String(50), unique=False)
-    department_name = db.Column(db.String(50), unique=True)
+    department_name = db.Column(db.String(50), unique=False)
     user_id = db.Column(db.Integer, db.ForeignKey('User.id'))
 
     def __init__(self, department_type, department_name, user_id):
@@ -307,7 +365,6 @@ class Privacy(db.Model):
     manager = db.Column(db.String(30), unique=False, nullable=False)
     device = db.Column(db.Boolean(), unique=False, nullable=True)
     work = db.Column(db.Boolean(), unique=False, nullable=True)
-    remarks = db.Column(db.String(50), unique=False, nullable=True)
     object = db.Column(db.String(50), unique=False)
     location = db.Column(db.String(50), unique=False, nullable=True)
     company_type = db.Column(db.String(50), unique=False, nullable=True)
@@ -320,18 +377,22 @@ class Privacy(db.Model):
     serial_number = db.Column(db.String(50), unique=False, nullable=True)
     pc_reason = db.Column(db.String(100), unique=False, nullable=True)
     work_division = db.Column(db.String(50), unique=False, nullable=True)
-    customer = db.Column(db.String(50), unique=False, nullable=True)
-    device_division = db.Column(db.String(50), unique=False, nullable=True)
-    device_count = db.Column(db.String(50), unique=False, nullable=True)
+    device_date = db.Column(db.String(50), unique=False, nullable=True)
+    device_company = db.Column(db.String(50), unique=False, nullable=True)
+    device_department = db.Column(db.String(50), unique=False, nullable=True)
+    device_request_manager = db.Column(db.String(50), unique=False, nullable=True)
+    device_manager = db.Column(db.String(50), unique=False, nullable=True)
+    device_reason = db.Column(db.String(50), unique=False, nullable=True)
+    device_remarks = db.Column(db.String(50), unique=False, nullable=True)
+    
 
-    def __init__(self, name, department, phone, manager, device, work, remarks, object, location, company_type, company, work_content, visit_date, registry, personal_computer, model_name, serial_number, pc_reason, work_division, customer, device_division, device_count):
+    def __init__(self, name, department, phone, manager, device, work, object, location, company_type, company, work_content, visit_date, registry, personal_computer, model_name, serial_number, pc_reason, work_division, device_date, device_company, device_department, device_request_manager, device_manager, device_reason, device_remarks):
         self.name = name
         self.department = department
         self.phone = phone
         self.manager = manager
         self.device = device
         self.work = work
-        self.remarks = remarks
         self.object = object
         self.location = location
         self.company_type = company_type
@@ -345,8 +406,12 @@ class Privacy(db.Model):
         self.serial_number = serial_number
         self.pc_reason = pc_reason
         self.work_division = work_division
-        self.customer = customer
-        self.device_division = device_division
-        self.device_count = device_count
+        self.device_date = device_date
+        self.device_company = device_company
+        self.device_department = device_department
+        self.device_request_manager = device_request_manager
+        self.device_manager = device_manager
+        self.device_reason = device_reason
+        self.device_remarks = device_remarks
     
 

@@ -93,7 +93,7 @@
                   <div class="form-check">
                     <input class="form-check-input" type="checkbox" id="gridCheck_3" value="1" name="inputPC" onchange="toggleInputs_pc()">
                     <label class="form-check-label" for="gridCheck_3">
-                    PC 반입
+                    노트북 반입
                     </label>
                   </div>
                   <div class="form-check ml-2">
@@ -118,7 +118,7 @@
                   <input type="text" class="form-control" id="inputSerialNumber" placeholder="etc. XY0XX0" disabled="true" name="inputSerialNumber">
                 </div>
                 <div class="col-6">
-                  <label for="inputReason" class="form-label">PC 반입 사유</label>
+                  <label for="inputReason" class="form-label">노트북 반입 사유(포트 사용 시: 사용 표기)</label>
                   <input type="text" class="form-control" id="inputReason" placeholder="" disabled="true" name="inputReason">
                 </div>
                 <div class="col-3">
@@ -196,8 +196,36 @@
             <div class="card-body ml-2">
               <div class="row no-gutters align-items-center" id="index_visitor">
                 <div class="col mr-2">
-                  <div class="text-xs font-weight-bold text-danger text-uppercase mb-1">실시간 출입 방문객 (1m)</div>
+                  <div class="text-xs font-weight-bold text-danger text-uppercase mb-1">실시간 출입 방문객(카드 소지) (1m)</div>
                   <div class="h5 mb-0 font-weight-bold text-gray-800">{% if visitor_count %}{{ visitor_count[0] }}명{% endif %}</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 클라우드 센터 잔류 방문자 -->
+        <div class="col-xl-2 col-md-6 mb-4">
+          <div class="card border-left-primary shadow h-100 py-2">
+            <div class="card-body ml-2">
+              <div class="row no-gutters align-items-center" id="index_center_visitor">
+                <div class="col mr-2">
+                  <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">클라우드 센터 잔류 인원(카드 미소지) (1m)</div>
+                  <div class="h5 mb-0 font-weight-bold text-gray-800">{% if no_exit_card_visitor %}{{ no_exit_card_visitor }}명 {% else %} 0명 {% endif %}</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 카드 수량 -->
+        <div class="col-xl-2 col-md-6 mb-4">
+          <div class="card border-left-info shadow h-100 py-2">
+            <div class="card-body ml-2">
+              <div class="row no-gutters align-items-center" id="index_card_visitor">
+                <div class="col mr-2">
+                  <div class="text-xs font-weight-bold text-info text-uppercase mb-1">미반납 카드 | 총 카드 [관리 - 카드 관리]</div>
+                  <div class="h5 mb-0 font-weight-bold text-gray-800">{% if total_card %}{{ no_return_card }}개 | {{ total_card }}개 {% else %} 0개 {% endif %}</div>
                 </div>
               </div>
             </div>
@@ -206,11 +234,11 @@
 
         <!-- 일간 방문자 -->
         <div class="col-xl-2 col-md-6 mb-4">
-          <div class="card border-left-primary shadow h-100 py-2">
+          <div class="card border-left-success shadow h-100 py-2">
             <div class="card-body ml-2">
               <div class="row no-gutters align-items-center" id="index_daily_visitor">
                 <div class="col mr-2">
-                  <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">일간 방문자 (Daily/1m)</div>
+                  <div class="text-xs font-weight-bold text-success text-uppercase mb-1">일간 방문자 (Daily/1m)</div>
                   <div class="h5 mb-0 font-weight-bold text-gray-800">{% if visitor_count[3] %}{{ visitor_count[3] }}명 {% else %} 0명 {% endif %}</div>
                 </div>
               </div>
@@ -220,40 +248,12 @@
 
         <!-- 주간 방문자 -->
         <div class="col-xl-2 col-md-6 mb-4">
-          <div class="card border-left-success shadow h-100 py-2">
+          <div class="card border-left-warning shadow h-100 py-2">
             <div class="card-body ml-2">
               <div class="row no-gutters align-items-center" id="index_monthly_visitor">
                 <div class="col mr-2">
-                  <div class="text-xs font-weight-bold text-success text-uppercase mb-1">월간 방문자 (Month/1m)</div>
+                  <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">월간 방문자 (Month/1m)</div>
                   <div class="h5 mb-0 font-weight-bold text-gray-800">{% if visitor_count[2] %}{{ visitor_count[2] }}명 {% else %} 0명 {% endif %}</div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- 월간 방문자 -->
-        <div class="col-xl-2 col-md-6 mb-4">
-          <div class="card border-left-info shadow h-100 py-2">
-            <div class="card-body ml-2">
-              <div class="row no-gutters align-items-center" id="index_yearly_visitor">
-                <div class="col mr-2">
-                  <div class="text-xs font-weight-bold text-info text-uppercase mb-1">연간 방문자 (Annual/1m)</div>
-                  <div class="h5 mb-0 font-weight-bold text-gray-800">{% if visitor_count[1] %}{{ visitor_count[1] }}명 {% else %} 0명 {% endif %}</div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- 연간 방문자 -->
-        <div class="col-xl-2 col-md-6 mb-4">
-          <div class="card border-left-warning shadow h-100 py-2">
-            <div class="card-body ml-2">
-              <div class="row no-gutters align-items-center" id="index_total_visitor">
-                <div class="col mr-2">
-                  <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">총 방문자 (Total/1m)</div>
-                  <div class="h5 mb-0 font-weight-bold text-gray-800">{% if total_visitors %}{{ total_visitors }}명 {% else %} 0명 {% endif %}</div>
                 </div>
               </div>
             </div>
@@ -262,10 +262,23 @@
       </div>
 
       <!-- <div class="mb-3" style="display:flex; justify-content: flex-end;">
-        <button type="button" class="d-none d-sm-inline-block btn btn-sm shadow-sm btn btn-secondary" id="exit_checkbox">선택 퇴실</button>
-        <input type="date" name="start_date" id="start_date" class="form-control col-xl-1 ml-2">
-        <input type="date" name="end_date" id="end_date" class="form-control col-xl-1 ml-2">
-        <button class="d-none d-sm-inline-block btn btn-sm btn-success shadow-sm ml-2" type="button" id="excel_download_btn" name="excel_download_btn"><i class="fas fa-plus fa-sm text-white-50"></i> 엑셀 다운로드</button>
+        <div class="form-check form-switch mr-2" style="display: flex; justify-content: center; align-items: center;">
+          <input class="form-check-input" type="checkbox" id="selectDateRadioSwitch">
+        </div>
+        <div>
+          <select name="select_excel_option" id="select_excel_option" class="form-select" style="display:none;" disabled>
+            <option value="name">이름</option>
+            <option value="department">소속</option>
+            <option value="phone">전화번호</option>
+            <option value="manager">담당자</option>
+          </select>
+        </div>
+        <div>
+          <input type="text" class="form-control" id="select_option_text" style="display:none;" disabled>
+        </div>
+        <input type="date" name="start_date" id="start_date" class="form-control col-xl-1 ml-2" id="start_date">
+        <input type="date" name="end_date" id="end_date" class="form-control col-xl-1 ml-2" id="end_date">
+        <button class="d-none d-sm-inline-block btn btn-sm btn-success shadow-sm ml-2" type="button" id="excel_download_btn" name="excel_download_btn" style="height:38px;"><i class="fas fa-plus fa-sm text-white-50"></i> 엑셀 다운로드</button>
       </div> -->
       <!-- Content Row -->
 
@@ -328,8 +341,13 @@
                 <!-- 방문객 퇴실 -->
                 <div class="col">
                   <div class="input-group">
-                    <input type="text" class="form-control" id="remarks_update_input" name="remarks_update_input" placeholder="비고 입력" maxlength="8" style="height: 38px;">
-                    <button class="btn btn-secondary" type="button" id="remarks_update_btn">수정</button>
+                    <select name="card_update_box" id="card_update_box">
+                      {% for card in update_card_list %}
+                        <option value="{{card.card_type}}">{{card.card_type}}</option>
+                      {% endfor %}
+                    </select>
+                    <input type="text" class="form-control" id="card_update_input" name="card_update_input" placeholder="카드 입력" maxlength="8" style="height: 38px;">
+                    <button class="btn btn-secondary" type="button" id="card_update_btn">수정</button>
                   </div>
                 </div>
                 <div class="col">
@@ -351,14 +369,14 @@
                         </div>
                       </th>
                       <th scope="col">No</th>
-                      <th scope="col"><span class="text-success"><랙키></span> / <span class="text-primary"><카드></span> / 등록 구분 / 방문 목적 / 방문객 / 소속 / 번호 / 담당자 / 승인 시간 / 퇴실 시간 / <span class="text-danger"><퇴실></span></th>
+                      <th scope="col"><span class="text-success"><랙키></span> / <span class="text-primary"><카드></span> 결재팀 / 등록인 / 등록 구분 / 방문 목적 / 방문객 / 소속 / 번호 / 담당자 / 출입 시간 / 퇴실 시간 / <span class="text-danger"><퇴실></span></th>
                     </tr>
                   </thead>
                   <tfoot>
                     <tr>
                       <th scope="col">#</th>
                       <th scope="col">No</th>
-                      <th scope="col"><span class="text-success"><랙키></span> / <span class="text-primary"><카드></span> / 등록 구분 / 방문 목적 / 방문객 / 소속 / 번호 / 담당자 / 승인 시간 / 퇴실 시간 / <span class="text-danger"><퇴실></span></th>
+                      <th scope="col"><span class="text-success"><랙키></span> / <span class="text-primary"><카드></span> 결재팀 / 등록인 / 등록 구분 / 방문 목적 / 방문객 / 소속 / 번호 / 담당자 / 출입 시간 / 퇴실 시간 / <span class="text-danger"><퇴실></span></th>
                     </tr>
                   </tfoot>
                   <tbody id="table_tbody">
@@ -381,9 +399,11 @@
                                   <li class="list-group-item bg-success text-white">{{approve_visitor.rack.key_type}}{{approve_visitor.rack.key_num}}</li>
                                   {% endif %}
                                   {% if approve_visitor.card_id != None %}
-                                  <li class="list-group-item bg-primary text-white">{{approve_visitor.card.card_type}}{{approve_visitor.card.card_num}}</li>
+                                  <li class="list-group-item bg-primary text-white mr-1">{{approve_visitor.card.card_type}}{{approve_visitor.card.card_num}}</li>
                                   {% endif %}
-
+                                  
+                                  <li class="list-group-item" style="border-left:3px solid gray;">결재: {{approve_visitor.approval_team}}</li>
+                                  <li class="list-group-item">등록: {{approve_visitor.writer}}</li>
                                   <li class="list-group-item">{{approve_visitor.registry}}</li>
                                   <li class="list-group-item">{{approve_visitor.object}}</li>
                                   <li class="list-group-item">
@@ -402,7 +422,10 @@
                                     {% endif %}
                                   </li>
                                   <li class="list-group-item">{{approve_visitor.manager}}</li>
-                                  <li class="list-group-item">{{approve_visitor.approve_date}}</li>
+                                  {% if approve_visitor.entry_date != None %}
+                                    <li class="list-group-item">{{approve_visitor.entry_date}}</li>
+                                  {% else %}
+                                  {% endif %}
                                   {% if approve_visitor.exit_date != None %}
                                     <li class="list-group-item">{{approve_visitor.exit_date}}</li>
                                     <li class="list-group-item bg-danger text-white">퇴실</li>
@@ -417,7 +440,7 @@
                                 <div class="row">
                                   <div class="col-xl-4">
                                     <ul class="list-group list-group-vertical">
-                                      <li class="list-group-item"><b>PC 반입</b></li>
+                                      <li class="list-group-item"><b>노트북 반입</b></li>
                                       <li class="list-group-item">
                                         {% if approve_visitor.personal_computer == 1 %}
                                         O
@@ -480,18 +503,22 @@
                                         {% endif %}
                                       </li>
                                       {% if approve_visitor.device == 1 %}
-                                      <li class="list-group-item"><b>고객사</b></li>
-                                      <li class="list-group-item">{{approve_visitor.customer}}</li>
-                                      <li class="list-group-item"><b>장비 기종 / 장비 수량</b></li>
-                                      <li class="list-group-item">{{approve_visitor.device_division}} / {{approve_visitor.device_count}}</li>
-                                      <li class="list-group-item"><b>비고</b></li>
-                                      <li class="list-group-item">{{approve_visitor.remarks}}</li>
+                                      <li class="list-group-item"><b>장비 반출입 날짜</b></li>
+                                      <li class="list-group-item">{{approve_visitor.device_date}}</li>
+                                      <li class="list-group-item"><b>요청자(회사, 부서, 담당자)</b></li>
+                                      <li class="list-group-item">{{approve_visitor.device_company}} / {{approve_visitor.device_department}} / {{approve_visitor.device_request_manager}}</li>
+                                      <li class="list-group-item"><b>장비 반출입 수행자(데이터센터 담당자) / 반출입 사유</b></li>
+                                      <li class="list-group-item">{{approve_visitor.device_manager}} / {{approve_visitor.device_reason}}</li>
+                                      <li class="list-group-item"><b>기타사항</b></li>
+                                      <li class="list-group-item">{{approve_visitor.device_remarks}}</li>
                                       {% else %}
-                                      <li class="list-group-item"><b>고객사</b></li>
+                                      <li class="list-group-item"><b>장비 반출입 날짜</b></li>
                                       <li class="list-group-item"></li>
-                                      <li class="list-group-item"><b>장비 기종 / 장비 수량</b></li>
+                                      <li class="list-group-item"><b>요청자(회사, 부서, 담당자)</b></li>
                                       <li class="list-group-item"></li>
-                                      <li class="list-group-item"><b>비고</b></li>
+                                      <li class="list-group-item"><b>장비 반출입 수행자(데이터센터 담당자) / 반출입 사유</b></li>
+                                      <li class="list-group-item"></li>
+                                      <li class="list-group-item"><b>기타사항</b></li>
                                       <li class="list-group-item"></li>
                                       {% endif %}
                                     </ul>
@@ -499,6 +526,11 @@
                                 </div>
                                 <div style="text-align: right;">
                                   {% if current_user.permission == '관리자' %}
+                                  {% if approve_visitor.exit == 1 %}
+                                  <div class="btn-group mt-4">
+                                    <button class="btn btn-secondary btn-sm" type="button" id="re_exit_btn{{approve_visitor.id}}" value="{{approve_visitor.id}}">퇴실</button>
+                                  </div>
+                                  {% endif %}
                                   {% if approve_visitor.exit == 0 %}
                                   <div class="btn-group mt-4">
                                     <button class="btn btn-secondary btn-sm" type="button" id="exit_btn{{approve_visitor.id}}" value="{{approve_visitor.id}}">퇴실</button>
@@ -540,6 +572,28 @@
                           message = request.responseText;
                           if (message == "Card None")
                             alert('카드를 먼저 불출해주세요.');
+                        }
+                      })
+                    })
+                  </script>
+                  <script>
+                    $('#re_exit_btn{{approve_visitor.id}}').click(function(){
+                      var exit_btn = $('#re_exit_btn{{approve_visitor.id}}').val();
+                      var postdata = {
+                        'exit_id': exit_btn,
+                      };
+                      $.ajax({
+                        contentType: 'application/json',
+                        type: 'POST',
+                        url: 'api/ajax_re_exit',
+                        data: JSON.stringify(postdata),
+                        dataType: 'json',
+                        success: function(response) {
+                          alert('퇴실 되었습니다.');
+                          history.go(0);
+                        },
+                        error: function(request, status, error) {
+                          alert('퇴실 시간 갱신 실패');
                         }
                       })
                     })
@@ -711,8 +765,8 @@
                               },
                               error: function(request, status, error) {
                                 message = request.responseText;
-                                if (message == "Use Card")
-                                  alert('방문객이 카드를 소지하고 있어 수정 기능이 제한됩니다.');
+                                // if (message == "Use Card")
+                                //   alert('방문객이 카드를 소지하고 있어 수정 기능이 제한됩니다.');
                               }
                             })
                         });
@@ -858,34 +912,42 @@
   })
 </script>
 
-<!-- 체크박스 비고 수정 스크립트 -->
+<!-- 체크박스 카드 수정 스크립트 -->
 <script>
-  $('#remarks_update_btn').click(function(){
-    var remarks = document.getElementById("remarks_update_input");
-    var input_remarks = remarks.value
+  $('#card_update_btn').click(function(){
+    var cards = document.getElementById("card_update_input");
+    var card_type = document.getElementById("card_update_box");
+    var input_cards = cards.value
+    var card_types = card_type.value
     var checked_list = [];
     $("input[name='check_box']:checked").each(function(){
       checked_list.push($(this).val());
     });
-    var postdata = {'checked_datas': checked_list, 'remarks': input_remarks}
+    var postdata = {'checked_datas': checked_list, 'cards': input_cards, 'card_types': card_types}
     $.ajax({
       contentType: 'application/json',
       type: 'POST',
-      url: 'api/ajax_remarks_update_checkbox',
+      url: 'api/ajax_cards_update_checkbox',
       data: JSON.stringify(postdata),
       dataType: 'json',
       success: function(data) {
         history.go(0);
-        alert('비고가 수정 되었습니다.');
+        alert('카드가 수정 되었습니다.');
       },
       error: function(request, status, error) {
         message = request.responseText;
         if (message == "No Select")
-          alert('비고 수정할 방문객을 선택해주세요.')
+          alert('카드 수정할 방문객을 선택해주세요.')
         if (message == "Exited")
-          alert('퇴실한 방문객은 비고 수정이 불가합니다.')
+          alert('퇴실한 방문객은 카드 수정이 불가합니다.')
         if (message == "Error")
-          alert('비고를 입력해주세요.')
+          alert('카드를 입력해주세요.')
+        if (message == "Multi Select")
+          alert('카드 수정은 동시 선택이 안됩니다. 1명만 선택하여 수정해주세요.')
+        if (message == "Use Card")
+          alert('사용중인 카드입니다.')
+        if (message == "No Create Card")
+          alert('없는 카드입니다. 카드를 생성해주세요.')
       }
     })
   })
@@ -1196,31 +1258,90 @@
 <!-- Excel Download 스크립트 -->
 <script>
   $('#excel_download_btn').click(function(){
-    var start_date = document.getElementById("start_date");
-    var end_date = document.getElementById("end_date");
-    var start_date_val = start_date.value
-    var end_date_val = end_date.value
-    var postdata = {'start_date_val': start_date_val, 'end_date_val': end_date_val}
-    $.ajax({
-      contentType: 'application/json',
-      type: 'POST',
-      url: '/api/ajax_excel_download',
-      data: JSON.stringify(postdata),
-      dataType: 'json',
-      success: function(data) {
-        alert('다운로드 되었습니다.')
-      },
-      error: function(request, status, error) {
-        message = request.responseText;
-        if (message == "No Date")
-          alert('날짜를 모두 선택해주세요.');
-        if (message == "Date Error")
-          alert('시작 날짜가 끝 날짜보다 작게 입력할 수 없습니다.');
-        if (message == "No Data")
-          alert('해당 기간에 검색된 데이터가 없습니다.');
-      }
-    })
+    var selectDateRadioSwitch = document.getElementById("selectDateRadioSwitch");
+
+    if (selectDateRadioSwitch.checked) {
+      var select_excel_option = document.getElementById("select_excel_option");
+      var select_option_text = document.getElementById("select_option_text");
+      var excel_option_val = select_excel_option.value;
+      var option_text_val = select_option_text.value;
+
+      var start_date = document.getElementById("start_date");
+      var end_date = document.getElementById("end_date");
+      var start_date_val = start_date.value;
+      var end_date_val = end_date.value;
+
+      var postdata = {'excel_option_val': excel_option_val, 'option_text_val': option_text_val ,'start_date_val': start_date_val, 'end_date_val': end_date_val}
+      $.ajax({
+        contentType: 'application/json',
+        type: 'POST',
+        url: '/api/ajax_excel_download_1',
+        data: JSON.stringify(postdata),
+        dataType: 'json',
+        success: function(data) {
+          alert('다운로드 되었습니다.')
+        },
+        error: function(request, status, error) {
+          message = request.responseText;
+          if (message == "No Input")
+            alert('조건에 입력된 값이 없습니다.');
+          if (message == "No Date")
+            alert('날짜를 모두 선택해주세요.');
+          if (message == "Date Error")
+            alert('시작 날짜를 끝 날짜보다 작게 입력할 수 없습니다.');
+          if (message == "No Data")
+            alert('검색된 데이터가 없습니다.');
+        }
+      })
+    }
+    else {
+      var start_date = document.getElementById("start_date");
+      var end_date = document.getElementById("end_date");
+
+      var start_date_val = start_date.value;
+      var end_date_val = end_date.value;
+
+      var postdata = {'start_date_val': start_date_val, 'end_date_val': end_date_val}
+      $.ajax({
+        contentType: 'application/json',
+        type: 'POST',
+        url: '/api/ajax_excel_download_2',
+        data: JSON.stringify(postdata),
+        dataType: 'json',
+        success: function(data) {
+          alert('다운로드 되었습니다.')
+        },
+        error: function(request, status, error) {
+          message = request.responseText;
+          if (message == "No Date")
+            alert('날짜를 모두 선택해주세요.');
+          if (message == "Date Error")
+            alert('시작 날짜를 끝 날짜보다 작게 입력할 수 없습니다.');
+          if (message == "No Data")
+            alert('해당 기간에 검색된 데이터가 없습니다.');
+        }
+      })
+    }
   })
+</script>
+
+<script>
+  $(document).ready(function() {
+    // selectDateRadioSwitch 체크박스 변경 이벤트를 감지
+    $('#selectDateRadioSwitch').change(function() {
+      if ($(this).is(':checked')) {
+        $('#select_excel_option').css('display', 'block');
+        $('#select_option_text').css('display', 'block');
+        $('#select_excel_option').prop('disabled', false); // 활성화
+        $('#select_option_text').prop('disabled', false);  // 활성화
+      } else {
+        $('#select_excel_option').css('display', 'none');
+        $('#select_option_text').css('display', 'none');
+        $('#select_excel_option').prop('disabled', true);  // 비활성화
+        $('#select_option_text').prop('disabled', true);   // 비활성화
+      }
+    });
+  });
 </script>
 {% endblock %}
 

@@ -20,7 +20,7 @@
                       <div class="card-body text-center">
                         <img src="{{ url_for('static', filename='img/CJ_logo.svg.png')}}" class="rounded-circle img-fluid" style="width: 150px; height: 150px; background: #fff;">
                         <h5 class="my-3">{{current_user.username}}</h5>
-                        <p class="text-muted mb-4">{{current_user.department}}, {{current_user.rank}}</p>
+                        <p class="text-muted mb-4">{{current_user.department}}, {{current_user.permission}}</p>
                         <div class="d-flex justify-content-center mb-2">
                         </div>
                       </div>
@@ -67,10 +67,10 @@
                         <hr>
                         <div class="row">
                           <div class="col-sm-3">
-                            <p class="mb-0">직급</p>
+                            <p class="mb-0">권한</p>
                           </div>
                           <div class="col-sm-9">
-                            <p class="text-muted mb-0">{{current_user.rank}}</p>
+                            <p class="text-muted mb-0">{{current_user.permission}}</p>
                           </div>
                         </div>
                       </div>

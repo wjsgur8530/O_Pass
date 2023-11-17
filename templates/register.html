@@ -51,29 +51,13 @@
                     <span class="text-gray-600" style="font-size: 0.8rem;padding-left:5px;">Name</span>
                     <input type="text" class="form-control" name="username" id="username" placeholder="Name" style="border-radius: 10rem; font-size: 0.85rem; padding-left:1rem;" required>
                   </div>
-                  <div class="col-sm-4 mb-3 mb-sm-0">
+                  <div class="col-sm-6 mb-3 mb-sm-0">
                     <span class="text-gray-600" style="font-size: 0.8rem;padding-left:5px;">Department</span>
                     <select class="form-control" aria-label="Default select example" id="registerDepartment" name="registerDepartment" style="border-radius: 10rem; font-size: 0.85rem; padding-left:1rem;" required>
                       <option value="Infra N/W">Infra N/W</option>
                       <option value="Infra Ops">Infra Ops</option>
                       <option value="Infra Tech Lab">Infra Tech Lab</option>
                       <option value="Infra Biz">Infra Biz</option>
-                      <option value="Desk">Desk</option>
-                      <option value="Monitoring">Monitoring</option>
-                      <option value="기타">기타</option>
-                    </select>
-                  </div>
-                  <div class="col-sm-2 mb-3 mb-sm-0">
-                    <span class="text-gray-600" style="font-size: 0.8rem;padding-left:5px;">Position</span>
-                    <select class="form-control" aria-label="Default select example" id="registerRank" name="registerRank" style="border-radius: 10rem; font-size: 0.85rem; padding-left:1rem;" required>
-                      <option value="G1">G1</option>
-                      <option value="G2">G2</option>
-                      <option value="G3">G3</option>
-                      <option value="G4">G4</option>
-                      <option value="G5">G5</option>
-                      <option value="G6">G6</option>
-                      <option value="G7">G7</option>
-                      <option value="임원">임원</option>
                       <option value="기타">기타</option>
                     </select>
                   </div>
@@ -83,46 +67,60 @@
                     <span class="text-gray-600" style="font-size: 0.8rem;padding-left:5px;">ID(CJ World ID)</span>
                     <input type="text" class="form-control" name="email" id="email" placeholder="CJ World ID" style="border-radius: 10rem; font-size: 0.85rem; padding-left:1rem;" required>
                   </div>
-                  <div class="col-sm-6">
+                  <div class="col-sm">
                     <span class="text-gray-600" style="font-size: 0.8rem;padding-left:5px;">Email(cj.net)</span>
-                    <select class="form-control" aria-label="Default select" name="email_fix" id="email_fix" style="border-radius: 10rem; font-size: 0.85rem; padding-left:1rem;" required>
+                    <div class="input-group">
+                    <select class="form-control" aria-label="Default select" name="email_fix" id="email_fix" style="border-radius: 20px 0 0 20px; height:34.5px; font-size: 0.85rem; padding-left:1rem;" required>
                       <option value="@cj.net">@cj.net</option>
                     </select>
+                    <button class="btn btn-primary" style="height: 34.5px;" id="emailTransferBtn">전송</button>
+                    </div>
                   </div>
                 </div>
-                <div class="form-group row">
-                  <div class="col-sm-6 mb-3 mb-sm-0">
-                    <span class="text-gray-600" style="font-size: 0.8rem;padding-left:5px;">Password (8자이상, 대/소/특수문자 포함, 연속문자 사용 금지)</span>
-                    <input type="password" class="form-control" name="password1" id="password" placeholder="Password" style="border-radius: 10rem; font-size: 0.85rem; padding-left:1rem;" required>
-                  </div>
-                  <div class="col-sm-6">
-                    <span class="text-gray-600" style="font-size: 0.8rem;padding-left:5px;">Password Repeat</span>
-                    <input type="password" class="form-control" name="password2" id="exampleRepeatPassword" placeholder="Repeat Password" style="border-radius: 10rem; font-size: 0.85rem; padding-left:1rem;" required>
-                  </div>
-                </div>
-                <div class="form-group row">
-                  <div class="col">
-                    <span class="text-gray-600" style="font-size: 0.8rem;padding-left:5px;">Password Question</span>
-                    <select name="password_question" id="password_question" class="form-control" style="border-radius: 20px; padding-left:1rem; font-size: 0.85rem;" required>
-                      <option value="내가 태어난 도시는 어디인가요?">내가 태어난 도시는 어디인가요?</option>
-                      <option value="가장 좋아하는 음식은 무엇인가요?">가장 좋아하는 음식은 무엇인가요?</option>
-                      <option value="첫 번째 애완동물의 이름은 무엇인가요?">첫 번째 애완동물의 이름은 무엇인가요?</option>
-                      <option value="가장 존경하는 인물의 이름은 무엇인가요?">가장 존경하는 인물의 이름은 무엇인가요?</option>
-                      <option value="자신의 좋아하는 도서나 영화 제목은 무엇인가요?">자신의 좋아하는 도서나 영화 제목은 무엇인가요?</option>
-                      <option value="어릴 적 가장 기억에 남는 장소는 어디인가요?">어릴 적 가장 기억에 남는 장소는 어디인가요?</option>
-                      <option value="가장 추억에 남는 기념일은 언제인가요?">가장 추억에 남는 기념일은 언제인가요?</option>
-                      <option value="첫 번째 자동차의 모델은 무엇인가요?">첫 번째 자동차의 모델은 무엇인가요?</option>
-                      <option value="가장 즐겨찾는 스포츠 팀이나 플레이어는 누구인가요?">가장 즐겨찾는 스포츠 팀이나 플레이어는 누구인가요?</option>
-                      <option value="초등학교 때 가장 친한 친구의 이름은 무엇인가요?">초등학교 때 가장 친한 친구의 이름은 무엇인가요?</option>
-                    </select>
+                <div class="form-group row" id="authNumberDiv" style="display: none;">
+                  <div class="col-sm mb-3 mb-sm-0">
+                    <span class="text-gray-600" style="font-size: 0.8rem;padding-left:5px;">인증 번호(임직원 메일로 전송된 인증 번호를 입력해주세요)</span>
+                    <div class="input-group">
+                    <input type="text" class="form-control" name="auth_number" id="auth_number" placeholder="Auth Number" style="border-radius: 20px 0 0 20px; height:34.5px; font-size: 0.85rem; padding-left:1rem;" required>
+                    <button class="btn btn-primary" type="button" style="height:34.5px;" id="authNumberValidBtn">확인</button>
+                    </div>
                   </div>
                 </div>
-                <div class="form-group row">
-                  <div class="col">
-                    <input type="text" class="form-control" name="password_hint" id="password_hint" placeholder="Password Hint Answer" style="border-radius: 10rem; font-size: 0.85rem; padding-left:1rem;" required>
+                <div class="passwordInputDiv" id="passwordInputDiv" style="display:none">
+                  <div class="form-group row">
+                    <div class="col-sm-6 mb-3 mb-sm-0">
+                      <span class="text-gray-600" style="font-size: 0.8rem;padding-left:5px;">Password (8자이상, 대/소/특수문자 포함, 연속문자 사용 금지)</span>
+                      <input type="password" class="form-control" name="password1" id="password" placeholder="Password" style="border-radius: 10rem; font-size: 0.85rem; padding-left:1rem;" required>
+                    </div>
+                    <div class="col-sm-6">
+                      <span class="text-gray-600" style="font-size: 0.8rem;padding-left:5px;">Password Repeat</span>
+                      <input type="password" class="form-control" name="password2" id="exampleRepeatPassword" placeholder="Repeat Password" style="border-radius: 10rem; font-size: 0.85rem; padding-left:1rem;" required>
+                    </div>
                   </div>
-                </div>
+                  <div class="form-group row">
+                    <div class="col">
+                      <span class="text-gray-600" style="font-size: 0.8rem;padding-left:5px;">Password Question</span>
+                      <select name="password_question" id="password_question" class="form-control" style="border-radius: 20px; padding-left:1rem; font-size: 0.85rem;" required>
+                        <option value="내가 태어난 도시는 어디인가요?">내가 태어난 도시는 어디인가요?</option>
+                        <option value="가장 좋아하는 음식은 무엇인가요?">가장 좋아하는 음식은 무엇인가요?</option>
+                        <option value="첫 번째 애완동물의 이름은 무엇인가요?">첫 번째 애완동물의 이름은 무엇인가요?</option>
+                        <option value="가장 존경하는 인물의 이름은 무엇인가요?">가장 존경하는 인물의 이름은 무엇인가요?</option>
+                        <option value="자신의 좋아하는 도서나 영화 제목은 무엇인가요?">자신의 좋아하는 도서나 영화 제목은 무엇인가요?</option>
+                        <option value="어릴 적 가장 기억에 남는 장소는 어디인가요?">어릴 적 가장 기억에 남는 장소는 어디인가요?</option>
+                        <option value="가장 추억에 남는 기념일은 언제인가요?">가장 추억에 남는 기념일은 언제인가요?</option>
+                        <option value="첫 번째 자동차의 모델은 무엇인가요?">첫 번째 자동차의 모델은 무엇인가요?</option>
+                        <option value="가장 즐겨찾는 스포츠 팀이나 플레이어는 누구인가요?">가장 즐겨찾는 스포츠 팀이나 플레이어는 누구인가요?</option>
+                        <option value="초등학교 때 가장 친한 친구의 이름은 무엇인가요?">초등학교 때 가장 친한 친구의 이름은 무엇인가요?</option>
+                      </select>
+                    </div>
+                  </div>
+                  <div class="form-group row">
+                    <div class="col">
+                      <input type="text" class="form-control" name="password_hint" id="password_hint" placeholder="Password Hint Answer" style="border-radius: 10rem; font-size: 0.85rem; padding-left:1rem;" required>
+                    </div>
+                  </div>
                 <button type="submit" class="btn btn-primary btn-user btn-block" value="submit">회원가입</button>
+              </div>
                 <!-- <hr>
                 <a href="index" class="btn btn-google btn-user btn-block">
                   <i class="fab fa-google fa-fw"></i> Register with Google
@@ -158,5 +156,91 @@
 
 </body>
 
+<script>
+  $('#emailTransferBtn').click(function(){
+    var email = $('#email').val();
+    var email_fix = $('#email_fix').val();
+    var email_new = email + email_fix;
+    var postdata = {
+      'email': email_new,
+    };
+    $.ajax({
+      contentType: 'application/json',
+      type: 'POST',
+      url: 'api/register_email_valid',
+      data: JSON.stringify(postdata),
+      dataType: 'json',
+      success: function(response) {
+        alert('확인 되었습니다. 임직원 메일로 전송된 인증번호 6자리를 입력해주세요.');
+        showAuthNumber()
+      },
+      error: function(request, status, error) {
+        message = request.responseText;
+        if (message == "Use Email") {
+          alert('이미 가입된 이메일입니다.');
+        }
+        else if(message == "Short") {
+          alert('이메일은 3자 이상이어야 합니다.');
+        }
+        else if(message == "Long") {
+          alert('이메일은 20자 이하여야 합니다.');
+        }
+        history.go(0);
+      }
+    })
+  })
+</script>
+<script>
+  $('#authNumberValidBtn').click(function(){
+    var email = $('#email').val();
+    var email_fix = $('#email_fix').val();
+    var email_new = email + email_fix;
+    var auth_number = $('#auth_number').val();
+    var postdata = {
+      'otp': auth_number,
+      'email': email_new
+    };
+    $.ajax({
+      contentType: 'application/json',
+      type: 'POST',
+      url: 'api/register_auth_number_valid',
+      data: JSON.stringify(postdata),
+      dataType: 'json',
+      success: function(response) {
+        var result = response.result;
+        if (result == auth_number) {
+          alert('확인되었습니다.');
+          showPasswordInput()
+        }
+      },
+      error: function(request, status, error) {
+        message = request.responseText;
+        if (message == "No Data") {
+          alert('해당 데이터가 없습니다.');
+        }
+        else if(message == "Time Out") {
+          alert('인증번호 유효시간이 만료되었습니다.');
+        }
+        else if(message == "No Auth") {
+          alert('인증번호를 다시 확인해주세요.');
+        }
+      }
+    })
+  })
+</script>
+<script>
+  function showAuthNumber() {
+    // 두 번째 div의 style 변경
+    document.getElementById('authNumberDiv').style.display = 'block';
+    document.getElementById('email').readOnly = true;
+    document.getElementById('email_fix').readOnly = true;
+  }
+</script>
+<script>
+  function showPasswordInput() {
+    document.getElementById('passwordInputDiv').style.display = 'block';
+    document.getElementById('auth_number').readOnly = true;
+  }
+</script>
 </html>
 {% endblock %}

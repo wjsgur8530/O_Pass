@@ -1,4 +1,4 @@
-from flask import Flask
+from flask import Flask, session
 from flask_migrate import Migrate
 from flask_sqlalchemy import SQLAlchemy
 from db_connector import db_connector, secret_key
@@ -14,7 +14,7 @@ def create_app():
     app = Flask(__name__)
     app.config["SQLALCHEMY_DATABASE_URI"] = f"mysql://{db_user}:{db_password}@{db_host}:{db_port}/{db_name}"
     app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
-    app.config['PERMANENT_SESSION_LIFETIME'] = 1800
+    app.config['PERMANENT_SESSION_LIFETIME'] = 7200
     app.config['SECRET_KEY'] = secret_key
     app.config['SESSION_TYPE'] = 'filesystem'
     app.config['SESSION_COOKIE_SECURE'] = True
