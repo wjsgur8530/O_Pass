@@ -36,7 +36,7 @@
                 </div>
                 <div class="card-body">
                   <div class="table-responsive">
-                    <table class="table table-bordered" id="dataTable" width="100%" cellspacing="0" style="text-align: center;">
+                    <table class="table table-hover table-bordered" id="dataTable" width="100%" cellspacing="0" style="text-align: center;">
                       <thead>
                         <tr>
                           <th scope="col" style="width:40px;">No</th>
@@ -129,6 +129,16 @@
     $('#dataTable1').DataTable();
   });
 </script> -->
+<script type="text/javascript">
+  $(document).ready(function () {
+    var table = $('#dataTable').DataTable({
+      lengthMenu: [10, 15, 20, 10000],
+      pageLength: 10, // 기본 페이지 길이 설정
+      order: [[0, 'desc']]
+    });
+  })
+</script>
+
 <script src="https://unpkg.com/tableexport/dist/tableexport.min.js"></script>
       <script>
         function exportTableToExcel(tableId, filename = ''){

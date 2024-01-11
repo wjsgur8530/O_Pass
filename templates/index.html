@@ -15,11 +15,6 @@
   <body>
     <!-- Begin Page Content -->
     <div class="container-fluid" id="refresh_div">
-      
-      <!-- Page Heading
-      <div class="d-sm-flex align-items-center justify-content-between mb-4">
-        <a href="#" class="d-none d-sm-inline-block btn btn-sm btn-primary shadow-sm"><i class="fas fa-download fa-sm text-white-50"></i> Generate Report</a>
-      </div> -->
 
       <!-- Content Row -->
       <div class="row">
@@ -131,38 +126,6 @@
                     </label>
                   </div>
                 </div>
-                <!-- <div class="col border-left-secondary">
-                  <div class="input-group">
-                    <div class="custom-select" style="overflow: hidden;">
-                      <label for="card_select_box">
-                      <select name="card_select_box" id="card_select_box">
-                        {% for card in card_list %}
-                          {% if card.card_status != "불출" %}
-                          <option value="{{card.card_type}}">{{card.card_type}}</option>
-                          {% else %}
-                          {% endif %}
-                        {% endfor %}
-                      </select> 카드
-                      </label>
-                    </div>
-                    <button class="btn btn-secondary" type="submit" id="entrance_card">불출</button>
-                    <button class="btn btn-secondary ml-2" type="submit" id="recall_card">회수</button>
-                  </div>
-                </div> -->
-                <!-- 방문객 퇴실 -->
-                <!-- <div class="col border-left-secondary">
-                  <div class="input-group">
-                    <input type="text" class="form-control" id="manager_update_input" name="manager_update_input" placeholder="담당자명 입력" maxlength="8" style="height: 38px;">
-                    <button class="btn btn-secondary" type="button" id="manager_update">수정</button>
-                  </div>
-                </div> -->
-                <!-- <div class="col border-left-secondary">
-                  <div class="input-group">
-                    <span class="input-group-btn" style="width:100%;">
-                      <button type="button" class="btn btn-secondary" id="exit_checkbox" style="height: 38px; overflow: hidden; width:100%;">퇴실(선택 체크 후 버튼 클릭)</button>
-                    </span>
-                  </div>
-                </div> -->
                 <div class="col">
                   <div class="input-group float-right col-xl-6">
                     <input type="text" id="search-input" class="form-control" placeholder="Search..."/>
@@ -172,212 +135,113 @@
               </div>
             </div>
             <div class="card-body">
-                <table class="table table-bordered" id="dataTable" width="100%" cellspacing="0" style="text-align: center;">
+              <div class="table-responsive">
+                <table class="table table-hover table-expandable" id="dataTable" width="100%" cellspacing="0" style="text-align: center;">
                   <thead>
                     <tr>
-                      <th scope="col">No</th>
-                      <th scope="col"><span class="text-success"><랙키></span> / <span class="text-primary"><카드></span> / 등록 구분 / 방문 목적 / 방문객 / 소속 / 번호 / 담당자 / 출입 시간 / 퇴실 시간 / <span class="text-danger"><퇴실></span></th>
+                      <th>#</th>
+                      <th>No</th>
+                      <th>카드</th>
+                      <th>결재팀</th>
+                      <th>등록인</th>
+                      <th>등록 구분</th>
+                      <th>방문 목적</th>
+                      <th>방문객</th>
+                      <th>소속</th>
+                      <th>번호</th>
+                      <th>담당자</th>
+                      <th>출입 시간</th>
+                      <th>퇴실 시간</th>
+                      <th>비고</th>
                     </tr>
                   </thead>
-                  <tfoot>
-                    <tr>
-                      <th scope="col">No</th>
-                      <th scope="col"><span class="text-success"><랙키></span> / <span class="text-primary"><카드></span> / 등록 구분 / 방문 목적 / 방문객 / 소속 / 번호 / 담당자 / 출입 시간 / 퇴실 시간 / <span class="text-danger"><퇴실></span></th>
-                    </tr>
-                  </tfoot>
                   <tbody id="table_tbody">
                   {% for approve_visitor in approve_visitors %}
-                  <tr>
-                    <td style="vertical-align: middle; text-align: center;">{{ loop.index }}</td>
+                    <tr class="dt-control"
+                      data-permission="{{current_user.permission}}"
+                      data-id="{{approve_visitor.id}}"
+                      data-personal_computer="{{approve_visitor.personal_computer}}"
+                      data-model_name="{{approve_visitor.model_name}}"
+                      data-serial_number="{{approve_visitor.serial_number}}"
+                      data-pc_reason="{{approve_visitor.pc_reason}}"
+                      data-work="{{approve_visitor.work}}"
+                      data-work_division="{{approve_visitor.work_division}}"
+                      data-location="{{approve_visitor.location}}"
+                      data-company_type="{{approve_visitor.company_type}}"
+                      data-company="{{approve_visitor.company}}"
+                      data-work_content="{{approve_visitor.work_content}}"
+                      data-device="{{approve_visitor.device}}"
+                      data-device_date="{{approve_visitor.device_date}}"
+                      data-device_company="{{approve_visitor.device_company}}"
+                      data-device_department="{{approve_visitor.device_department}}"
+                      data-device_request_manager="{{approve_visitor.device_request_manager}}"
+                      data-device_manager="{{approve_visitor.device_manager}}"
+                      data-device_reason="{{approve_visitor.device_reason}}"
+                      data-device_remarks="{{approve_visitor.device_remarks}}"
+                      data-exit="{{approve_visitor.exit}}"
+                    >
                     <td>
-                      <!-- 아코디언 -->
-                      <div class="accordion" id="accordionExample{{approve_visitor.id}}">
-                        <div class="accordion-item">
-                          <h2 class="accordion-header" id="heading{{approve_visitor.id}}">
-                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse{{approve_visitor.id}}" aria-expanded="true" aria-controls="collapse{{approve_visitor.id}}">
-                              <ul class="list-group list-group-horizontal">
-                                {% if approve_visitor.rack_id != None %}
-                                <li class="list-group-item bg-success text-white">{{approve_visitor.rack.key_type}}{{approve_visitor.rack.key_num}}</li>
-                                {% endif %}
-                                {% if approve_visitor.card_id != None %}
-                                <li class="list-group-item bg-primary text-white mr-1">{{approve_visitor.card.card_type}}{{approve_visitor.card.card_num}}</li>
-                                {% endif %}
-
-                                <li class="list-group-item" style="border-left:3px solid gray;">결재: {{approve_visitor.approval_team}}</li>
-                                <li class="list-group-item">등록: {{approve_visitor.writer}}</li>
-                                <li class="list-group-item">{{approve_visitor.registry}}</li>
-                                <li class="list-group-item">{{approve_visitor.object}}</li>
-                                <li class="list-group-item">
-                                  {% if approve_visitor.name|length > 1 %}
-                                      {{ approve_visitor.name[0] + '*' + approve_visitor.name[2:] }}
-                                  {% else %}
-                                      {{ approve_visitor.name }}
-                                  {% endif %}
-                                </li>
-                                <li class="list-group-item">{{approve_visitor.department}}</li>
-                                <li class="list-group-item">
-                                  {% if approve_visitor.phone|length > 6 %}
-                                      {{ approve_visitor.phone[:3] + '****' + approve_visitor.phone[7:]}}
-                                  {% else %}
-                                      {{ approve_visitor.phone }}
-                                  {% endif %}
-                                </li>
-                                <li class="list-group-item">{{approve_visitor.manager}}</li>
-                                {% if approve_visitor.entry_date != None %}
-                                  <li class="list-group-item">{{approve_visitor.entry_date}}</li>
-                                {% else %}
-                                {% endif %}
-                                {% if approve_visitor.exit_date != None %}
-                                  <li class="list-group-item">{{approve_visitor.exit_date}}</li>
-                                  <li class="list-group-item bg-danger text-white">퇴실</li>
-                                {% else %}
-                                  <li class="list-group-item  bg-white text-danger">퇴실 안함</li>
-                                {% endif %}
-                              </ul>
-                            </button>
-                          </h2>
-                          <div id="collapse{{approve_visitor.id}}" class="accordion-collapse collapse" aria-labelledby="heading{{approve_visitor.id}}" data-bs-parent="#accordionExample">
-                            <div class="accordion-body">
-                              <div class="row">
-                                <div class="col-xl-4">
-                                  <ul class="list-group list-group-vertical">
-                                    <li class="list-group-item"><b>PC 반입</b></li>
-                                    <li class="list-group-item">
-                                      {% if approve_visitor.personal_computer == 1 %}
-                                      O
-                                      {% else %}
-                                      X
-                                      {% endif %}
-                                    </li>
-                                    {% if approve_visitor.personal_computer == 1 %}
-                                    <li class="list-group-item"><b>모델명</b></li>
-                                    <li class="list-group-item">{{approve_visitor.model_name}}</li>
-                                    <li class="list-group-item"><b>시리얼 넘버</b></li>
-                                    <li class="list-group-item">{{approve_visitor.serial_number}}</li>
-                                    <li class="list-group-item"><b>반입 사유</b></li>
-                                    <li class="list-group-item">{{approve_visitor.pc_reason}}</li>
-                                    {% else %}
-                                    <li class="list-group-item"><b>모델명</b></li>
-                                    <li class="list-group-item"></li>
-                                    <li class="list-group-item"><b>시리얼 넘버</b></li>
-                                    <li class="list-group-item"></li>
-                                    <li class="list-group-item"><b>반입 사유</b></li>
-                                    <li class="list-group-item"></li>
-                                    {% endif %}
-                                  </ul>
-                                </div>
-                                <div class="col-xl-4">
-                                  <ul class="list-group list-group-vertical">
-                                    <li class="list-group-item"><b>작업</b></li>
-                                    <li class="list-group-item">
-                                      {% if approve_visitor.work == 1 %}
-                                      O
-                                      {% else %}
-                                      X
-                                      {% endif %}
-                                    </li>
-                                    {% if approve_visitor.work == 1 %}
-                                      <li class="list-group-item"><b>작업 분류 / 작업 위치</b></li>
-                                      <li class="list-group-item">{{approve_visitor.work_division}} / {{approve_visitor.location}}</li>
-                                      <li class="list-group-item"><b>요청 종류 / 요청 회사</b></li>
-                                      <li class="list-group-item">{{approve_visitor.company_type}} / {{approve_visitor.company}}</li>
-                                      <li class="list-group-item"><b>작업 내용</b></li>
-                                      <li class="list-group-item">{{approve_visitor.work_content}}</li>
-                                    {% else %}
-                                      <li class="list-group-item"><b>작업 분류 / 작업 위치</b></li>
-                                      <li class="list-group-item"></li>
-                                      <li class="list-group-item"><b>요청 종류 / 요청 회사</b></li>
-                                      <li class="list-group-item"></li>
-                                      <li class="list-group-item"><b>작업 내용</b></li>
-                                      <li class="list-group-item"></li>
-                                    {% endif %}
-                                  </ul>
-                                </div>
-                                <div class="col-xl-4">
-                                  <ul class="list-group list-group-vertical">
-                                    <li class="list-group-item"><b>장비 반출입</b></li>
-                                    <li class="list-group-item">
-                                      {% if approve_visitor.device == 1 %}
-                                      O
-                                      {% else %}
-                                      X
-                                      {% endif %}
-                                    </li>
-                                    {% if approve_visitor.device == 1 %}
-                                      <li class="list-group-item"><b>장비 반출입 날짜</b></li>
-                                      <li class="list-group-item">{{approve_visitor.device_date}}</li>
-                                      <li class="list-group-item"><b>요청자(회사, 부서, 담당자)</b></li>
-                                      <li class="list-group-item">{{approve_visitor.device_company}} / {{approve_visitor.device_department}} / {{approve_visitor.device_request_manager}}</li>
-                                      <li class="list-group-item"><b>장비 반출입 수행자(데이터센터 담당자) / 반출입 사유</b></li>
-                                      <li class="list-group-item">{{approve_visitor.device_manager}} / {{approve_visitor.device_reason}}</li>
-                                      <li class="list-group-item"><b>기타사항</b></li>
-                                      <li class="list-group-item">{{approve_visitor.device_remarks}}</li>
-                                      {% else %}
-                                      <li class="list-group-item"><b>장비 반출입 날짜</b></li>
-                                      <li class="list-group-item"></li>
-                                      <li class="list-group-item"><b>요청자(회사, 부서, 담당자)</b></li>
-                                      <li class="list-group-item"></li>
-                                      <li class="list-group-item"><b>장비 반출입 수행자(데이터센터 담당자) / 반출입 사유</b></li>
-                                      <li class="list-group-item"></li>
-                                      <li class="list-group-item"><b>기타사항</b></li>
-                                      <li class="list-group-item"></li>
-                                      {% endif %}
-                                  </ul>
-                                </div>
-                              </div>
-                              <div style="text-align: right;">
-                                {% if current_user.permission == '관리자' %}
-                                {% if approve_visitor.exit == 0 %}
-                                <div class="btn-group mt-4">
-                                  <button class="btn btn-secondary btn-sm" type="button" id="exit_btn{{approve_visitor.id}}" value="{{approve_visitor.id}}">퇴실</button>
-
-                                  <button class="btn btn-primary btn-sm ml-3" type="button" id="qrcode_btn{{approve_visitor.id}}" value="{{approve_visitor.id}}">QR 재전송</button>
-
-                                  <button class="btn_group btn btn-success btn-sm ml-3" type="button" id="update_btn{{approve_visitor.id}}" value="{{approve_visitor.id}}">수정</button>
-                                  <button class="btn_group btn btn-danger btn-sm ml-1" type="button" data-toggle="modal" data-target="#deleteModal">삭제</button>
-                                </div>
-                                {% endif %}
-                                {% endif %}
-                              </div>
-                            </div>
-                          </div>
-                        </div>
+                      <div class="form-check" style="display: flex; justify-content: center; align-items: center;">
+                        <input type="checkbox" class="form-check-input" name="check_box"
+                          id="checkbox{{approve_visitor.id}}" value="{{approve_visitor.id}}">
                       </div>
-                      <!-- 아코디언 끝 -->
+                    </td>
+                    <td>{{ approve_visitor.id }}</td>
+                    <td>{{approve_visitor.card.card_type}}{{approve_visitor.card.card_num}}</td>
+                    <td>{{approve_visitor.approval_team}}</td>
+                    <td>{{approve_visitor.writer}}</td>
+                    <td>{{approve_visitor.registry}}</td>
+                    <td>{{approve_visitor.object}}</td>
+                    <td>
+                      {% if approve_visitor.name|length > 1 %}
+                      {{ approve_visitor.name[0] + '*' + approve_visitor.name[2:] }}
+                      {% else %}
+                      {{ approve_visitor.name }}
+                      {% endif %}
+                    </td>
+                    <td>{{approve_visitor.department}}</td>
+                    <td>
+                      {% if approve_visitor.phone|length > 6 %}
+                      {{ approve_visitor.phone[:3] + '****' + approve_visitor.phone[7:]}}
+                      {% else %}
+                      {{ approve_visitor.phone }}
+                      {% endif %}
+                    </td>
+                    <td>{{approve_visitor.manager}}</td>
+                    <td>
+                      {% if approve_visitor.entry_date != None %}
+                      {{approve_visitor.entry_date}}
+                      {% else %}
+                      {% endif %}
+                    </td>
+                    <td>
+                      {% if approve_visitor.exit_date != None %}
+                      {{approve_visitor.exit_date}}
+                      {% else %}
+                      {% endif %}
+                    </td>
+                    <td>
+                      {% if approve_visitor.exit_date != None %}
+                      <div class="alert alert-danger rounded-pill" role="alert" style="padding:0 5px;margin-bottom:0;">
+                        퇴실
+                      </div>
+                      {% else %}
+                        {% if approve_visitor.card_id != None %}
+                        <div class="alert alert-primary rounded-pill" role="alert" style="padding:0 5px;margin-bottom:0;">
+                          출입
+                        </div>
+                        {% else %}
+                        <div class="alert alert-success rounded-pill" role="alert" style="padding:0 5px;margin-bottom:0;">
+                          입실
+                        </div>
+                        {% endif %}
+                      {% endif %}
                     </td>
                   </tr>
-                <!-- 퇴실 스크립트 -->
-                    <!-- 퇴실 스크립트 -->
-                  <script>
-                    $('#exit_btn{{approve_visitor.id}}').click(function(){
-                      var exit_btn = $('#exit_btn{{approve_visitor.id}}').val();
-                      var postdata = {
-                        'exit_id': exit_btn,
-                        'exit': 1
-                      };
-                      $.ajax({
-                        contentType: 'application/json',
-                        type: 'POST',
-                        url: 'api/ajax_exit',
-                        data: JSON.stringify(postdata),
-                        dataType: 'json',
-                        success: function(response) {
-                          alert('퇴실 되었습니다.');
-                          history.go(0);
-                        },
-                        error: function(request, status, error) {
-                          message = request.responseText;
-                          if (message == "Card None")
-                            alert('카드를 먼저 불출해주세요.');
-                          if (message == "Exit Error")
-                            alert('퇴실 오류가 발생했습니다.');
-                        }
-                      })
-                    })
-                  </script>
                   {% endfor %}
                   </tbody>
                 </table>
+              </div>
             </div>
           </div>
         </div>
@@ -390,87 +254,7 @@
   </body>
 </html>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-ka7Sk0Gln4gmtz2MlQnikT1wXgYsOg+OMhuP+IlRH9sENBO0LRn5q+8nbTov4+1p" crossorigin="anonymous"></script>
-<!-- 체크박스 전체 선택/해제 스크립트 -->
-<script type="text/javascript">
-  $(document).ready(function() {
-    $("#index_total_check_box").click(function() {
-      if($("#index_total_check_box").is(":checked")) $("input[name=check_box]").prop("checked", true);
-      else $("input[name=check_box]").prop("checked", false);
-    });
-    
-    $("input[name=check_box]").click(function() {
-      var total = $("input[name=check_box]").length;
-      var checked = $("input[name=check_box]:checked").length;
-      
-      if(total != checked) $("#index_total_check_box").prop("checked", false);
-      else $("#index_total_check_box").prop("checked", true); 
-    });
-  });
-</script>
 
-<!-- 체크박스 퇴실 스크립트 -->
-<script>
-  $('#exit_checkbox').click(function(){
-    var checked_list = [];
-    $("input[name='check_box']:checked").each(function(){
-      checked_list.push($(this).val());
-    });
-    var postdata = {'checked_datas': checked_list}
-    $.ajax({
-      contentType: 'application/json',
-      type: 'POST',
-      url: 'api/ajax_index_exit_checkbox',
-      data: JSON.stringify(postdata),
-      dataType: 'json',
-      success: function(data) {
-        history.go(0);
-        alert('퇴실 되었습니다.');
-      },
-      error: function(request, status, error) {
-        message = request.responseText;
-        if (message == "No Select")
-          alert('퇴실할 방문객을 선택해주세요.')
-        if (message == "Exited")
-          alert('이미 퇴실한 방문객입니다.')
-        if (message == "No Card")
-          alert('카드를 먼저 불출해주세요.');
-      }
-    })
-  })
-</script>
-
-<!-- 체크박스 담당자 수정 스크립트 -->
-<script>
-  $('#manager_update').click(function(){
-    var manager = document.getElementById("manager_update_input");
-    var input_manager = manager.value
-    var checked_list = [];
-    $("input[name='check_box']:checked").each(function(){
-      checked_list.push($(this).val());
-    });
-    var postdata = {'checked_datas': checked_list, 'manager': input_manager}
-    $.ajax({
-      contentType: 'application/json',
-      type: 'POST',
-      url: 'api/ajax_index_manager_update_checkbox',
-      data: JSON.stringify(postdata),
-      dataType: 'json',
-      success: function(data) {
-        history.go(0);
-        alert('담당자가 수정 되었습니다.');
-      },
-      error: function(request, status, error) {
-        message = request.responseText;
-        if (message == "No Select")
-          alert('담당자를 수정할 방문객을 선택해주세요.')
-        if (message == "Exited")
-          alert('퇴실한 방문객은 담당자 수정이 불가합니다.')
-        if (message == "Error")
-          alert('담당자를 입력해주세요.')
-      }
-    })
-  })
-</script>
 
 <!-- 커스텀 셀렉트, 검색 기능 -->
 <script>
@@ -504,6 +288,141 @@
     $('#search-input').on('keyup', function() {
       table.search(this.value).draw();
     });
+
+    $('#dataTable tbody').on('click', 'tr.dt-control', function (e) {
+      let tr = e.target.closest('tr');
+      let row = table.row(tr);
+
+      var permission = $(this).data('permission');
+      var id = $(this).data('id');
+      var personal_computer = $(this).data('personal_computer');
+      var model_name = $(this).data('model_name');
+      var serial_number = $(this).data('serial_number');
+      var pc_reason = $(this).data('pc_reason');
+      var work = $(this).data('work');
+      var work_division = $(this).data('work_division');
+      var location = $(this).data('location');
+      var company_type = $(this).data('company_type');
+      var company = $(this).data('company');
+      var work_content = $(this).data('work_content');
+      var device = $(this).data('device');
+      var device_date = $(this).data('device_date');
+      var device_company = $(this).data('device_company');
+      var device_department = $(this).data('device_department');
+      var device_request_manager = $(this).data('device_request_manager');
+      var device_manager = $(this).data('device_manager');
+      var device_reason = $(this).data('device_reason');
+      var device_remarks = $(this).data('device_remarks');
+      var exit = $(this).data('exit');
+  
+      // console.log(id)
+      // console.log(permission)
+      // console.log(typeof(personal_computer))
+      // console.log(personal_computer)
+      // console.log(exit)
+
+      var htmlVals = '<div class="slider row">';
+      htmlVals += '<div class="col-xl-4">';
+      // 노트북 반입
+      htmlVals += '<ul class="list-group list-group-vertical">';
+      htmlVals += '<li class="list-group-item"><b>노트북 반입</b></li>';
+      htmlVals += '<li class="list-group-item">';
+      if (personal_computer == 'True') {htmlVals += 'O';} else {htmlVals += 'X';}
+      htmlVals += '</li>';
+      if (personal_computer == 'True') {
+        htmlVals += '<li class="list-group-item"><b>모델명</b></li>';
+        htmlVals += '<li class="list-group-item">' + model_name + '</li>';
+        htmlVals += '<li class="list-group-item"><b>시리얼 넘버</b></li>';
+        htmlVals += '<li class="list-group-item">' + serial_number + '</li>';
+        htmlVals += '<li class="list-group-item"><b>반입 사유</b></li>';
+        htmlVals += '<li class="list-group-item">' + pc_reason + '</li>';
+      } else {
+        htmlVals += '<li class="list-group-item"><b>모델명</b></li>';
+        htmlVals += '<li class="list-group-item">없음</li>';
+        htmlVals += '<li class="list-group-item"><b>시리얼 넘버</b></li>';
+        htmlVals += '<li class="list-group-item">없음</li>';
+        htmlVals += '<li class="list-group-item"><b>반입 사유</b></li>';
+        htmlVals += '<li class="list-group-item">없음</li>';
+      }
+      htmlVals += '</ul>';
+      // 노트북 반입 끝
+      htmlVals += '</div>';
+      htmlVals += '<div class="col-xl-4">';
+      // 작업
+      htmlVals += '<ul class="list-group list-group-vertical">';
+      htmlVals += '<li class="list-group-item"><b>작업</b></li>';
+      htmlVals += '<li class="list-group-item">';
+      if (work == 'True') {htmlVals += 'O';} else {htmlVals += 'X';}
+      htmlVals += '</li>';
+      if (work == 'True') {
+        htmlVals += '<li class="list-group-item"><b>작업 분류 / 작업 위치</b></li>';
+        htmlVals += '<li class="list-group-item">' + work_division + ' / ' + location + '</li>';
+        htmlVals += '<li class="list-group-item"><b>요청 종류 / 요청 회사</b></li>';
+        htmlVals += '<li class="list-group-item">' + company_type + ' / ' + company + '</li>';
+        htmlVals += '<li class="list-group-item"><b>작업 내용</b></li>';
+        htmlVals += '<li class="list-group-item">' + work_content + '</li>';
+      } else {
+        htmlVals += '<li class="list-group-item"><b>작업 분류 / 작업 위치</b></li>';
+        htmlVals += '<li class="list-group-item">없음</li>';
+        htmlVals += '<li class="list-group-item"><b>요청 종류 / 요청 회사</b></li>';
+        htmlVals += '<li class="list-group-item">없음</li>';
+        htmlVals += '<li class="list-group-item"><b>작업 내용</b></li>';
+        htmlVals += '<li class="list-group-item">없음</li>';
+      }
+      htmlVals += '</ul>';
+      // 작업 끝
+      htmlVals += '</div>';
+      htmlVals += '<div class="col-xl-4">';
+      // 장비
+      htmlVals += '<ul class="list-group list-group-vertical">';
+      htmlVals += '<li class="list-group-item"><b>장비 반출입</b></li>';
+      htmlVals += '<li class="list-group-item">';
+      if (device == 'True') {htmlVals += 'O';} else {htmlVals += 'X';}
+      htmlVals += '</li>';
+      if (device == 'True') {
+        htmlVals += '<li class="list-group-item"><b>장비 반출입 날짜</b></li>';
+        htmlVals += '<li class="list-group-item">' + device_date + '</li>';
+        htmlVals += '<li class="list-group-item"><b>요청자(회사, 부서, 담당자)</b></li>';
+        htmlVals += '<li class="list-group-item">' + device_company + ' / ' + device_department + ' / ' + device_request_manager + '</li>';
+        htmlVals += '<li class="list-group-item"><b>장비 반출입 수행자(데이터센터 담당자) / 반출입 사유</b></li>';
+        htmlVals += '<li class="list-group-item">' + device_manager + ' / ' + device_reason + '</li>';
+        htmlVals += '<li class="list-group-item"><b>기타사항</b></li>';
+        htmlVals += '<li class="list-group-item">' + device_remarks + '</li>';
+      } else {
+        htmlVals += '<li class="list-group-item"><b>장비 반출입 날짜</b></li>';
+        htmlVals += '<li class="list-group-item">없음</li>';
+        htmlVals += '<li class="list-group-item"><b>요청자(회사, 부서, 담당자)</b></li>';
+        htmlVals += '<li class="list-group-item">없음</li>';
+        htmlVals += '<li class="list-group-item"><b>장비 반출입 수행자(데이터센터 담당자) / 반출입 사유</b></li>';
+        htmlVals += '<li class="list-group-item">없음</li>';
+        htmlVals += '<li class="list-group-item"><b>기타사항</b></li>';
+        htmlVals += '<li class="list-group-item">없음</li>';
+      }
+      htmlVals += '</ul>';
+      // 장비 끝
+      htmlVals += '</div>';
+      htmlVals += '</div>';
+      htmlVals += '<div class="col-xl-4">';
+      htmlVals += '<ul class="list-group list-group-vertical">';
+      htmlVals += '</ul>';
+      htmlVals += '</div>';
+      htmlVals += '<div class="col-xl-4">';
+      htmlVals += '<ul class="list-group list-group-vertical">';
+      htmlVals += '</ul>';
+      htmlVals += '</div>';
+      htmlVals += '<div style="text-align: right;">';
+      htmlVals += '</div>';
+      htmlVals += '</div>';
+
+      if (row.child.isShown()) {
+        $('div.slider', row.child()).slideUp( function () {
+            row.child(htmlVals).hide();
+        } );
+      }
+      else {
+        row.child(htmlVals, 'no-padding' ).show();
+      }
+    });
   });
 </script>
 
@@ -516,78 +435,6 @@
     search.style.display = 'none';
     select.style.display = 'none';
   });
-</script>
-
-<!-- 체크 박스 카드 불출 스크립트 -->
-<script>
-  $('#entrance_card').click(function(){
-    var checked_list = [];
-    var input_card = document.getElementById('card_select_box');
-    var card = input_card.value
-    $("input[name='check_box']:checked").each(function(){
-      checked_list.push($(this).val());
-    });
-    var postdata = {'checked_datas': checked_list, 'card': card}
-    $.ajax({
-      contentType: 'application/json',
-      type: 'POST',
-      url: 'api/ajax_index_card_checkbox',
-      data: JSON.stringify(postdata),
-      dataType: 'json',
-      success: function(data) {
-        alert('카드가 불출 되었습니다.');
-        history.go(0);
-      },
-      error: function(request, status, error) {
-        message = request.responseText;
-        if (message == "No Card")
-          alert('카드를 먼저 불출해주세요.');
-
-        if (message == "No Select")
-          alert('방문객을 선택해주세요.');
-
-        if (message == "Multi Check")
-          alert('카드 불출은 단일 선택만 가능합니다.');
-
-        if (message == "Exited")
-          alert('이미 퇴실한 방문객입니다.')
-
-        if (message == "Use Card")
-          alert('이미 카드를 불출했습니다.')
-      }
-    })
-  })
-</script>
-
-<!-- 체크 박스 카드 회수 스크립트 -->
-<script>
-  $('#recall_card').click(function(){
-    var checked_list = [];
-    $("input[name='check_box']:checked").each(function(){
-      checked_list.push($(this).val());
-    });
-    var postdata = {'checked_datas': checked_list}
-    $.ajax({
-      contentType: 'application/json',
-      type: 'POST',
-      url: 'api/ajax_update_visit_recall_card_checkbox',
-      data: JSON.stringify(postdata),
-      dataType: 'json',
-      success: function(data) {
-        alert('카드가 회수 되었습니다.');
-        history.go(0);
-      },
-      error: function(request, status, error) {
-        message = request.responseText;
-        if (message == "No Card")
-          alert('불출된 카드가 없습니다.');
-        if (message == "No Select")
-          alert('방문객을 선택해주세요.');
-        if (message == "Exited")
-          alert('이미 퇴실한 방문객입니다.');
-      }
-    })
-  })
 </script>
 
 <!-- 시간 새로고침 js -->
@@ -651,4 +498,7 @@
 
     <!-- Page level custom scripts -->
     <script src="{{ url_for('static', filename='js/demo/datatables-demo.js')}}"></script>
+
+    <script src="{{ url_for('static', filename='css/bootstrap-table-expandable.css')}}"></script>
+    <script src="{{ url_for('static', filename='js/bootstrap-table-expandable.js')}}"></script>
 {% endblock %}

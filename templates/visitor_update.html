@@ -1,80 +1,90 @@
-{% extends "base.html" %} {% block title %}Sample{% endblock %} 
+{% extends "base.html" %} {% block title %}Sample{% endblock %}
 {% block content %}
 <html>
-  <head>
-    <style>
-      * {
-        padding:0;
-        margin:0;
-        box-sizing: border-box;
-      }
-      .btn_group {
-        font-size: 1rem;
-      }
-      #modalWrap {
-        position: fixed; /* Stay in place */
-        z-index: 10; /* Sit on top */
-        padding-top: 100px; /* Location of the box */
-        left: 0;
-        top: 0;
-        width: 100%; /* Full width */
-        height: 100%; /* Full height */
-        overflow: auto; /* Enable scroll if needed */
-        background-color: rgba(0,0,0,0.4); /* Black w/ opacity */
-      }
-  
-      #modalBody {
-        width: 800px;
-        height: 720px;
-        padding: 30px 30px;
-        margin: 0 auto;
-        border: 1px solid #777;
-        background-color: #fff;
-      }
-  
-      #closeBtn {
-        float:right;
-        font-weight: bold;
-        color: #777;
-        font-size:25px;
-        cursor: pointer;
-      }
-    </style>
-  </head>
-  <body>
-    <!-- Begin Page Content -->
-    <div class="container-fluid" id="refresh_div">
-      
-      <!-- 팝업 닫기 -->
-      <div id="modalWrap" style="display: none;">
+
+<head>
+  <style>
+    * {
+      padding: 0;
+      margin: 0;
+      box-sizing: border-box;
+    }
+
+    .btn_group {
+      font-size: 1rem;
+    }
+
+    .modalWrap {
+      position: fixed;
+      /* Stay in place */
+      z-index: 10;
+      /* Sit on top */
+      padding-top: 50px;
+      /* Location of the box */
+      left: 0;
+      top: 0;
+      width: 100%;
+      /* Full width */
+      height: 100%;
+      /* Full height */
+      overflow: auto;
+      /* Enable scroll if needed */
+      background-color: rgba(0, 0, 0, 0.4);
+      /* Black w/ opacity */
+    }
+
+    #modalBody {
+      width: 800px;
+      padding: 30px 30px;
+      margin: 0 auto;
+      border: 1px solid #777;
+      background-color: #fff;
+    }
+
+    .closeBtn {
+      float: right;
+      font-weight: bold;
+      color: #777;
+      font-size: 25px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+
+<body>
+  <!-- Begin Page Content -->
+  <div class="container-fluid" id="refresh_div">
+    <!-- Content Row -->
+    <div class="row">
+      <div id="modalWrap" class="modalWrap" style="display: none;">
         <div id="modalContent">
-            <div id="modalBody">
-                <!-- 팝업 닫기 -->
-            <span id="closeBtn">&times;</span> 
-                <!-- 팝업 내용 -->
+          <div id="modalBody">
+            <span id="closeBtn" class="closeBtn">&times;</span>
             <h3 style="text-align:center">내방객 정보 수정하기</h3>
-            <form class="row g-3" method="post" action="/manage_visitors" enctype="multipart/form-data">
+            <div class="row">
+              <form class="row g-3" method="post" action="/manage_visitors" enctype="multipart/form-data">
                 <div class="col" style="display: none;">
                   <label for="inputUpdateNumber" class="form-label">#</label>
                   <input type="text" class="form-control" id="inputUpdateNumber" name="inputUpdateNumber">
                 </div>
-                <div class="col-md-6">
+                <div class="col-md-6 mt-3">
                   <label for="inputName" class="form-label">이름</label>
                   <input type="text" class="form-control" id="inputName" name="inputName" required>
                 </div>
-                <div class="col-6">
+                <div class="col-6 mt-3">
                   <label for="inputPhoneNumber" class="form-label">연락처</label>
-                  <input type="text" class="form-control" id="inputPhoneNumber" placeholder="(-)를 빼고 입력해주세요." name="inputPhoneNumber" required>
+                  <input type="text" class="form-control" id="inputPhoneNumber" placeholder="(-)를 빼고 입력해주세요."
+                    name="inputPhoneNumber" required>
                 </div>
-                <div class="col-md-4">
+                <div class="col-md-4 mt-3">
                   <label for="inputDepartment" class="form-label">소속</label>
                   <select class="form-select" id="inputDepartment" name="inputDepartment" required>
                     {% for department_list in department_lists %}
-                      <option value="{{department_list.department_name}}">{{department_list.department_name}}</option>
+                    <option value="{{department_list.department_name}}">{{department_list.department_name}}</option>
                     {% endfor %}
                   </select>
                 </div>
-                <div class="col-md-4">
+                <div class="col-md-4 mt-3">
                   <label for="inputObject" class="form-label">방문 목적</label>
                   <select class="form-select" id="inputObject" name="inputObject" required>
                     <option value="업무 협의">업무 협의</option>
@@ -85,43 +95,49 @@
                     <option value="기타">기타</option>
                   </select>
                 </div>
-                <div class="col-4">
+                <div class="col-4 mt-3">
                   <label for="inputManager" class="form-label">담당자</label>
                   <input type="text" class="form-control" id="inputManager" placeholder="" name="inputManager" required>
                 </div>
-                <div class="col-12" style="display: flex;">
+                <div class="col-12 mt-3" style="display: flex;">
                   <div class="form-check">
-                    <input class="form-check-input" type="checkbox" id="gridCheck_3" value="1" name="inputPC" onchange="toggleInputs_pc()">
+                    <input class="form-check-input" type="checkbox" id="gridCheck_3" value="1" name="inputPC"
+                      onchange="toggleInputs_pc()">
                     <label class="form-check-label" for="gridCheck_3">
-                    노트북 반입
+                      노트북 반입
                     </label>
                   </div>
                   <div class="form-check ml-2">
-                    <input class="form-check-input" type="checkbox" id="gridCheck_2" value="1" name="inputWork" onchange="toggleInputs_work()">
+                    <input class="form-check-input" type="checkbox" id="gridCheck_2" value="1" name="inputWork"
+                      onchange="toggleInputs_work()">
                     <label class="form-check-label" for="gridCheck_2">
-                    서버실 출입
+                      서버실 출입
                     </label>
                   </div>
                   <div class="form-check ml-2">
-                    <input class="form-check-input" type="checkbox" id="gridCheck" value="1" name="inputDevice" onchange="toggleInputs()">
+                    <input class="form-check-input" type="checkbox" id="gridCheck" value="1" name="inputDevice"
+                      onchange="toggleInputs()">
                     <label class="form-check-label" for="gridCheck">
-                    장비 반출입
+                      장비 반출입
                     </label>
                   </div>
                 </div>
-                <div class="col-3">
+                <div class="col-3 mt-3">
                   <label for="inputModelName" class="form-label">모델명</label>
-                  <input type="text" class="form-control" id="inputModelName" placeholder="etc. 맥북" disabled="true" name="inputModelName">
+                  <input type="text" class="form-control" id="inputModelName" placeholder="etc. 맥북" disabled="true"
+                    name="inputModelName">
                 </div>
-                <div class="col-3">
+                <div class="col-3 mt-3">
                   <label for="inputSerialNumber" class="form-label">일련 번호</label>
-                  <input type="text" class="form-control" id="inputSerialNumber" placeholder="etc. XY0XX0" disabled="true" name="inputSerialNumber">
+                  <input type="text" class="form-control" id="inputSerialNumber" placeholder="etc. XY0XX0" disabled="true"
+                    name="inputSerialNumber">
                 </div>
-                <div class="col-6">
+                <div class="col-6 mt-3">
                   <label for="inputReason" class="form-label">노트북 반입 사유(포트 사용 시: 사용 표기)</label>
-                  <input type="text" class="form-control" id="inputReason" placeholder="" disabled="true" name="inputReason">
+                  <input type="text" class="form-control" id="inputReason" placeholder="" disabled="true"
+                    name="inputReason">
                 </div>
-                <div class="col-3">
+                <div class="col-3 mt-3">
                   <label for="inputWorkDivision" class="form-label">작업 구분</label>
                   <select class="form-select" id="inputWorkDivision" name="inputWorkDivision" disabled="true">
                     <option value="시스템 점검">시스템 점검</option>
@@ -131,649 +147,320 @@
                     <option value="기타">기타</option>
                   </select>
                 </div>
-                <div class="col-9">
+                <div class="col-9 mt-3">
                   <label for="inputContent" class="form-label">작업 내용</label>
                   <input type="text" class="form-control" id="inputContent" disabled="true" name="inputContent">
                 </div>
-                <div class="col-6">
-                  <label for="inputLocation" class="form-label">작업 위치</label>
-                  <input type="text" class="form-control" id="inputLocation" placeholder="etc. 4층 전산실" disabled="true" name="inputLocation">
+                <div class="col-6 mt-3">
+                  <label for="inputLocation" class="form-label">작업 위치(랙 위치도 기입)</label>
+                  <input type="text" class="form-control" id="inputLocation" placeholder="etc. 4층 전산실" disabled="true"
+                    name="inputLocation">
                 </div>
-                <div class="col-6">
-                  <label for="inputCompany" class="form-label">작업 요청 회사</label>
+                <div class="col-6 mt-3">
+                  <label for="inputCompany" class="form-label">작업 대상 회사</label>
                   <div class="input-group">
-                  <select class="form-select col-xl-5" id="inputCompany" name="inputCompany" disabled="true">
-                    <option value="계열사">계열사</option>
-                    <option value="대외고객사">대외고객사</option>
-                  </select>
-                  <input type="text" class="form-control" id="inputCompanyName" disabled="true" name="inputCompanyName">
+                    <select class="form-select col-xl-5" id="inputCompany" name="inputCompany" disabled="true">
+                      <option value="계열사">계열사</option>
+                      <option value="대외고객사">대외고객사</option>
+                    </select>
+                    <input type="text" class="form-control" id="inputCompanyName" disabled="true" name="inputCompanyName">
                   </div>
                 </div>
-                <div class="col-md-3">
-                  <label for="inputCustomer" class="form-label">고객사</label>
-                  <input type="text" class="form-control" id="inputCustomer" disabled="true" name="inputCustomer" placeholder="etc. 고객사명">
+                <h6>[출입 요청자]</h6>
+                <div class="col-md-12">
+                  <label for="inputDeviceDate" class="form-label">일자</label>
+                  <input type="text" class="form-control" id="inputDeviceDate" disabled="true" name="inputDeviceDate" placeholder="etc. 기간 YYYY년 MM월 DD일 ~ YYYY년 MM월 DD일">
+                </div>
+                <div class="col-md-5">
+                  <label for="inputDeviceCompany" class="form-label">회사명</label>
+                  <input type="text" class="form-control" id="inputDeviceCompany" disabled="true" name="inputDeviceCompany">
                 </div>
                 <div class="col-md-4">
-                  <label for="inputDeviceDivision" class="form-label">장비 기종</label>
-                  <input type="text" class="form-control" id="inputDeviceDivision" disabled="true" name="inputDeviceDivision" placeholder="etc. 기종, 파트">
-                </div>
-                <div class="col-md-2">
-                  <label for="inputDeviceCount" class="form-label">수량</label>
-                  <input type="text" class="form-control" id="inputDeviceCount" disabled="true" name="inputDeviceCount" placeholder="etc. 1">
+                  <label for="inputDeviceDepartment" class="form-label">부서명</label>
+                  <input type="text" class="form-control" id="inputDeviceDepartment" disabled="true" name="inputDeviceDepartment">
                 </div>
                 <div class="col-md-3">
-                  <label for="inputRemarks" class="form-label">비고</label>
-                  <input type="text" class="form-control" id="inputRemarks" disabled="true" name="inputRemarks">
+                  <label for="inputDeviceRequestManager" class="form-label">담당자</label>
+                  <input type="text" class="form-control" id="inputDeviceRequestManager" disabled="true" name="inputDeviceRequestManager">
                 </div>
-                <div class="col-12">
+                <h6>[장비/파트 반출입 수행자 (데이터센터 근무자)] / 반입, 반출 사유</h6>
+                <div class="col-md-3">
+                  <label for="inputDeviceManager" class="form-label">담당자</label>
+                  <input type="text" class="form-control" id="inputDeviceManager" disabled="true" name="inputDeviceManager">
+                </div>
+                <div class="col-md-9">
+                  <label for="inputDeviceReason" class="form-label">반입/반출 사유</label>
+                  <input type="text" class="form-control" id="inputDeviceReason" disabled="true" name="inputDeviceReason">
+                </div>
+                <div class="col-md-12">
+                  <label for="inputDeviceRemarks" class="form-label">기타사항</label>
+                  <input type="text" class="form-control" id="inputDeviceRemarks" disabled="true" name="inputDeviceRemarks">
+                </div>
+                <div class="col-12 mt-3">
                   <button type="submit" class="btn btn-success">수정하기</button>
                 </div>
               </form>
             </div>
           </div>
         </div>
+      </div>
 
-      <!-- Content Row -->
-      <div class="row">
-      
-        <!-- 현재 시간 -->
-        <div class="col-xl-2 col-md-6 mb-4" id="current_time">
-          <div class="card border-left-secondary shadow h-100 py-2">
-            <div class="card-body ml-2">
-              <div class="row no-gutters align-items-center" id="index_timestamp">
-                <div class="col mr-2">
-                  <div class="text-xs font-weight-bold text-gray text-uppercase mb-1">{{time[0]}}</div>
-                  <div class="h5 mb-0 font-weight-bold text-gray-800">{{time[1]}}</div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- 실시간 출입 방문자 -->
-        <div class="col-xl-2 col-md-6 mb-4">
-          <div class="card border-left-danger shadow h-100 py-2">
-            <div class="card-body ml-2">
-              <div class="row no-gutters align-items-center" id="index_visitor">
-                <div class="col mr-2">
-                  <div class="text-xs font-weight-bold text-danger text-uppercase mb-1">실시간 출입 방문객(카드 소지) (1m)</div>
-                  <div class="h5 mb-0 font-weight-bold text-gray-800">{% if visitor_count %}{{ visitor_count[0] }}명{% endif %}</div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- 클라우드 센터 잔류 방문자 -->
-        <div class="col-xl-2 col-md-6 mb-4">
-          <div class="card border-left-primary shadow h-100 py-2">
-            <div class="card-body ml-2">
-              <div class="row no-gutters align-items-center" id="index_center_visitor">
-                <div class="col mr-2">
-                  <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">클라우드 센터 잔류 인원(카드 미소지) (1m)</div>
-                  <div class="h5 mb-0 font-weight-bold text-gray-800">{% if no_exit_card_visitor %}{{ no_exit_card_visitor }}명 {% else %} 0명 {% endif %}</div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- 카드 수량 -->
-        <div class="col-xl-2 col-md-6 mb-4">
-          <div class="card border-left-info shadow h-100 py-2">
-            <div class="card-body ml-2">
-              <div class="row no-gutters align-items-center" id="index_card_visitor">
-                <div class="col mr-2">
-                  <div class="text-xs font-weight-bold text-info text-uppercase mb-1">미반납 카드 | 총 카드 [관리 - 카드 관리]</div>
-                  <div class="h5 mb-0 font-weight-bold text-gray-800">{% if total_card %}{{ no_return_card }}개 | {{ total_card }}개 {% else %} 0개 {% endif %}</div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- 일간 방문자 -->
-        <div class="col-xl-2 col-md-6 mb-4">
-          <div class="card border-left-success shadow h-100 py-2">
-            <div class="card-body ml-2">
-              <div class="row no-gutters align-items-center" id="index_daily_visitor">
-                <div class="col mr-2">
-                  <div class="text-xs font-weight-bold text-success text-uppercase mb-1">일간 방문자 (Daily/1m)</div>
-                  <div class="h5 mb-0 font-weight-bold text-gray-800">{% if visitor_count[3] %}{{ visitor_count[3] }}명 {% else %} 0명 {% endif %}</div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- 주간 방문자 -->
-        <div class="col-xl-2 col-md-6 mb-4">
-          <div class="card border-left-warning shadow h-100 py-2">
-            <div class="card-body ml-2">
-              <div class="row no-gutters align-items-center" id="index_monthly_visitor">
-                <div class="col mr-2">
-                  <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">월간 방문자 (Month/1m)</div>
-                  <div class="h5 mb-0 font-weight-bold text-gray-800">{% if visitor_count[2] %}{{ visitor_count[2] }}명 {% else %} 0명 {% endif %}</div>
-                </div>
+      <!-- 현재 시간 -->
+      <div class="col-xl-2 col-md-6 mb-4" id="current_time">
+        <div class="card border-left-secondary shadow h-100 py-2">
+          <div class="card-body ml-2">
+            <div class="row no-gutters align-items-center" id="index_timestamp">
+              <div class="col mr-2">
+                <div class="text-xs font-weight-bold text-gray text-uppercase mb-1">{{time[0]}}</div>
+                <div class="h5 mb-0 font-weight-bold text-gray-800">{{time[1]}}</div>
               </div>
             </div>
           </div>
         </div>
       </div>
 
-      <!-- <div class="mb-3" style="display:flex; justify-content: flex-end;">
-        <div class="form-check form-switch mr-2" style="display: flex; justify-content: center; align-items: center;">
-          <input class="form-check-input" type="checkbox" id="selectDateRadioSwitch">
+      <!-- 실시간 출입 방문자 -->
+      <div class="col-xl-2 col-md-6 mb-4">
+        <div class="card border-left-danger shadow h-100 py-2">
+          <div class="card-body ml-2">
+            <div class="row no-gutters align-items-center" id="index_visitor">
+              <div class="col mr-2">
+                <div class="text-xs font-weight-bold text-danger text-uppercase mb-1">실시간 출입 방문객(카드 소지) (1m)</div>
+                <div class="h5 mb-0 font-weight-bold text-gray-800">
+                  {% if visitor_count %}{{ visitor_count[0] }}명{% endif %}</div>
+              </div>
+            </div>
+          </div>
         </div>
-        <div>
-          <select name="select_excel_option" id="select_excel_option" class="form-select" style="display:none;" disabled>
-            <option value="name">이름</option>
-            <option value="department">소속</option>
-            <option value="phone">전화번호</option>
-            <option value="manager">담당자</option>
-          </select>
-        </div>
-        <div>
-          <input type="text" class="form-control" id="select_option_text" style="display:none;" disabled>
-        </div>
-        <input type="date" name="start_date" id="start_date" class="form-control col-xl-1 ml-2" id="start_date">
-        <input type="date" name="end_date" id="end_date" class="form-control col-xl-1 ml-2" id="end_date">
-        <button class="d-none d-sm-inline-block btn btn-sm btn-success shadow-sm ml-2" type="button" id="excel_download_btn" name="excel_download_btn" style="height:38px;"><i class="fas fa-plus fa-sm text-white-50"></i> 엑셀 다운로드</button>
-      </div> -->
-      <!-- Content Row -->
+      </div>
 
-      <div class="row">
+      <!-- 클라우드 센터 잔류 방문자 -->
+      <div class="col-xl-2 col-md-6 mb-4">
+        <div class="card border-left-primary shadow h-100 py-2">
+          <div class="card-body ml-2">
+            <div class="row no-gutters align-items-center" id="index_center_visitor">
+              <div class="col mr-2">
+                <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">클라우드 센터 잔류 인원(카드 미소지) (1m)</div>
+                <div class="h5 mb-0 font-weight-bold text-gray-800">
+                  {% if no_exit_card_visitor %}{{ no_exit_card_visitor }}명 {% else %} 0명 {% endif %}</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
 
-        <!-- Area Chart -->
-        <div class="col-xl-12 col-lg-7">
-          <!-- DataTales Example -->
-          <div class="card shadow mb-4">
-            <div class="card-header py-3">
-              <div class="row">
-                <div class="col">
-                  <div class="custom-select" id="custom-select" style="overflow: hidden;">
-                    <label for="custom-select-box">
+      <!-- 카드 수량 -->
+      <div class="col-xl-2 col-md-6 mb-4">
+        <div class="card border-left-info shadow h-100 py-2">
+          <div class="card-body ml-2">
+            <div class="row no-gutters align-items-center" id="index_card_visitor">
+              <div class="col mr-2">
+                <div class="text-xs font-weight-bold text-info text-uppercase mb-1">미반납 카드 | 총 카드 [관리 - 카드 관리]</div>
+                <div class="h5 mb-0 font-weight-bold text-gray-800">{% if total_card %}{{ no_return_card }}개 |
+                  {{ total_card }}개 {% else %} 0개 {% endif %}</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 일간 방문자 -->
+      <div class="col-xl-2 col-md-6 mb-4">
+        <div class="card border-left-success shadow h-100 py-2">
+          <div class="card-body ml-2">
+            <div class="row no-gutters align-items-center" id="index_daily_visitor">
+              <div class="col mr-2">
+                <div class="text-xs font-weight-bold text-success text-uppercase mb-1">일간 방문자 (Daily/1m)</div>
+                <div class="h5 mb-0 font-weight-bold text-gray-800">{% if visitor_count[3] %}{{ visitor_count[3] }}명
+                  {% else %} 0명 {% endif %}</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 주간 방문자 -->
+      <div class="col-xl-2 col-md-6 mb-4">
+        <div class="card border-left-warning shadow h-100 py-2">
+          <div class="card-body ml-2">
+            <div class="row no-gutters align-items-center" id="index_monthly_visitor">
+              <div class="col mr-2">
+                <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">월간 방문자 (Month/1m)</div>
+                <div class="h5 mb-0 font-weight-bold text-gray-800">{% if visitor_count[2] %}{{ visitor_count[2] }}명
+                  {% else %} 0명 {% endif %}</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="col-xl-12 col-lg-7">
+        <!-- DataTales Example -->
+        <div class="card shadow mb-4">
+          <div class="card-header py-3">
+            <div class="row">
+              <div class="col">
+                <div class="custom-select" id="custom-select" style="overflow: hidden;">
+                  <label for="custom-select-box">
                     <select name="custom-select-box" id="custom-select-box">
                       <option value="10">10</option>
                       <option value="25">25</option>
                       <option value="50">50</option>
                       <option value="100">100</option>
                     </select> 개씩 보기
-                    </label>
-                  </div>
+                  </label>
                 </div>
-                <div class="col">
-                  <div class="input-group">
-                    <div class="custom-select" style="overflow: hidden;">
-                      <label for="key_select_box">
-                      <select name="key_select_box" id="key_select_box">
-                        {% for key in rack_key_list %}
-                          {% if key.key_status != "불출" %}
-                          <option value="{{key.key_type}} {{key.key_num}}">{{key.key_type}}{{key.key_num}}</option>
-                          {% else %}
-                          {% endif %}
-                        {% endfor %}
-                      </select> Rack 키
-                      </label>
-                    </div>
-                    <button class="btn btn-secondary" type="submit" id="entrance_key">불출</button>
-                    <button class="btn btn-secondary ml-2" type="submit" id="recall_key">회수</button>
-                  </div>
-                </div>
-                <div class="col">
-                  <div class="input-group">
-                    <div class="custom-select" style="overflow: hidden;">
-                      <label for="card_select_box">
+              </div>
+              <div class="col">
+                <div class="input-group">
+                  <div class="custom-select" style="overflow: hidden;">
+                    <label for="card_select_box">
                       <select name="card_select_box" id="card_select_box">
                         {% for card in card_list %}
-                          {% if card.card_status != "불출" %}
-                          <option value="{{card.card_type}} {{card.card_num}}">{{card.card_type}}{{card.card_num}}</option>
-                          {% else %}
-                          {% endif %}
+                        {% if card.card_status != "불출" %}
+                        <option value="{{card.card_type}} {{card.card_num}}">{{card.card_type}}{{card.card_num}}
+                        </option>
+                        {% else %}
+                        {% endif %}
                         {% endfor %}
                       </select> 카드
-                      </label>
-                    </div>
-                    <button class="btn btn-secondary" type="submit" id="entrance_card">불출</button>
-                    <button class="btn btn-secondary ml-2" type="submit" id="recall_card">회수</button>
+                    </label>
                   </div>
+                  <button class="btn btn-secondary" type="submit" id="entrance_card">불출</button>
+                  <button class="btn btn-secondary ml-2" type="submit" id="recall_card">회수</button>
                 </div>
-                <!-- 방문객 퇴실 -->
-                <div class="col">
-                  <div class="input-group">
-                    <select name="card_update_box" id="card_update_box">
-                      {% for card in update_card_list %}
-                        <option value="{{card.card_type}}">{{card.card_type}}</option>
-                      {% endfor %}
-                    </select>
-                    <input type="text" class="form-control" id="card_update_input" name="card_update_input" placeholder="카드 입력" maxlength="8" style="height: 38px;">
-                    <button class="btn btn-secondary" type="button" id="card_update_btn">수정</button>
-                  </div>
+              </div>
+              <!-- 방문객 퇴실 -->
+              <div class="col">
+                <div class="input-group">
+                  <select name="card_update_box" id="card_update_box">
+                    {% for card in update_card_list %}
+                    <option value="{{card.card_type}}">{{card.card_type}}</option>
+                    {% endfor %}
+                  </select>
+                  <input type="text" class="form-control" id="card_update_input" name="card_update_input"
+                    placeholder="카드 입력" maxlength="8" style="height: 38px;">
+                  <button class="btn btn-secondary" type="button" id="card_update_btn">수정</button>
                 </div>
-                <div class="col">
-                  <div class="input-group">
-                    <input type="text" id="search-input" class="form-control" placeholder="Search..."/>
-                    <button class="btn btn-secondary" type="button">검색</button>
-                  </div>
+              </div>
+              <div class="col">
+                <div class="input-group">
+                  <input type="text" id="search-input" class="form-control" placeholder="Search..." />
+                  <button class="btn btn-secondary" type="button">검색</button>
                 </div>
               </div>
             </div>
-            <div class="card-body">
-              <div class="table-responsive">
-                <table class="table table-bordered" id="dataTable" width="100%" cellspacing="0" style="text-align: center;">
-                  <thead>
-                    <tr>
-                      <th scope="col">
-                        <div class="form-check" style="display: flex; justify-content: center; align-items: center;">
-                          <input type="checkbox" class="form-check-input" name="index_total_check_box" id="index_total_check_box">
-                        </div>
-                      </th>
-                      <th scope="col">No</th>
-                      <th scope="col"><span class="text-success"><랙키></span> / <span class="text-primary"><카드></span> 결재팀 / 등록인 / 등록 구분 / 방문 목적 / 방문객 / 소속 / 번호 / 담당자 / 출입 시간 / 퇴실 시간 / <span class="text-danger"><퇴실></span></th>
-                    </tr>
-                  </thead>
-                  <tfoot>
-                    <tr>
-                      <th scope="col">#</th>
-                      <th scope="col">No</th>
-                      <th scope="col"><span class="text-success"><랙키></span> / <span class="text-primary"><카드></span> 결재팀 / 등록인 / 등록 구분 / 방문 목적 / 방문객 / 소속 / 번호 / 담당자 / 출입 시간 / 퇴실 시간 / <span class="text-danger"><퇴실></span></th>
-                    </tr>
-                  </tfoot>
-                  <tbody id="table_tbody">
+          </div>
+          <div class="card-body">
+            <div class="table-responsive">
+              <table class="table table-hover table-expandable" id="dataTable" width="100%" cellspacing="0" style="text-align: center;">
+                <thead>
+                  <tr>
+                    <th>#</th>
+                    <th>No</th>
+                    <th>카드</th>
+                    <th>결재팀</th>
+                    <th>등록인</th>
+                    <th>등록 구분</th>
+                    <th>방문 목적</th>
+                    <th>방문객</th>
+                    <th>소속</th>
+                    <th>번호</th>
+                    <th>담당자</th>
+                    <th>출입 시간</th>
+                    <th>퇴실 시간</th>
+                    <th>비고</th>
+                  </tr>
+                </thead>
+                <tbody id="table_tbody">
                   {% for approve_visitor in approve_visitors %}
-                    <tr>
-                      <th scope="row" style="vertical-align: middle; text-align: center;">
-                        <div class="form-check" style="display: flex; justify-content: center; align-items: center;">
-                          <input type="checkbox" class="form-check-input" name="check_box" id="checkbox{{approve_visitor.id}}" value="{{approve_visitor.id}}">
+                  <tr class="dt-control"
+                  data-permission="{{current_user.permission}}"
+                  data-id="{{approve_visitor.id}}"
+                  data-personal_computer="{{approve_visitor.personal_computer}}"
+                  data-model_name="{{approve_visitor.model_name}}"
+                  data-serial_number="{{approve_visitor.serial_number}}"
+                  data-pc_reason="{{approve_visitor.pc_reason}}"
+                  data-work="{{approve_visitor.work}}"
+                  data-work_division="{{approve_visitor.work_division}}"
+                  data-location="{{approve_visitor.location}}"
+                  data-company_type="{{approve_visitor.company_type}}"
+                  data-company="{{approve_visitor.company}}"
+                  data-work_content="{{approve_visitor.work_content}}"
+                  data-device="{{approve_visitor.device}}"
+                  data-device_date="{{approve_visitor.device_date}}"
+                  data-device_company="{{approve_visitor.device_company}}"
+                  data-device_department="{{approve_visitor.device_department}}"
+                  data-device_request_manager="{{approve_visitor.device_request_manager}}"
+                  data-device_manager="{{approve_visitor.device_manager}}"
+                  data-device_reason="{{approve_visitor.device_reason}}"
+                  data-device_remarks="{{approve_visitor.device_remarks}}"
+                  data-exit="{{approve_visitor.exit}}"
+                  > <!-- odd dt-hasChild-->
+                    <td>
+                      <div class="form-check" style="display: flex; justify-content: center; align-items: center;">
+                        <input type="checkbox" class="form-check-input" name="check_box"
+                          id="checkbox{{approve_visitor.id}}" value="{{approve_visitor.id}}">
+                      </div>
+                    </td>
+                    <td class="">{{ approve_visitor.id }}</td>
+                    <td>{{approve_visitor.card.card_type}}{{approve_visitor.card.card_num}}</td>
+                    <td>{{approve_visitor.approval_team}}</td>
+                    <td>{{approve_visitor.writer}}</td>
+                    <td>{{approve_visitor.registry}}</td>
+                    <td>{{approve_visitor.object}}</td>
+                    <td>
+                      {% if approve_visitor.name|length > 1 %}
+                      {{ approve_visitor.name[0] + '*' + approve_visitor.name[2:] }}
+                      {% else %}
+                      {{ approve_visitor.name }}
+                      {% endif %}
+                    </td>
+                    <td>{{approve_visitor.department}}</td>
+                    <td>
+                      {% if approve_visitor.phone|length > 6 %}
+                      {{ approve_visitor.phone[:3] + '****' + approve_visitor.phone[7:]}}
+                      {% else %}
+                      {{ approve_visitor.phone }}
+                      {% endif %}
+                    </td>
+                    <td>{{approve_visitor.manager}}</td>
+                    <td>
+                      {% if approve_visitor.entry_date != None %}
+                      {{approve_visitor.entry_date}}
+                      {% else %}
+                      {% endif %}
+                    </td>
+                    <td>
+                      {% if approve_visitor.exit_date != None %}
+                      {{approve_visitor.exit_date}}
+                      {% else %}
+                      {% endif %}
+                    </td>
+                    <td>
+                      {% if approve_visitor.exit_date != None %}
+                      <div class="alert alert-danger rounded-pill" role="alert" style="padding:0 5px;margin-bottom:0;">
+                        퇴실
+                      </div>
+                      {% else %}
+                        {% if approve_visitor.card_id != None %}
+                        <div class="alert alert-primary rounded-pill" role="alert" style="padding:0 5px;margin-bottom:0;">
+                          출입
                         </div>
-                      </th>
-                      <td style="vertical-align: middle; text-align: center;">{{ loop.index }}</td>
-                      <td>
-                        <!-- 아코디언 -->
-                        <div class="accordion" id="accordionExample{{approve_visitor.id}}">
-                          <div class="accordion-item">
-                            <h2 class="accordion-header" id="heading{{approve_visitor.id}}">
-                              <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse{{approve_visitor.id}}" aria-expanded="true" aria-controls="collapse{{approve_visitor.id}}">
-                                <ul class="list-group list-group-horizontal">
-                                  {% if approve_visitor.rack_id != None %}
-                                  <li class="list-group-item bg-success text-white">{{approve_visitor.rack.key_type}}{{approve_visitor.rack.key_num}}</li>
-                                  {% endif %}
-                                  {% if approve_visitor.card_id != None %}
-                                  <li class="list-group-item bg-primary text-white mr-1">{{approve_visitor.card.card_type}}{{approve_visitor.card.card_num}}</li>
-                                  {% endif %}
-                                  
-                                  <li class="list-group-item" style="border-left:3px solid gray;">결재: {{approve_visitor.approval_team}}</li>
-                                  <li class="list-group-item">등록: {{approve_visitor.writer}}</li>
-                                  <li class="list-group-item">{{approve_visitor.registry}}</li>
-                                  <li class="list-group-item">{{approve_visitor.object}}</li>
-                                  <li class="list-group-item">
-                                    {% if approve_visitor.name|length > 1 %}
-                                        {{ approve_visitor.name[0] + '*' + approve_visitor.name[2:] }}
-                                    {% else %}
-                                        {{ approve_visitor.name }}
-                                    {% endif %}
-                                  </li>
-                                  <li class="list-group-item">{{approve_visitor.department}}</li>
-                                  <li class="list-group-item">
-                                    {% if approve_visitor.phone|length > 6 %}
-                                        {{ approve_visitor.phone[:3] + '****' + approve_visitor.phone[7:]}}
-                                    {% else %}
-                                        {{ approve_visitor.phone }}
-                                    {% endif %}
-                                  </li>
-                                  <li class="list-group-item">{{approve_visitor.manager}}</li>
-                                  {% if approve_visitor.entry_date != None %}
-                                    <li class="list-group-item">{{approve_visitor.entry_date}}</li>
-                                  {% else %}
-                                  {% endif %}
-                                  {% if approve_visitor.exit_date != None %}
-                                    <li class="list-group-item">{{approve_visitor.exit_date}}</li>
-                                    <li class="list-group-item bg-danger text-white">퇴실</li>
-                                  {% else %}
-                                    <li class="list-group-item bg-white text-danger">퇴실 안함</li>
-                                  {% endif %}
-                                </ul>
-                              </button>
-                            </h2>
-                            <div id="collapse{{approve_visitor.id}}" class="accordion-collapse collapse" aria-labelledby="heading{{approve_visitor.id}}" data-bs-parent="#accordionExample">
-                              <div class="accordion-body">
-                                <div class="row">
-                                  <div class="col-xl-4">
-                                    <ul class="list-group list-group-vertical">
-                                      <li class="list-group-item"><b>노트북 반입</b></li>
-                                      <li class="list-group-item">
-                                        {% if approve_visitor.personal_computer == 1 %}
-                                        O
-                                        {% else %}
-                                        X
-                                        {% endif %}
-                                      </li>
-                                      {% if approve_visitor.personal_computer == 1 %}
-                                      <li class="list-group-item"><b>모델명</b></li>
-                                      <li class="list-group-item">{{approve_visitor.model_name}}</li>
-                                      <li class="list-group-item"><b>시리얼 넘버</b></li>
-                                      <li class="list-group-item">{{approve_visitor.serial_number}}</li>
-                                      <li class="list-group-item"><b>반입 사유</b></li>
-                                      <li class="list-group-item">{{approve_visitor.pc_reason}}</li>
-                                      {% else %}
-                                      <li class="list-group-item"><b>모델명</b></li>
-                                      <li class="list-group-item"></li>
-                                      <li class="list-group-item"><b>시리얼 넘버</b></li>
-                                      <li class="list-group-item"></li>
-                                      <li class="list-group-item"><b>반입 사유</b></li>
-                                      <li class="list-group-item"></li>
-                                      {% endif %}
-                                    </ul>
-                                  </div>
-                                  <div class="col-xl-4">
-                                    <ul class="list-group list-group-vertical">
-                                      <li class="list-group-item"><b>작업</b></li>
-                                      <li class="list-group-item">
-                                        {% if approve_visitor.work == 1 %}
-                                        O
-                                        {% else %}
-                                        X
-                                        {% endif %}
-                                      </li>
-                                      {% if approve_visitor.work == 1 %}
-                                        <li class="list-group-item"><b>작업 분류 / 작업 위치</b></li>
-                                        <li class="list-group-item">{{approve_visitor.work_division}} / {{approve_visitor.location}}</li>
-                                        <li class="list-group-item"><b>요청 종류 / 요청 회사</b></li>
-                                        <li class="list-group-item">{{approve_visitor.company_type}} / {{approve_visitor.company}}</li>
-                                        <li class="list-group-item"><b>작업 내용</b></li>
-                                        <li class="list-group-item">{{approve_visitor.work_content}}</li>
-                                      {% else %}
-                                        <li class="list-group-item"><b>작업 분류 / 작업 위치</b></li>
-                                        <li class="list-group-item"></li>
-                                        <li class="list-group-item"><b>요청 종류 / 요청 회사</b></li>
-                                        <li class="list-group-item"></li>
-                                        <li class="list-group-item"><b>작업 내용</b></li>
-                                        <li class="list-group-item"></li>
-                                      {% endif %}
-                                    </ul>
-                                  </div>
-                                  <div class="col-xl-4">
-                                    <ul class="list-group list-group-vertical">
-                                      <li class="list-group-item"><b>장비 반출입</b></li>
-                                      <li class="list-group-item">
-                                        {% if approve_visitor.device == 1 %}
-                                        O
-                                        {% else %}
-                                        X
-                                        {% endif %}
-                                      </li>
-                                      {% if approve_visitor.device == 1 %}
-                                      <li class="list-group-item"><b>장비 반출입 날짜</b></li>
-                                      <li class="list-group-item">{{approve_visitor.device_date}}</li>
-                                      <li class="list-group-item"><b>요청자(회사, 부서, 담당자)</b></li>
-                                      <li class="list-group-item">{{approve_visitor.device_company}} / {{approve_visitor.device_department}} / {{approve_visitor.device_request_manager}}</li>
-                                      <li class="list-group-item"><b>장비 반출입 수행자(데이터센터 담당자) / 반출입 사유</b></li>
-                                      <li class="list-group-item">{{approve_visitor.device_manager}} / {{approve_visitor.device_reason}}</li>
-                                      <li class="list-group-item"><b>기타사항</b></li>
-                                      <li class="list-group-item">{{approve_visitor.device_remarks}}</li>
-                                      {% else %}
-                                      <li class="list-group-item"><b>장비 반출입 날짜</b></li>
-                                      <li class="list-group-item"></li>
-                                      <li class="list-group-item"><b>요청자(회사, 부서, 담당자)</b></li>
-                                      <li class="list-group-item"></li>
-                                      <li class="list-group-item"><b>장비 반출입 수행자(데이터센터 담당자) / 반출입 사유</b></li>
-                                      <li class="list-group-item"></li>
-                                      <li class="list-group-item"><b>기타사항</b></li>
-                                      <li class="list-group-item"></li>
-                                      {% endif %}
-                                    </ul>
-                                  </div>
-                                </div>
-                                <div style="text-align: right;">
-                                  {% if current_user.permission == '관리자' %}
-                                  {% if approve_visitor.exit == 1 %}
-                                  <div class="btn-group mt-4">
-                                    <button class="btn btn-secondary btn-sm" type="button" id="re_exit_btn{{approve_visitor.id}}" value="{{approve_visitor.id}}">퇴실</button>
-                                  </div>
-                                  {% endif %}
-                                  {% if approve_visitor.exit == 0 %}
-                                  <div class="btn-group mt-4">
-                                    <button class="btn btn-secondary btn-sm" type="button" id="exit_btn{{approve_visitor.id}}" value="{{approve_visitor.id}}">퇴실</button>
-
-                                    <button class="btn btn-primary btn-sm ml-3" type="button" id="qrcode_btn{{approve_visitor.id}}" value="{{approve_visitor.id}}">QR 재전송</button>
-
-                                    <button class="btn_group btn btn-success btn-sm ml-3" type="button" id="update_btn{{approve_visitor.id}}" value="{{approve_visitor.id}}">수정</button>
-                                    <button class="btn_group btn btn-danger btn-sm ml-1" type="button" data-toggle="modal" data-target="#deleteModal">삭제</button>
-                                  </div>
-                                  {% endif %}
-                                  {% endif %}
-                                </div>
-                              </div>
-                            </div>
-                          </div>
+                        {% else %}
+                        <div class="alert alert-success rounded-pill" role="alert" style="padding:0 5px;margin-bottom:0;">
+                          입실
                         </div>
-                        <!-- 아코디언 끝 -->
-                      </td>
-                    </tr>
-                  <!-- 퇴실 스크립트 -->
-                  <script>
-                    $('#exit_btn{{approve_visitor.id}}').click(function(){
-                      var exit_btn = $('#exit_btn{{approve_visitor.id}}').val();
-                      var postdata = {
-                        'exit_id': exit_btn,
-                        'exit': 1
-                      };
-                      $.ajax({
-                        contentType: 'application/json',
-                        type: 'POST',
-                        url: 'api/ajax_exit',
-                        data: JSON.stringify(postdata),
-                        dataType: 'json',
-                        success: function(response) {
-                          alert('퇴실 되었습니다.');
-                          history.go(0);
-                        },
-                        error: function(request, status, error) {
-                          message = request.responseText;
-                          if (message == "Card None")
-                            alert('카드를 먼저 불출해주세요.');
-                        }
-                      })
-                    })
-                  </script>
-                  <script>
-                    $('#re_exit_btn{{approve_visitor.id}}').click(function(){
-                      var exit_btn = $('#re_exit_btn{{approve_visitor.id}}').val();
-                      var postdata = {
-                        'exit_id': exit_btn,
-                      };
-                      $.ajax({
-                        contentType: 'application/json',
-                        type: 'POST',
-                        url: 'api/ajax_re_exit',
-                        data: JSON.stringify(postdata),
-                        dataType: 'json',
-                        success: function(response) {
-                          alert('퇴실 되었습니다.');
-                          history.go(0);
-                        },
-                        error: function(request, status, error) {
-                          alert('퇴실 시간 갱신 실패');
-                        }
-                      })
-                    })
-                  </script>
-                   <!-- QR 재전송 스크립트 -->
-                   <script>
-                    $('#qrcode_btn{{approve_visitor.id}}').click(function(){
-                      var qrcode_btn = $('#qrcode_btn{{approve_visitor.id}}').val();
-                      var postdata = {
-                        'qrcode_btn': qrcode_btn,
-                      };
-                      $.ajax({
-                        contentType: 'application/json',
-                        type: 'POST',
-                        url: 'api/ajax_manage_qrcode_send',
-                        data: JSON.stringify(postdata),
-                        dataType: 'json',
-                        success: function(response) {
-                          alert('QR 코드가 재전송 되었습니다.');
-                          history.go(0);
-                        },
-                        error: function(request, status, error) {
-                          message = request.responseText;
-                          if (message == "Use Card")
-                            alert('이미 카드를 받은 방문객입니다.')
-                        }
-                      })
-                    })
-                  </script>
-                  <script>
-                      function handleSuccess(response) {
-                        var inputModelName = document.getElementById('inputModelName');
-                        var inputSerialNumber = document.getElementById('inputSerialNumber');
-                        var inputReason = document.getElementById('inputReason');
-                        
-                        var inputWorkDivision = document.getElementById('inputWorkDivision');
-                        var inputLocation = document.getElementById('inputLocation');
-                        var inputCompanyType = document.getElementById('inputCompany');
-                        var inputCompanyName = document.getElementById('inputCompanyName');
-                        var inputContent = document.getElementById('inputContent');
+                        {% endif %}
+                      {% endif %}
+                    </td>
+                  </tr>
 
-                        var inputCustomer = document.getElementById('inputCustomer');
-                        var inputDeviceDivision = document.getElementById('inputDeviceDivision');
-                        var inputDeviceCount = document.getElementById('inputDeviceCount');
-                        var inputRemarks = document.getElementById('inputRemarks');
-
-                        var update_id = response.response[0];
-                        var name = response.response[1];
-                        var department = response.response[2];
-                        var object = response.response[3];
-                        var phone = response.response[4];
-                        var manager = response.response[5];
-                        var device = response.response[6];
-                        var remarks = response.response[7];
-                        var location = response.response[8];
-                        var work = response.response[9];
-                        var company_type = response.response[10];
-                        var company = response.response[11];
-                        var work_content = response.response[12];
-                        var personal_computer = response.response[13];
-                        var model_name = response.response[14];
-                        var serial_number = response.response[15];
-                        var pc_reason = response.response[16];
-                        var work_division = response.response[17];
-                        var customer = response.response[18];
-                        var device_division = response.response[19];
-                        var device_count = response.response[20];
-
-                        document.getElementById("inputUpdateNumber").value = update_id;
-                        document.getElementById("inputName").value = name;
-                        document.getElementById("inputDepartment").value = department;
-                        document.getElementById("inputObject").value = object;
-                        document.getElementById("inputPhoneNumber").value = phone;
-                        document.getElementById("inputManager").value = manager;
-                        
-                        if (personal_computer == true) {
-                          document.getElementById('gridCheck_3').checked = true;
-                          document.getElementById("inputModelName").value = model_name;
-                          document.getElementById("inputSerialNumber").value = serial_number;
-                          document.getElementById("inputReason").value = pc_reason;
-                          inputModelName.disabled = false;
-                          inputSerialNumber.disabled = false;
-                          inputReason.disabled = false;
-                        } else {
-                          document.getElementById('gridCheck_3').checked = false;
-                          document.getElementById("inputModelName").value = null;
-                          document.getElementById("inputSerialNumber").value = null;
-                          document.getElementById("inputReason").value = null;
-                          inputModelName.disabled = true;
-                          inputSerialNumber.disabled = true;
-                          inputReason.disabled = true;
-                        }
-
-
-                        if (work == true) {
-                          document.getElementById('gridCheck_2').checked = true;
-                          document.getElementById('inputWorkDivision').value = work_division
-                          document.getElementById("inputLocation").value = location;
-                          document.getElementById('inputCompany').value = company_type;
-                          document.getElementById('inputCompanyName').value = company;
-                          document.getElementById('inputContent').value = work_content;
-                          inputWorkDivision.disabled = false;
-                          inputLocation.disabled = false;
-                          inputCompanyType.disabled = false;
-                          inputCompanyName.disabled = false;
-                          inputContent.disabled = false;
-                        } else {
-                          document.getElementById('gridCheck_2').checked = false;
-                          document.getElementById('inputWorkDivision').value = null;
-                          document.getElementById("inputLocation").value = null;
-                          document.getElementById('inputCompany').value = null;
-                          document.getElementById('inputCompanyName').value = null;
-                          document.getElementById('inputContent').value = null;
-                          inputWorkDivision.disabled = true;
-                          inputLocation.disabled = true;
-                          inputCompanyType.disabled = true;
-                          inputCompanyName.disabled = true;
-                          inputContent.disabled = true;
-                        }
-                        if (device == true) {
-                          document.getElementById('gridCheck').checked = true;
-                          document.getElementById("inputCustomer").value = customer;
-                          document.getElementById("inputDeviceDivision").value = device_division;
-                          document.getElementById("inputDeviceCount").value = device_count;
-                          document.getElementById("inputRemarks").value = remarks;
-                          inputCustomer.disabled = false;
-                          inputDeviceDivision.disabled = false;
-                          inputDeviceCount.disabled = false;
-                          inputRemarks.disabled = false;
-                        } else {
-                          document.getElementById('gridCheck').checked = false;
-                          document.getElementById("inputCustomer").value = null;
-                          document.getElementById("inputDeviceDivision").value = null;
-                          document.getElementById("inputDeviceCount").value = null;
-                          document.getElementById("inputRemarks").value = null;
-                          inputCustomer.disabled = true;
-                          inputDeviceDivision.disabled = true;
-                          inputDeviceCount.disabled = true;
-                          inputRemarks.disabled = true; 
-                        }
-                      }
-                      $(document).ready(function() {
-                        $('#update_btn{{approve_visitor.id}}').click(function() {
-                            const modal = document.getElementById('modalWrap');
-                            const closeBtn = document.getElementById('closeBtn');
-                          
-                            closeBtn.onclick = function() {
-                                modal.style.display = 'none';
-                            }
-                          
-                            window.onclick = function(event) {
-                                if (event.target == modal) {
-                                    modal.style.display = 'none';
-                                }
-                            }
-                            var update_btn = $('#update_btn{{approve_visitor.id}}').val();
-                            var postdata = {
-                              'update_btn': update_btn,
-                            };
-                            $.ajax({
-                              contentType: 'application/json',
-                              type: 'POST',
-                              url: 'api/ajax_update_manage_visit',
-                              data: JSON.stringify(postdata),
-                              dataType: 'json',
-                              success: function(response) {
-                                modal.style.display = 'block';
-                                handleSuccess(response);
-                              },
-                              error: function(request, status, error) {
-                                message = request.responseText;
-                                // if (message == "Use Card")
-                                //   alert('방문객이 카드를 소지하고 있어 수정 기능이 제한됩니다.');
-                              }
-                            })
-                        });
-                    });
-                  </script>
                   <!-- visitor 삭제 Modal-->
-                  <div class="modal fade" id="deleteModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+                  <div class="modal fade" id="deleteModal" tabindex="-1" role="dialog"
+                    aria-labelledby="exampleModalLabel" aria-hidden="true">
                     <div class="modal-dialog" role="document">
                       <div class="modal-content">
                         <div class="modal-header">
@@ -785,88 +472,69 @@
                         <div class="modal-body">삭제하면 방문객에 대한 데이터가 사라지고 복구할 수 없습니다. 정말 삭제하시려면 "삭제"를 선택하십시오.</div>
                         <div class="modal-footer">
                           <button class="btn btn-secondary" type="button" data-dismiss="modal">취소</button>
-                          <button class="btn btn-danger" type="button" data-dismiss="modal" id="delete_btn{{approve_visitor.id}}" value="{{approve_visitor.id}}">삭제</button>
+                          <button class="btn btn-danger" type="button" data-dismiss="modal"
+                            id="delete_btn{{approve_visitor.id}}" value="{{approve_visitor.id}}">삭제</button>
                         </div>
                       </div>
                     </div>
                   </div>
-                  <script>
-                    $('#delete_btn{{approve_visitor.id}}').click(function(){
-                      var delete_btn = $('#delete_btn{{approve_visitor.id}}').val();
-                      var postdata = {
-                        'delete_btn': delete_btn,
-                      };
-                      $.ajax({
-                        contentType: 'application/json',
-                        type: 'POST',
-                        url: 'api/ajax_delete_manage_visit',
-                        data: JSON.stringify(postdata),
-                        dataType: 'json',
-                        success: function(response) {
-                          alert('삭제 되었습니다.');
-                          history.go(0);
-                        },
-                        error: function(request, status, error) {
-                          message = request.responseText;
-                          if (message == "Use Card")
-                            alert('방문객이 카드를 소지하고 있어 삭제 기능이 제한됩니다.');
-                        }
-                      })
-                    })
-                  </script>
                   {% endfor %}
-                  </tbody>
-                </table>
-              </div>
+                </tbody>
+              </table>
             </div>
           </div>
         </div>
+      </div>
     </div>
     <!-- /.container-fluid -->
 
   </div>
-  <!-- End of Main Content --> 
+  <!-- End of Main Content -->
 
-  </body>
+</body>
+
 </html>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-ka7Sk0Gln4gmtz2MlQnikT1wXgYsOg+OMhuP+IlRH9sENBO0LRn5q+8nbTov4+1p" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"
+  integrity="sha384-ka7Sk0Gln4gmtz2MlQnikT1wXgYsOg+OMhuP+IlRH9sENBO0LRn5q+8nbTov4+1p" crossorigin="anonymous"></script>
 <!-- 체크박스 전체 선택/해제 스크립트 -->
 <script type="text/javascript">
-  $(document).ready(function() {
-    $("#index_total_check_box").click(function() {
-      if($("#index_total_check_box").is(":checked")) $("input[name=check_box]").prop("checked", true);
+  $(document).ready(function () {
+    $("#index_total_check_box").click(function () {
+      if ($("#index_total_check_box").is(":checked")) $("input[name=check_box]").prop("checked", true);
       else $("input[name=check_box]").prop("checked", false);
     });
-    
-    $("input[name=check_box]").click(function() {
+
+    $("input[name=check_box]").click(function () {
       var total = $("input[name=check_box]").length;
       var checked = $("input[name=check_box]:checked").length;
-      
-      if(total != checked) $("#index_total_check_box").prop("checked", false);
-      else $("#index_total_check_box").prop("checked", true); 
+
+      if (total != checked) $("#index_total_check_box").prop("checked", false);
+      else $("#index_total_check_box").prop("checked", true);
     });
   });
 </script>
 
 <!-- 체크박스 퇴실 스크립트 -->
 <script>
-  $('#exit_checkbox').click(function(){
+  $('#exit_checkbox').click(function () {
     var checked_list = [];
-    $("input[name='check_box']:checked").each(function(){
+    $("input[name='check_box']:checked").each(function () {
       checked_list.push($(this).val());
     });
-    var postdata = {'checked_datas': checked_list}
+    var postdata = {
+      'checked_datas': checked_list
+    }
     $.ajax({
       contentType: 'application/json',
       type: 'POST',
       url: 'api/ajax_index_exit_checkbox',
       data: JSON.stringify(postdata),
       dataType: 'json',
-      success: function(data) {
+      success: function (data) {
         history.go(0);
         alert('퇴실 되었습니다.');
       },
-      error: function(request, status, error) {
+      error: function (request, status, error) {
         message = request.responseText;
         if (message == "No Select")
           alert('퇴실할 방문객을 선택해주세요.')
@@ -881,25 +549,28 @@
 
 <!-- 체크박스 담당자 수정 스크립트 -->
 <script>
-  $('#manager_update').click(function(){
+  $('#manager_update').click(function () {
     var manager = document.getElementById("manager_update_input");
     var input_manager = manager.value
     var checked_list = [];
-    $("input[name='check_box']:checked").each(function(){
+    $("input[name='check_box']:checked").each(function () {
       checked_list.push($(this).val());
     });
-    var postdata = {'checked_datas': checked_list, 'manager': input_manager}
+    var postdata = {
+      'checked_datas': checked_list,
+      'manager': input_manager
+    }
     $.ajax({
       contentType: 'application/json',
       type: 'POST',
       url: 'api/ajax_index_manager_update_checkbox',
       data: JSON.stringify(postdata),
       dataType: 'json',
-      success: function(data) {
+      success: function (data) {
         history.go(0);
         alert('담당자가 수정 되었습니다.');
       },
-      error: function(request, status, error) {
+      error: function (request, status, error) {
         message = request.responseText;
         if (message == "No Select")
           alert('담당자를 수정할 방문객을 선택해주세요.')
@@ -914,27 +585,31 @@
 
 <!-- 체크박스 카드 수정 스크립트 -->
 <script>
-  $('#card_update_btn').click(function(){
+  $('#card_update_btn').click(function () {
     var cards = document.getElementById("card_update_input");
     var card_type = document.getElementById("card_update_box");
     var input_cards = cards.value
     var card_types = card_type.value
     var checked_list = [];
-    $("input[name='check_box']:checked").each(function(){
+    $("input[name='check_box']:checked").each(function () {
       checked_list.push($(this).val());
     });
-    var postdata = {'checked_datas': checked_list, 'cards': input_cards, 'card_types': card_types}
+    var postdata = {
+      'checked_datas': checked_list,
+      'cards': input_cards,
+      'card_types': card_types
+    }
     $.ajax({
       contentType: 'application/json',
       type: 'POST',
       url: 'api/ajax_cards_update_checkbox',
       data: JSON.stringify(postdata),
       dataType: 'json',
-      success: function(data) {
+      success: function (data) {
         history.go(0);
         alert('카드가 수정 되었습니다.');
       },
-      error: function(request, status, error) {
+      error: function (request, status, error) {
         message = request.responseText;
         if (message == "No Select")
           alert('카드 수정할 방문객을 선택해주세요.')
@@ -954,21 +629,24 @@
 </script>
 
 <!-- 커스텀 셀렉트, 검색 기능 -->
-<script>
-  $(document).ready(function() {
+<script type="text/javascript">
+  $(document).ready(function () {
+    // $('#dataTable tr:even').filter(':gt(0)').remove();
     // DataTable 초기화
     var table = $('#dataTable').DataTable({
-      lengthMenu: [10, 15, 20],
-      pageLength: 10 // 기본 페이지 길이 설정
+      lengthMenu: [10, 15, 20, 10000],
+      pageLength: 10, // 기본 페이지 길이 설정
+      order: [[1, 'desc']]
     });
+    
     // 기존 페이지 길이 조정 기능 활성화
-    $('#dataTable_length select').on('change', function() {
+    $('#dataTable_length select').on('change', function () {
       var newLength = parseInt($(this).val(), 10);
       table.page.len(newLength).draw();
     });
 
     // 셀릭트 이벤트 처리
-    $('#custom-select-box').on('change', function() {
+    $('#custom-select-box').on('change', function () {
       var newLength = parseInt($(this).val(), 10);
       table.page.len(newLength).draw();
     });
@@ -982,15 +660,436 @@
     $('#custom-select-box').html(options);
 
     // 검색 이벤트 처리
-    $('#search-input').on('keyup', function() {
+    $('#search-input').on('keyup', function () {
       table.search(this.value).draw();
+    });
+
+    $('#dataTable tbody').on('click', 'tr.dt-control', function (e) {
+      let tr = e.target.closest('tr');
+      let row = table.row(tr);
+
+      var permission = $(this).data('permission');
+      var id = $(this).data('id');
+      var personal_computer = $(this).data('personal_computer');
+      var model_name = $(this).data('model_name');
+      var serial_number = $(this).data('serial_number');
+      var pc_reason = $(this).data('pc_reason');
+      var work = $(this).data('work');
+      var work_division = $(this).data('work_division');
+      var location = $(this).data('location');
+      var company_type = $(this).data('company_type');
+      var company = $(this).data('company');
+      var work_content = $(this).data('work_content');
+      var device = $(this).data('device');
+      var device_date = $(this).data('device_date');
+      var device_company = $(this).data('device_company');
+      var device_department = $(this).data('device_department');
+      var device_request_manager = $(this).data('device_request_manager');
+      var device_manager = $(this).data('device_manager');
+      var device_reason = $(this).data('device_reason');
+      var device_remarks = $(this).data('device_remarks');
+      var exit = $(this).data('exit');
+  
+      // console.log(id)
+      // console.log(permission)
+      // console.log(typeof(personal_computer))
+      // console.log(personal_computer)
+      // console.log(exit)
+
+      var htmlVals = '<div class="slider row">';
+      htmlVals += '<div class="col-xl-4">';
+      // 노트북 반입
+      htmlVals += '<ul class="list-group list-group-vertical">';
+      htmlVals += '<li class="list-group-item"><b>노트북 반입</b></li>';
+      htmlVals += '<li class="list-group-item">';
+      if (personal_computer == 'True') {htmlVals += 'O';} else {htmlVals += 'X';}
+      htmlVals += '</li>';
+      if (personal_computer == 'True') {
+        htmlVals += '<li class="list-group-item"><b>모델명</b></li>';
+        htmlVals += '<li class="list-group-item">' + model_name + '</li>';
+        htmlVals += '<li class="list-group-item"><b>시리얼 넘버</b></li>';
+        htmlVals += '<li class="list-group-item">' + serial_number + '</li>';
+        htmlVals += '<li class="list-group-item"><b>반입 사유</b></li>';
+        htmlVals += '<li class="list-group-item">' + pc_reason + '</li>';
+      } else {
+        htmlVals += '<li class="list-group-item"><b>모델명</b></li>';
+        htmlVals += '<li class="list-group-item">없음</li>';
+        htmlVals += '<li class="list-group-item"><b>시리얼 넘버</b></li>';
+        htmlVals += '<li class="list-group-item">없음</li>';
+        htmlVals += '<li class="list-group-item"><b>반입 사유</b></li>';
+        htmlVals += '<li class="list-group-item">없음</li>';
+      }
+      htmlVals += '</ul>';
+      // 노트북 반입 끝
+      htmlVals += '</div>';
+      htmlVals += '<div class="col-xl-4">';
+      // 작업
+      htmlVals += '<ul class="list-group list-group-vertical">';
+      htmlVals += '<li class="list-group-item"><b>작업</b></li>';
+      htmlVals += '<li class="list-group-item">';
+      if (work == 'True') {htmlVals += 'O';} else {htmlVals += 'X';}
+      htmlVals += '</li>';
+      if (work == 'True') {
+        htmlVals += '<li class="list-group-item"><b>작업 분류 / 작업 위치</b></li>';
+        htmlVals += '<li class="list-group-item">' + work_division + ' / ' + location + '</li>';
+        htmlVals += '<li class="list-group-item"><b>요청 종류 / 요청 회사</b></li>';
+        htmlVals += '<li class="list-group-item">' + company_type + ' / ' + company + '</li>';
+        htmlVals += '<li class="list-group-item"><b>작업 내용</b></li>';
+        htmlVals += '<li class="list-group-item">' + work_content + '</li>';
+      } else {
+        htmlVals += '<li class="list-group-item"><b>작업 분류 / 작업 위치</b></li>';
+        htmlVals += '<li class="list-group-item">없음</li>';
+        htmlVals += '<li class="list-group-item"><b>요청 종류 / 요청 회사</b></li>';
+        htmlVals += '<li class="list-group-item">없음</li>';
+        htmlVals += '<li class="list-group-item"><b>작업 내용</b></li>';
+        htmlVals += '<li class="list-group-item">없음</li>';
+      }
+      htmlVals += '</ul>';
+      // 작업 끝
+      htmlVals += '</div>';
+      htmlVals += '<div class="col-xl-4">';
+      // 장비
+      htmlVals += '<ul class="list-group list-group-vertical">';
+      htmlVals += '<li class="list-group-item"><b>장비 반출입</b></li>';
+      htmlVals += '<li class="list-group-item">';
+      if (device == 'True') {htmlVals += 'O';} else {htmlVals += 'X';}
+      htmlVals += '</li>';
+      if (device == 'True') {
+        htmlVals += '<li class="list-group-item"><b>장비 반출입 날짜</b></li>';
+        htmlVals += '<li class="list-group-item">' + device_date + '</li>';
+        htmlVals += '<li class="list-group-item"><b>요청자(회사, 부서, 담당자)</b></li>';
+        htmlVals += '<li class="list-group-item">' + device_company + ' / ' + device_department + ' / ' + device_request_manager + '</li>';
+        htmlVals += '<li class="list-group-item"><b>장비 반출입 수행자(데이터센터 담당자) / 반출입 사유</b></li>';
+        htmlVals += '<li class="list-group-item">' + device_manager + ' / ' + device_reason + '</li>';
+        htmlVals += '<li class="list-group-item"><b>기타사항</b></li>';
+        htmlVals += '<li class="list-group-item">' + device_remarks + '</li>';
+      } else {
+        htmlVals += '<li class="list-group-item"><b>장비 반출입 날짜</b></li>';
+        htmlVals += '<li class="list-group-item">없음</li>';
+        htmlVals += '<li class="list-group-item"><b>요청자(회사, 부서, 담당자)</b></li>';
+        htmlVals += '<li class="list-group-item">없음</li>';
+        htmlVals += '<li class="list-group-item"><b>장비 반출입 수행자(데이터센터 담당자) / 반출입 사유</b></li>';
+        htmlVals += '<li class="list-group-item">없음</li>';
+        htmlVals += '<li class="list-group-item"><b>기타사항</b></li>';
+        htmlVals += '<li class="list-group-item">없음</li>';
+      }
+      htmlVals += '</ul>';
+      // 장비 끝
+      htmlVals += '</div>';
+      htmlVals += '</div>';
+      htmlVals += '<div class="col-xl-4">';
+      htmlVals += '<ul class="list-group list-group-vertical">';
+      htmlVals += '</ul>';
+      htmlVals += '</div>';
+      htmlVals += '<div class="col-xl-4">';
+      htmlVals += '<ul class="list-group list-group-vertical">';
+      htmlVals += '</ul>';
+      htmlVals += '</div>';
+      htmlVals += '<div style="text-align: right;">';
+      if (permission == '관리자') {
+        if (exit == 'True') {
+          htmlVals += '<div class="btn-group mt-4">';
+          htmlVals += '<button class="btn btn-secondary btn-sm" type="button" id="re_exit_btn' + id + '" value="' + id + '">퇴실</button>';
+          htmlVals += '</div>';
+        } else {
+          htmlVals += '<div class="btn-group mt-4">';
+          htmlVals += '<button class="btn btn-secondary btn-sm" type="button" id="exit_btn' + id + '" value="' + id + '">퇴실</button>';
+          htmlVals += '<button class="btn btn-primary btn-sm ml-3" type="button" id="qrcode_btn' + id + '" value="' + id + '">QR 재전송</button>';
+          htmlVals += '<button class="btn_group btn btn-success btn-sm ml-3" type="button" id="update_btn' + id + '" value="' + id + '">수정</button>';
+          htmlVals += '<button class="btn_group btn btn-danger btn-sm ml-1" type="button" data-toggle="modal" data-target="#deleteModal">삭제</button>';
+          htmlVals += '</div>';
+        }
+      }
+      htmlVals += '</div>';
+      htmlVals += '</div>';
+
+      if (row.child.isShown()) {
+        $('div.slider', row.child()).slideUp( function () {
+            row.child(htmlVals).hide();
+        } );
+      }
+      else {
+        row.child(htmlVals, 'no-padding' ).show();
+      }
+
+      // 퇴실 스크립트
+      $('#exit_btn' + id).click(function() {
+        var value = document.getElementById('exit_btn' + id).value;
+        console.log(value);
+        var exit_btn = value
+        var postdata = {
+          'exit_id': exit_btn,
+          'exit': 1
+        };
+        $.ajax({
+          contentType: 'application/json',
+          type: 'POST',
+          url: 'api/ajax_exit',
+          data: JSON.stringify(postdata),
+          dataType: 'json',
+          success: function (response) {
+            alert('퇴실 되었습니다.');
+            history.go(0);
+          },
+          error: function (request, status, error) {
+            message = request.responseText;
+            if (message == "Card None")
+              alert('카드를 먼저 불출해주세요.');
+          }
+        });
+      });
+
+      // 재 퇴실 스크립트
+      $('#re_exit_btn' + id).click(function () {
+        var value = document.getElementById('re_exit_btn' + id).value;
+        console.log(value)
+        var postdata = {
+          'exit_id': value,
+        };
+        $.ajax({
+          contentType: 'application/json',
+          type: 'POST',
+          url: 'api/ajax_re_exit',
+          data: JSON.stringify(postdata),
+          dataType: 'json',
+          success: function (response) {
+            alert('퇴실 되었습니다.');
+            history.go(0);
+          },
+          error: function (request, status, error) {
+            alert('퇴실 시간 갱신 실패');
+          }
+        })
+      })
+
+      // QR 코드 재전송
+      $('#qrcode_btn' + id).click(function () {
+        var value = document.getElementById('qrcode_btn' + id).value;
+        var postdata = {
+          'qrcode_btn': value,
+        };
+        $.ajax({
+          contentType: 'application/json',
+          type: 'POST',
+          url: 'api/ajax_manage_qrcode_send',
+          data: JSON.stringify(postdata),
+          dataType: 'json',
+          success: function (response) {
+            alert('QR 코드가 재전송 되었습니다.');
+            history.go(0);
+          },
+          error: function (request, status, error) {
+            message = request.responseText;
+            if (message == "Use Card")
+              alert('이미 카드를 받은 방문객입니다.')
+          }
+        })
+      })
+
+      // 업데이트 스크립트
+      $('#update_btn' + id).click(function () {
+        console.log('업데이트');
+        console.log(id)
+        var modal = document.getElementById('modalWrap');
+        var closeBtn = document.getElementById('closeBtn');
+        
+        closeBtn.onclick = function () {
+          modal.style.display = 'none';
+        }
+
+        window.onclick = function (event) {
+          if (event.target == modal) {
+            modal.style.display = 'none';
+          }
+        }
+        var value = document.getElementById('update_btn' + id).value;
+        console.log("업데이트 넘버: " + value);
+        var postdata = {
+          'update_btn': value,
+        };
+        $.ajax({
+          contentType: 'application/json',
+          type: 'POST',
+          url: 'api/ajax_update_manage_visit',
+          data: JSON.stringify(postdata),
+          dataType: 'json',
+          success: function (response) {
+            modal.style.display = 'block';
+            console.log(response)
+            handleSuccess(response);
+          },
+          error: function (request, status, error) {
+            message = request.responseText;
+            if (message == "Use Card")
+              alert('방문객이 카드를 소지하고 있어 수정 기능이 제한됩니다.');
+          }
+        })
+      });
+
+      // 삭제 스크립트
+      $('#delete_btn' + id).click(function () {
+        var value = document.getElementById('delete_btn' + id).value;
+        var postdata = {
+          'delete_btn': value,
+        };
+        $.ajax({
+          contentType: 'application/json',
+          type: 'POST',
+          url: 'api/ajax_delete_manage_visit',
+          data: JSON.stringify(postdata),
+          dataType: 'json',
+          success: function (response) {
+            alert('삭제 되었습니다.');
+            history.go(0);
+          },
+          error: function (request, status, error) {
+            message = request.responseText;
+            if (message == "Use Card")
+              alert('방문객이 카드를 소지하고 있어 삭제 기능이 제한됩니다.');
+          }
+        })
+      })
     });
   });
 </script>
 
+<script>
+  function handleSuccess(response) {
+    var inputModelName = document.getElementById('inputModelName');
+    var inputSerialNumber = document.getElementById('inputSerialNumber');
+    var inputReason = document.getElementById('inputReason');
+
+    var inputWorkDivision = document.getElementById('inputWorkDivision');
+    var inputLocation = document.getElementById('inputLocation');
+    var inputCompanyType = document.getElementById('inputCompany');
+    var inputCompanyName = document.getElementById('inputCompanyName');
+    var inputContent = document.getElementById('inputContent');
+
+    var inputDeviceDate = document.getElementById('inputDeviceDate');
+    var inputDeviceCompany = document.getElementById('inputDeviceCompany');
+    var inputDeviceDepartment = document.getElementById('inputDeviceDepartment');
+    var inputDeviceRequestManager = document.getElementById('inputDeviceRequestManager');
+    var inputDeviceManager = document.getElementById('inputDeviceManager');
+    var inputDeviceReason = document.getElementById('inputDeviceReason');
+    var inputDeviceRemarks = document.getElementById('inputDeviceRemarks');
+
+    var update_id = response.response[0];
+    var name = response.response[1];
+    var department = response.response[2];
+    var object = response.response[3];
+    var phone = response.response[4];
+    var manager = response.response[5];
+    var device = response.response[6];
+    var location = response.response[7];
+    var work = response.response[8];
+    var company_type = response.response[9];
+    var company = response.response[10];
+    var work_content = response.response[11];
+    var personal_computer = response.response[12];
+    var model_name = response.response[13];
+    var serial_number = response.response[14];
+    var pc_reason = response.response[15];
+    var work_division = response.response[16];
+    var device_date = response.response[17];
+    var device_company = response.response[18];
+    var device_department = response.response[19];
+    var device_request_manager = response.response[20];
+    var device_manager = response.response[21];
+    var device_reason = response.response[22];
+    var device_remarks = response.response[23];
+    var approval_team = response.response[24];
+
+    // document.getElementById("inputApproval").value = approval_team;
+    document.getElementById("inputUpdateNumber").value = update_id;
+    document.getElementById("inputName").value = name;
+    document.getElementById("inputDepartment").value = department;
+    document.getElementById("inputObject").value = object;
+    document.getElementById("inputPhoneNumber").value = phone;
+    document.getElementById("inputManager").value = manager;
+
+    if (personal_computer == true) {
+      document.getElementById('gridCheck_3').checked = true;
+      document.getElementById("inputModelName").value = model_name;
+      document.getElementById("inputSerialNumber").value = serial_number;
+      document.getElementById("inputReason").value = pc_reason;
+      inputModelName.disabled = false;
+      inputSerialNumber.disabled = false;
+      inputReason.disabled = false;
+    } else {
+      document.getElementById('gridCheck_3').checked = false;
+      document.getElementById("inputModelName").value = null;
+      document.getElementById("inputSerialNumber").value = null;
+      document.getElementById("inputReason").value = null;
+      inputModelName.disabled = true;
+      inputSerialNumber.disabled = true;
+      inputReason.disabled = true;
+    }
+
+
+    if (work == true) {
+      document.getElementById('gridCheck_2').checked = true;
+      document.getElementById('inputWorkDivision').value = work_division
+      document.getElementById("inputLocation").value = location;
+      document.getElementById('inputCompany').value = company_type;
+      document.getElementById('inputCompanyName').value = company;
+      document.getElementById('inputContent').value = work_content;
+      inputWorkDivision.disabled = false;
+      inputLocation.disabled = false;
+      inputCompanyType.disabled = false;
+      inputCompanyName.disabled = false;
+      inputContent.disabled = false;
+    } else {
+      document.getElementById('gridCheck_2').checked = false;
+      document.getElementById('inputWorkDivision').value = null;
+      document.getElementById("inputLocation").value = null;
+      document.getElementById('inputCompany').value = null;
+      document.getElementById('inputCompanyName').value = null;
+      document.getElementById('inputContent').value = null;
+      inputWorkDivision.disabled = true;
+      inputLocation.disabled = true;
+      inputCompanyType.disabled = true;
+      inputCompanyName.disabled = true;
+      inputContent.disabled = true;
+    }
+    if (device == true) {
+      document.getElementById('gridCheck').checked = true;
+      document.getElementById("inputDeviceDate").value = device_date;
+      document.getElementById("inputDeviceCompany").value = device_company;
+      document.getElementById("inputDeviceDepartment").value = device_department;
+      document.getElementById("inputDeviceRequestManager").value = device_request_manager;
+      document.getElementById("inputDeviceManager").value = device_manager;
+      document.getElementById("inputDeviceReason").value = device_reason;
+      document.getElementById("inputDeviceRemarks").value = device_remarks;
+      inputDeviceDate.disabled = false;
+      inputDeviceCompany.disabled = false;
+      inputDeviceDepartment.disabled = false;
+      inputDeviceRequestManager.disabled = false;
+      inputDeviceManager.disabled = false;
+      inputDeviceReason.disabled = false;
+      inputDeviceRemarks.disabled = false;
+    } else {
+      document.getElementById('gridCheck').checked = false;
+      document.getElementById("inputDeviceDate").value = null;
+      document.getElementById("inputDeviceCompany").value = null;
+      document.getElementById("inputDeviceDepartment").value = null;
+      document.getElementById("inputDeviceRequestManager").value = null;
+      document.getElementById("inputDeviceManager").value = null;
+      document.getElementById("inputDeviceReason").value = null;
+      document.getElementById("inputDeviceRemarks").value = null;
+      inputDeviceDate.disabled = true;
+      inputDeviceCompany.disabled = true;
+      inputDeviceDepartment.disabled = true;
+      inputDeviceRequestManager.disabled = true;
+      inputDeviceManager.disabled = true;
+      inputDeviceReason.disabled = true;
+      inputDeviceRemarks.disabled = true;
+    }
+  }
+</script>
+
 <!-- 기존 셀렉트, 검색 폼 제거 -->
 <script>
-  $(document).ready(function() {
+  $(document).ready(function () {
     var search = document.querySelector('#dataTable_filter');
     var select = document.querySelector('#dataTable_length')
 
@@ -1001,25 +1100,28 @@
 
 <!-- 체크 박스 카드 불출 스크립트 -->
 <script>
-  $('#entrance_card').click(function(){
+  $('#entrance_card').click(function () {
     var checked_list = [];
     var input_card = document.getElementById('card_select_box');
     var card = input_card.value
-    $("input[name='check_box']:checked").each(function(){
+    $("input[name='check_box']:checked").each(function () {
       checked_list.push($(this).val());
     });
-    var postdata = {'checked_datas': checked_list, 'card': card}
+    var postdata = {
+      'checked_datas': checked_list,
+      'card': card
+    }
     $.ajax({
       contentType: 'application/json',
       type: 'POST',
       url: 'api/ajax_index_card_checkbox',
       data: JSON.stringify(postdata),
       dataType: 'json',
-      success: function(data) {
+      success: function (data) {
         alert('카드가 불출 되었습니다.');
         history.go(0);
       },
-      error: function(request, status, error) {
+      error: function (request, status, error) {
         message = request.responseText;
         if (message == "No Card")
           alert('카드를 먼저 불출해주세요.');
@@ -1041,28 +1143,32 @@
 </script>
 <!-- 체크 박스 카드 회수 스크립트 -->
 <script>
-  $('#recall_card').click(function(){
+  $('#recall_card').click(function () {
     var checked_list = [];
-    $("input[name='check_box']:checked").each(function(){
+    $("input[name='check_box']:checked").each(function () {
       checked_list.push($(this).val());
     });
-    var postdata = {'checked_datas': checked_list}
+    var postdata = {
+      'checked_datas': checked_list
+    }
     $.ajax({
       contentType: 'application/json',
       type: 'POST',
       url: 'api/ajax_update_visit_recall_card_checkbox',
       data: JSON.stringify(postdata),
       dataType: 'json',
-      success: function(data) {
+      success: function (data) {
         alert('카드가 회수 되었습니다.');
         history.go(0);
       },
-      error: function(request, status, error) {
+      error: function (request, status, error) {
         message = request.responseText;
         if (message == "No Card")
           alert('불출된 카드가 없습니다.');
         if (message == "No Select")
           alert('방문객을 선택해주세요.');
+        if (message == "Multi Check")
+          alert('카드 회수는 단일 선택만 가능합니다.');
         if (message == "Exited")
           alert('이미 퇴실한 방문객입니다.');
       }
@@ -1073,90 +1179,102 @@
 <!-- 인풋 창 disabled/abled -->
 <script>
   function toggleInputs() {
-      var checkbox = document.getElementById('gridCheck');
-      var inputCustomer = document.getElementById('inputCustomer');
-      var inputDeviceDivision = document.getElementById('inputDeviceDivision');
-      var inputDeviceCount = document.getElementById('inputDeviceCount');
-      var inputRemarks = document.getElementById('inputRemarks');
+    var checkbox = document.getElementById('gridCheck');
+    var inputDeviceDate = document.getElementById('inputDeviceDate')
+    var inputDeviceCompany = document.getElementById('inputDeviceCompany')
+    var inputDeviceDepartment = document.getElementById('inputDeviceDepartment')
+    var inputDeviceRequestManager = document.getElementById('inputDeviceRequestManager');
+    var inputDeviceManager = document.getElementById('inputDeviceManager');
+    var inputDeviceReason = document.getElementById('inputDeviceReason');
+    var inputDeviceRemarks = document.getElementById('inputDeviceRemarks');
 
-      if (checkbox.checked) {
-        inputCustomer.disabled = false;
-        inputDeviceDivision.disabled = false;
-        inputDeviceCount.disabled = false;
-        inputRemarks.disabled = false;
-      } else {
-        inputCustomer.disabled = true;
-        inputDeviceDivision.disabled = true;
-        inputDeviceCount.disabled = true;
-        inputRemarks.disabled = true;
-      }
+    if (checkbox.checked) {
+      inputDeviceDate.disabled = false;
+      inputDeviceCompany.disabled = false;
+      inputDeviceDepartment.disabled = false;
+      inputDeviceRequestManager.disabled = false;
+      inputDeviceManager.disabled = false;
+      inputDeviceReason.disabled = false;
+      inputDeviceRemarks.disabled = false;
+    } else {
+      inputDeviceDate.disabled = true;
+      inputDeviceCompany.disabled = true;
+      inputDeviceDepartment.disabled = true;
+      inputDeviceRequestManager.disabled = true;
+      inputDeviceManager.disabled = true;
+      inputDeviceReason.disabled = true;
+      inputDeviceRemarks.disabled = true;
+    }
   }
 </script>
 
 <script>
   function toggleInputs_work() {
-      var checkbox = document.getElementById('gridCheck_2');
-      var inputWorkDivision = document.getElementById('inputWorkDivision')
-      var inputLocation = document.getElementById('inputLocation');
-      var inputCompany = document.getElementById('inputCompany');
-      var inputCompanyName = document.getElementById('inputCompanyName');
-      var inputContent = document.getElementById('inputContent');
+    var checkbox = document.getElementById('gridCheck_2');
+    var inputWorkDivision = document.getElementById('inputWorkDivision')
+    var inputLocation = document.getElementById('inputLocation');
+    var inputCompany = document.getElementById('inputCompany');
+    var inputCompanyName = document.getElementById('inputCompanyName');
+    var inputContent = document.getElementById('inputContent');
 
-      if (checkbox.checked) {
-        inputWorkDivision.disabled = false;
-        inputLocation.disabled = false;
-        inputCompany.disabled = false;
-        inputCompanyName.disabled = false;
-        inputContent.disabled = false;
-      } else {
-        inputWorkDivision.disabled = true;
-        inputLocation.disabled = true;
-        inputCompany.disabled = true;
-        inputCompanyName.disabled = true;
-        inputContent.disabled = true;
-      }
+    if (checkbox.checked) {
+      inputWorkDivision.disabled = false;
+      inputLocation.disabled = false;
+      inputCompany.disabled = false;
+      inputCompanyName.disabled = false;
+      inputContent.disabled = false;
+    } else {
+      inputWorkDivision.disabled = true;
+      inputLocation.disabled = true;
+      inputCompany.disabled = true;
+      inputCompanyName.disabled = true;
+      inputContent.disabled = true;
+    }
   }
 </script>
 
 <script>
   function toggleInputs_pc() {
-      var checkbox = document.getElementById('gridCheck_3');
-      var inputModelName = document.getElementById('inputModelName');
-      var inputSerialNumber = document.getElementById('inputSerialNumber');
-      var inputReason = document.getElementById('inputReason');
+    var checkbox = document.getElementById('gridCheck_3');
+    var inputModelName = document.getElementById('inputModelName');
+    var inputSerialNumber = document.getElementById('inputSerialNumber');
+    var inputReason = document.getElementById('inputReason');
 
-      if (checkbox.checked) {
-        inputModelName.disabled = false;
-        inputSerialNumber.disabled = false;
-        inputReason.disabled = false;
-      } else {
-        inputModelName.disabled = true;
-        inputSerialNumber.disabled = true;
-        inputReason.disabled = true;
-      }
+    if (checkbox.checked) {
+      inputModelName.disabled = false;
+      inputSerialNumber.disabled = false;
+      inputReason.disabled = false;
+    } else {
+      inputModelName.disabled = true;
+      inputSerialNumber.disabled = true;
+      inputReason.disabled = true;
+    }
   }
 </script>
 
 <script>
-  $('#entrance_key').click(function(){
+  $('#entrance_key').click(function () {
     var checked_list = [];
     var input_key = document.getElementById('key_select_box');
     var key = input_key.value
-    $("input[name='check_box']:checked").each(function(){
+    $("input[name='check_box']:checked").each(function () {
       checked_list.push($(this).val());
     });
-    var postdata = {'checked_datas': checked_list, 'key': key}
+    var postdata = {
+      'checked_datas': checked_list,
+      'key': key
+    }
     $.ajax({
       contentType: 'application/json',
       type: 'POST',
       url: 'api/ajax_use_rack_key_checkbox',
       data: JSON.stringify(postdata),
       dataType: 'json',
-      success: function(data) {
+      success: function (data) {
         alert('키가 불출 되었습니다.');
         history.go(0);
       },
-      error: function(request, status, error) {
+      error: function (request, status, error) {
         message = request.responseText;
         if (message == "No Key")
           alert('키를 먼저 불출해주세요.');
@@ -1181,23 +1299,25 @@
 </script>
 <!-- 체크 박스 랙키 회수 스크립트 -->
 <script>
-  $('#recall_key').click(function(){
+  $('#recall_key').click(function () {
     var checked_list = [];
-    $("input[name='check_box']:checked").each(function(){
+    $("input[name='check_box']:checked").each(function () {
       checked_list.push($(this).val());
     });
-    var postdata = {'checked_datas': checked_list}
+    var postdata = {
+      'checked_datas': checked_list
+    }
     $.ajax({
       contentType: 'application/json',
       type: 'POST',
       url: 'api/ajax_recall_rack_key_checkbox',
       data: JSON.stringify(postdata),
       dataType: 'json',
-      success: function(data) {
+      success: function (data) {
         alert('키가 회수 되었습니다.');
         history.go(0);
       },
-      error: function(request, status, error) {
+      error: function (request, status, error) {
         message = request.responseText;
         if (message == "No Key")
           alert('불출된 키가 없습니다.');
@@ -1212,43 +1332,37 @@
 
 <!-- 시간 새로고침 js -->
 <script>
-  function autoRefresh_stamptime_div()
-  {
+  function autoRefresh_stamptime_div() {
     var currentLocation = window.location;
     $("#index_timestamp").load(currentLocation + ' #index_timestamp')
   }
   setInterval('autoRefresh_stamptime_div()', 1000); //1초 마다 새로고침
 
-  function autoRefresh_visitor_div()
-  {
+  function autoRefresh_visitor_div() {
     var currentLocation = window.location;
     $("#index_visitor").load(currentLocation + ' #index_visitor')
   }
   setInterval('autoRefresh_visitor_div()', 60000); //1분 마다 새로고침
 
-  function autoRefresh_daily_visitor_div()
-  {
+  function autoRefresh_daily_visitor_div() {
     var currentLocation = window.location;
     $("#index_daily_visitor").load(currentLocation + ' #index_daily_visitor')
   }
   setInterval('autoRefresh_daily_visitor_div()', 60000); //1분 마다 새로고침
 
-  function autoRefresh_monthly_visitor_div()
-  {
+  function autoRefresh_monthly_visitor_div() {
     var currentLocation = window.location;
     $("#index_monthly_visitor").load(currentLocation + ' #index_monthly_visitor')
   }
   setInterval('autoRefresh_monthly_visitor_div()', 60000); //1분 마다 새로고침
 
-  function autoRefresh_yearly_visitor_div()
-  {
+  function autoRefresh_yearly_visitor_div() {
     var currentLocation = window.location;
     $("#index_yearly_visitor").load(currentLocation + ' #index_yearly_visitor')
   }
   setInterval('autoRefresh_yearly_visitor_div()', 60000); //1분 마다 새로고침
 
-  function autoRefresh_total_visitor_div()
-  {
+  function autoRefresh_total_visitor_div() {
     var currentLocation = window.location;
     $("#index_total_visitor").load(currentLocation + ' #index_total_visitor')
   }
@@ -1257,7 +1371,7 @@
 
 <!-- Excel Download 스크립트 -->
 <script>
-  $('#excel_download_btn').click(function(){
+  $('#excel_download_btn').click(function () {
     var selectDateRadioSwitch = document.getElementById("selectDateRadioSwitch");
 
     if (selectDateRadioSwitch.checked) {
@@ -1271,17 +1385,22 @@
       var start_date_val = start_date.value;
       var end_date_val = end_date.value;
 
-      var postdata = {'excel_option_val': excel_option_val, 'option_text_val': option_text_val ,'start_date_val': start_date_val, 'end_date_val': end_date_val}
+      var postdata = {
+        'excel_option_val': excel_option_val,
+        'option_text_val': option_text_val,
+        'start_date_val': start_date_val,
+        'end_date_val': end_date_val
+      }
       $.ajax({
         contentType: 'application/json',
         type: 'POST',
         url: '/api/ajax_excel_download_1',
         data: JSON.stringify(postdata),
         dataType: 'json',
-        success: function(data) {
+        success: function (data) {
           alert('다운로드 되었습니다.')
         },
-        error: function(request, status, error) {
+        error: function (request, status, error) {
           message = request.responseText;
           if (message == "No Input")
             alert('조건에 입력된 값이 없습니다.');
@@ -1293,25 +1412,27 @@
             alert('검색된 데이터가 없습니다.');
         }
       })
-    }
-    else {
+    } else {
       var start_date = document.getElementById("start_date");
       var end_date = document.getElementById("end_date");
 
       var start_date_val = start_date.value;
       var end_date_val = end_date.value;
 
-      var postdata = {'start_date_val': start_date_val, 'end_date_val': end_date_val}
+      var postdata = {
+        'start_date_val': start_date_val,
+        'end_date_val': end_date_val
+      }
       $.ajax({
         contentType: 'application/json',
         type: 'POST',
         url: '/api/ajax_excel_download_2',
         data: JSON.stringify(postdata),
         dataType: 'json',
-        success: function(data) {
+        success: function (data) {
           alert('다운로드 되었습니다.')
         },
-        error: function(request, status, error) {
+        error: function (request, status, error) {
           message = request.responseText;
           if (message == "No Date")
             alert('날짜를 모두 선택해주세요.');
@@ -1326,19 +1447,19 @@
 </script>
 
 <script>
-  $(document).ready(function() {
+  $(document).ready(function () {
     // selectDateRadioSwitch 체크박스 변경 이벤트를 감지
-    $('#selectDateRadioSwitch').change(function() {
+    $('#selectDateRadioSwitch').change(function () {
       if ($(this).is(':checked')) {
         $('#select_excel_option').css('display', 'block');
         $('#select_option_text').css('display', 'block');
         $('#select_excel_option').prop('disabled', false); // 활성화
-        $('#select_option_text').prop('disabled', false);  // 활성화
+        $('#select_option_text').prop('disabled', false); // 활성화
       } else {
         $('#select_excel_option').css('display', 'none');
         $('#select_option_text').css('display', 'none');
-        $('#select_excel_option').prop('disabled', true);  // 비활성화
-        $('#select_option_text').prop('disabled', true);   // 비활성화
+        $('#select_excel_option').prop('disabled', true); // 비활성화
+        $('#select_option_text').prop('disabled', true); // 비활성화
       }
     });
   });
@@ -1346,18 +1467,21 @@
 {% endblock %}
 
 {% block js %}
-    {{ super() }}
-    <!-- Page level plugins -->
-    <script src="{{ url_for('static', filename='vendor/chart.js/Chart.min.js')}}"></script>
+{{ super() }}
+<!-- Page level plugins -->
+<script src="{{ url_for('static', filename='vendor/chart.js/Chart.min.js')}}"></script>
 
-    <!-- Page level custom scripts -->
-    <script src="{{ url_for('static', filename='js/demo/chart-area-demo.js')}}"></script>
-    <script src="{{ url_for('static', filename='js/demo/chart-pie-demo.js')}}"></script>
+<!-- Page level custom scripts -->
+<script src="{{ url_for('static', filename='js/demo/chart-area-demo.js')}}"></script>
+<script src="{{ url_for('static', filename='js/demo/chart-pie-demo.js')}}"></script>
 
-    <!-- 테이블 데이터 처리 부트스트랩 Page level plugins -->
-    <script src="{{ url_for('static', filename='vendor/datatables/jquery.dataTables.min.js')}}"></script>
-    <script src="{{ url_for('static', filename='vendor/datatables/dataTables.bootstrap4.min.js')}}"></script>
+<!-- 테이블 데이터 처리 부트스트랩 Page level plugins -->
+<script src="{{ url_for('static', filename='vendor/datatables/jquery.dataTables.min.js')}}"></script>
+<script src="{{ url_for('static', filename='vendor/datatables/dataTables.bootstrap4.min.js')}}"></script>
 
-    <!-- Page level custom scripts -->
-    <script src="{{ url_for('static', filename='js/demo/datatables-demo.js')}}"></script>
+<!-- Page level custom scripts -->
+<script src="{{ url_for('static', filename='js/demo/datatables-demo.js')}}"></script>
+
+<script src="{{ url_for('static', filename='css/bootstrap-table-expandable.css')}}"></script>
+<script src="{{ url_for('static', filename='js/bootstrap-table-expandable.js')}}"></script>
 {% endblock %}

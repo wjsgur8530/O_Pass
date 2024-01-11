@@ -155,6 +155,17 @@
         <!-- /.container-fluid -->
       </div>
       <!-- End of Main Content -->
+
+<script>
+  $(document).ready(function() {
+    // DataTable 초기화
+    var table = $('#dataTable').DataTable({
+      lengthMenu: [10, 15, 20],
+      pageLength: 10, // 기본 페이지 길이 설정
+      order: [[0, 'desc']]
+    });
+  })
+</script>
 <script>
   $(document).ready(function() {
       $('#dataTable2').DataTable(); // dataTable2에 dataTable 기능 부여

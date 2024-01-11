@@ -251,144 +251,7 @@ def visualization_chart():
 
 
 #===================================================================================
-
-# 방문객 관리 페이지
-@app.route('/manage_visitors', methods=['GET', 'POST'])
-@login_required
-def manage_visitors():
-    current_timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-    if request.method == 'POST' and current_user.permission == '관리자':
-        update_id = request.form['inputUpdateNumber']
-        name = request.form['inputName']
-        department = request.form['inputDepartment']
-        phone = request.form['inputPhoneNumber']
-        manager = request.form['inputManager']
-        location = request.form.get('inputLocation')
-        device = request.form.get('inputDevice')
-        remarks = request.form.get('inputRemarks')
-        object = request.form.get('inputObject')
-        personal_computer = request.form.get('inputPC')
-        work = request.form.get('inputWork')
-        company_type = request.form.get('inputCompany')
-        company = request.form.get('inputCompanyName')
-        work_content = request.form.get('inputContent')
-        model_name = request.form.get('inputModelName')
-        serial_number = request.form.get('inputSerialNumber')
-        reason = request.form.get('inputReason')
-        work_division = request.form.get('inputWorkDivision')
-        customer = request.form.get('inputCustomer')
-        device_division = request.form.get('inputDeviceDivision')
-        device_count = request.form.get('inputDeviceCount')
-
-        update_visitor = Visitor.query.filter_by(id=update_id).first()
-        update_visitor.name = name
-        update_visitor.department = aes.encrypt(department)
-        update_visitor.phone = aes.encrypt(phone)
-        update_visitor.manager = manager
-
-        if personal_computer == '1':
-            update_visitor.personal_computer = True
-        else:
-            update_visitor.personal_computer = False
-
-        update_visitor.model_name = model_name
-        update_visitor.serial_number = serial_number
-        update_visitor.pc_reason = reason
-
-        if device == '1':
-            update_visitor.device = True
-        else:
-            update_visitor.device = False
-
-        update_visitor.customer = customer
-        update_visitor.device_division = device_division
-        update_visitor.device_count = device_count
-        update_visitor.remarks = remarks
-        update_visitor.location = location
-        update_visitor.object = object
-
-        if work == '1':
-            update_visitor.work = True
-        else:
-            update_visitor.work = False
-
-        update_visitor.work_division = work_division
-        update_visitor.company_type = company_type
-        update_visitor.company = company
-        update_visitor.work_content = work_content
-
-        # 수정하기 시 로그 남기기
-        privacy_log = Privacy_log("수정", current_user.id, request.remote_addr, current_timestamp, "내방객 수정", update_visitor.name)
-        db.session.add(privacy_log)
-
-        db.session.commit()
-        return redirect('manage_visitors')
-    elif current_user.permission == '관리자':
-
-        # 타임 스탬프
-        today_weekday = datetime.now().weekday()
-        weekdays = {0: "월요일", 1: "화요일", 2: "수요일", 3: "목요일", 4: "금요일", 5: "토요일", 6: "일요일"}
-        weekday = weekdays.get(today_weekday, "")
-        current_date = datetime.now().strftime('%Y년 %m월 %d일 ') + weekday
-        current_time = datetime.now().strftime('\n%p %H:%M:%S')
-        time = [ current_date, current_time]
-
-        # 승인된 방문객 Sort_Desc
-        approve_visitors = Visitor.query.filter_by(approve=1).order_by(Visitor.id.desc())
-        for visitor in approve_visitors:
-            visitor.department = aes.decrypt(visitor.department)
-            visitor.phone = aes.decrypt(visitor.phone)
-
-        # 출입 카드 목록
-        card_list = Card.query.all()
-
-        # 카드 수정 목록
-        update_card_list = Card.query.with_entities(Card.card_type).distinct().all()
-
-        # 랙 키 목록
-        rack_key_list = Rack.query.all()
-        if approve_visitors:
-            # 실시간 출입 방문객
-            in_visitor = Visitor.query.filter_by(exit=0)
-            in_visitor_card_none = Visitor.query.filter_by(exit=0, card_id=None)
-
-            # 실시간 출입 방문객 카운팅
-            in_visitor = in_visitor.count()
-            in_visitor_card_none = in_visitor_card_none.count()
-            in_visitor = in_visitor - in_visitor_card_none
-
-            # 퇴실하지 않고 카드 받지 않은 방문객
-            no_exit_card_visitor = Visitor.query.filter_by(exit=0, card_id=None).count()
-
-            # 미반납 카드
-            total_card = Card.query.count()
-            no_return_card = Card.query.filter_by(card_status='불출').count()
-
-            today = date.today()
-            total_visitors = db.session.query(func.sum(Year.count)).scalar() # 총 방문객
-            year = Year.query.filter_by(year=today.year).first() # 연간 방문객
-            month = Month.query.filter_by(year=today.year, month=today.month).first() # 월간 방문객
-            day = Day.query.filter_by(year=today.year, month=today.month, day=today.day).first() # 일간 방문객
-            if year:
-                yearly_visitor = year.count
-                if month:
-                    monthly_visitor = month.count
-                    if day:
-                        daily_visitor = day.count
-                        visitor_count = [in_visitor, yearly_visitor, monthly_visitor, daily_visitor]
-                    else:
-                        visitor_count = [in_visitor, yearly_visitor, monthly_visitor, 0]
-                else:
-                    visitor_count = [in_visitor, yearly_visitor, 0, 0]
-            else:
-                visitor_count = [in_visitor, 0, 0, 0]
-
-        # 내방객 등록 - 부서 목록
-        
-        department_lists = Department.query.filter_by(user_id=current_user.id).all()
-        return render_template('visitor_update.html', current_user=current_user, approve_visitors=approve_visitors, visitor_count=visitor_count, time=time, card_list=card_list, update_card_list=update_card_list, department_lists=department_lists, total_visitors=total_visitors, rack_key_list=rack_key_list, no_exit_card_visitor=no_exit_card_visitor, total_card=total_card, no_return_card=no_return_card)
-    else:
-        return render_template('404.html')
+    
 #===================================================================================
 
 @app.route('/rack_visitors', methods=['GET','POST'])
@@ -513,7 +376,6 @@ def visit_update():
         manager = request.form['inputUpdateManager']
         location = request.form.get('inputUpdateLocation')
         device = request.form.get('inputUpdateDevice')
-        remarks = request.form.get('inputUpdateRemarks')
         object = request.form.get('inputUpdateObject')
         personal_computer = request.form.get('inputUpdatePC')
         work = request.form.get('inputUpdateWork')
@@ -524,9 +386,15 @@ def visit_update():
         serial_number = request.form.get('inputUpdateSerialNumber')
         reason = request.form.get('inputUpdateReason')
         work_division = request.form.get('inputUpdateWorkDivision')
-        customer = request.form.get('inputUpdateCustomer')
-        device_division = request.form.get('inputUpdateDeviceDivision')
-        device_count = request.form.get('inputUpdateDeviceCount')
+
+        device_date = request.form.get('inputUpdateDeviceDate')
+        device_company = request.form.get('inputUpdateDeviceCompany')
+        device_department = request.form.get('inputUpdateDeviceDepartment')
+        device_request_manager = request.form.get('inputUpdateDeviceRequestManager')
+        device_manager = request.form.get('inputUpdateDeviceManager')
+        device_reason = request.form.get('inputUpdateDeviceReason')
+        device_remarks = request.form.get('inputUpdateDeviceRemarks')
+
         approval_team = request.form.get('inputUpdateApproval')
 
         update_visitor = Visitor.query.filter_by(id=update_id).first()
@@ -549,10 +417,14 @@ def visit_update():
         else:
             update_visitor.device = False
         
-        update_visitor.customer = customer
-        update_visitor.device_division = device_division
-        update_visitor.device_count = device_count
-        update_visitor.remarks = remarks
+        update_visitor.device_date = device_date
+        update_visitor.device_company = device_company
+        update_visitor.device_department = device_department
+        update_visitor.device_request_manager = device_request_manager
+        update_visitor.device_manager = device_manager
+        update_visitor.device_reason = device_reason
+        update_visitor.device_remarks = device_remarks
+
         update_visitor.location = location
         update_visitor.object = object
 
@@ -654,7 +526,7 @@ def manage_logs():
 def card_logs():
     formatted_date = datetime.now().strftime('%Y-%m-%d')
     if current_user.permission == '관리자':
-        card_log = Card_log.query.all()
+        card_log = Card_log.query.order_by(Card_log.id.asc()).all()
 
         cards = Card_log.query.with_entities(Card_log.card_type).distinct().all()
         categories = []
@@ -679,15 +551,22 @@ def user_logs():
         return render_template('user_logs.html', user_log=user_log)
     else:
         return render_template('404.html')
-
-@app.route('/account_logs', methods=['GET', 'POST'])
+    
+@app.route('/account_delete_logs', methods=['GET', 'POST'])
 @login_required
-def account_logs():
+def account_delete_logs():
+    if current_user.permission == '관리자':
+        remove_user = Account_log.query.all()
+        return render_template('account_delete_logs.html', remove_user=remove_user)
+    else:
+        return render_template('404.html')
+    
+@app.route('/account_manage', methods=['GET', 'POST'])
+@login_required
+def account_manage():
     if current_user.permission == '관리자':
         user = User.query.filter_by().order_by(User.id).all()
-        remove_user = Account_log.query.all()
-        print(user)
-        return render_template('account_logs.html', user=user, remove_user=remove_user)
+        return render_template('account_manage.html', user=user)
     else:
         return render_template('404.html')
 
@@ -717,9 +596,20 @@ def password_change_log():
         password_change_log = Password_change_log.query.filter_by(user_id=current_user.id).order_by(Password_change_log.id.desc()).all()
         return render_template('password_change_at.html', password_change_log=password_change_log)
 
-@app.route('/privacy_logs', methods=['GET', 'POST'])
+# 등록
+@app.route('/privacy_1', methods=['GET', 'POST'])
 @login_required
-def privacy_logs():
+def privacy_1():
+    if current_user.permission == '관리자':
+        register_log = Privacy_log.query.filter_by(task_title='등록').all()
+        return render_template('privacy_register_logs.html', register_log=register_log)
+    else:
+        return render_template('404.html')
+
+# 승인
+@app.route('/privacy_2', methods=['GET', 'POST'])
+@login_required
+def privacy_2():
     if current_user.permission == '관리자':
         register_log = Privacy_log.query.filter_by(task_title='등록').all()
         approve_log = Privacy_log.query.filter_by(task_title='승인').all()
@@ -727,7 +617,7 @@ def privacy_logs():
         change_log = Privacy_log.query.filter_by(task_title='수정').all()
         inquiry_log = Privacy_log.query.filter_by(task_title='조회').all()
         delete_log= Privacy_log.query.filter_by(task_title='삭제').all() 
-        return render_template('privacy_logs.html', register_log=register_log, approve_log=approve_log, reject_log=reject_log, change_log=change_log, inquiry_log=inquiry_log, delete_log=delete_log)
+        return render_template('privacy_register_logs.html', register_log=register_log, approve_log=approve_log, reject_log=reject_log, change_log=change_log, inquiry_log=inquiry_log, delete_log=delete_log)
     else:
         return render_template('404.html')
 
@@ -1301,14 +1191,13 @@ def visitor():
         # GET - 승인되지 않은 방문객 정보
         if current_user.permission == '관리자':
             visitor_info = Visitor.query.filter(
-                or_(
-                    Visitor.writer == current_user.username,
-                    and_(
-                        Visitor.approval_team == current_user.department,
-                        Visitor.approve == 0,
-                    )
+                # Visitor.writer == current_user.username,
+                and_(
+                    Visitor.approval_team == current_user.department,
+                    Visitor.approve == 0,
                 )
             )
+
             for visitor in visitor_info:
                 visitor.department = aes.decrypt(visitor.department)
                 visitor.phone = aes.decrypt(visitor.phone)
@@ -1841,6 +1730,8 @@ def ajax_update_visit_recall_card_checkbox():
     # 선택한 카드가 없음
     if data_length < 1:
         return "No Select"
+    if data_length != 1:
+        return "Multi Check"
     
     for checked_data in checked_datas:
         recall_visitor = Visitor.query.filter_by(id=checked_data).first()
@@ -1850,6 +1741,7 @@ def ajax_update_visit_recall_card_checkbox():
             return "Exited"
         recall_visitor.card.card_status = "회수"
         recall_visitor.card_id = None
+        recall_visitor.entry_date = None
         db.session.commit()
     return jsonify(result = "success")
 
@@ -3613,6 +3505,290 @@ def process_device():
     else:
         result = db.session.query(Visitor, DeviceInfo).join(DeviceInfo, Visitor.id == DeviceInfo.visitor_id).filter(Visitor.device == 1, Visitor.exit == 1).all()
         return render_template('process_device.html', result=result)
+
+@app.route('/accordion_table', methods=['GET','POST'])
+def accordion_table():
+    current_timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+    if request.method == 'POST' and current_user.permission == '관리자':
+        update_id = request.form['inputUpdateNumber']
+        name = request.form['inputName']
+        department = request.form['inputDepartment']
+        phone = request.form['inputPhoneNumber']
+        manager = request.form['inputManager']
+        location = request.form.get('inputLocation')
+        device = request.form.get('inputDevice')
+        remarks = request.form.get('inputRemarks')
+        object = request.form.get('inputObject')
+        personal_computer = request.form.get('inputPC')
+        work = request.form.get('inputWork')
+        company_type = request.form.get('inputCompany')
+        company = request.form.get('inputCompanyName')
+        work_content = request.form.get('inputContent')
+        model_name = request.form.get('inputModelName')
+        serial_number = request.form.get('inputSerialNumber')
+        reason = request.form.get('inputReason')
+        work_division = request.form.get('inputWorkDivision')
+        customer = request.form.get('inputCustomer')
+        device_division = request.form.get('inputDeviceDivision')
+        device_count = request.form.get('inputDeviceCount')
+
+        update_visitor = Visitor.query.filter_by(id=update_id).first()
+        update_visitor.name = name
+        update_visitor.department = aes.encrypt(department)
+        update_visitor.phone = aes.encrypt(phone)
+        update_visitor.manager = manager
+
+        if personal_computer == '1':
+            update_visitor.personal_computer = True
+        else:
+            update_visitor.personal_computer = False
+
+        update_visitor.model_name = model_name
+        update_visitor.serial_number = serial_number
+        update_visitor.pc_reason = reason
+
+        if device == '1':
+            update_visitor.device = True
+        else:
+            update_visitor.device = False
+
+        update_visitor.customer = customer
+        update_visitor.device_division = device_division
+        update_visitor.device_count = device_count
+        update_visitor.remarks = remarks
+        update_visitor.location = location
+        update_visitor.object = object
+
+        if work == '1':
+            update_visitor.work = True
+        else:
+            update_visitor.work = False
+
+        update_visitor.work_division = work_division
+        update_visitor.company_type = company_type
+        update_visitor.company = company
+        update_visitor.work_content = work_content
+
+        # 수정하기 시 로그 남기기
+        privacy_log = Privacy_log("수정", current_user.id, request.remote_addr, current_timestamp, "내방객 수정", update_visitor.name)
+        db.session.add(privacy_log)
+
+        db.session.commit()
+        return redirect('manage_visitors')
+    elif current_user.permission == '관리자':
+        # 타임 스탬프
+        today_weekday = datetime.now().weekday()
+        weekdays = {0: "월요일", 1: "화요일", 2: "수요일", 3: "목요일", 4: "금요일", 5: "토요일", 6: "일요일"}
+        weekday = weekdays.get(today_weekday, "")
+        current_date = datetime.now().strftime('%Y년 %m월 %d일 ') + weekday
+        current_time = datetime.now().strftime('\n%p %H:%M:%S')
+        time = [ current_date, current_time]
+
+        # 승인된 방문객 Sort_Desc
+        approve_visitors = Visitor.query.filter_by(approve=1).order_by(Visitor.id.desc())
+        for visitor in approve_visitors:
+            visitor.department = aes.decrypt(visitor.department)
+            visitor.phone = aes.decrypt(visitor.phone)
+
+        # 출입 카드 목록
+        card_list = Card.query.all()
+
+        # 카드 수정 목록
+        update_card_list = Card.query.with_entities(Card.card_type).distinct().all()
+
+        # 랙 키 목록
+        rack_key_list = Rack.query.all()
+        if approve_visitors:
+            # 실시간 출입 방문객
+            in_visitor = Visitor.query.filter_by(exit=0)
+            in_visitor_card_none = Visitor.query.filter_by(exit=0, card_id=None)
+
+            # 실시간 출입 방문객 카운팅
+            in_visitor = in_visitor.count()
+            in_visitor_card_none = in_visitor_card_none.count()
+            in_visitor = in_visitor - in_visitor_card_none
+
+            # 퇴실하지 않고 카드 받지 않은 방문객
+            no_exit_card_visitor = Visitor.query.filter_by(exit=0, card_id=None).count()
+
+            # 미반납 카드
+            total_card = Card.query.count()
+            no_return_card = Card.query.filter_by(card_status='불출').count()
+
+            today = date.today()
+            total_visitors = db.session.query(func.sum(Year.count)).scalar() # 총 방문객
+            year = Year.query.filter_by(year=today.year).first() # 연간 방문객
+            month = Month.query.filter_by(year=today.year, month=today.month).first() # 월간 방문객
+            day = Day.query.filter_by(year=today.year, month=today.month, day=today.day).first() # 일간 방문객
+            if year:
+                yearly_visitor = year.count
+                if month:
+                    monthly_visitor = month.count
+                    if day:
+                        daily_visitor = day.count
+                        visitor_count = [in_visitor, yearly_visitor, monthly_visitor, daily_visitor]
+                    else:
+                        visitor_count = [in_visitor, yearly_visitor, monthly_visitor, 0]
+                else:
+                    visitor_count = [in_visitor, yearly_visitor, 0, 0]
+            else:
+                visitor_count = [in_visitor, 0, 0, 0]
+
+        # 내방객 등록 - 부서 목록
+        
+        department_lists = Department.query.filter_by(user_id=current_user.id).all()
+        return render_template('accordion_table.html', current_user=current_user, approve_visitors=approve_visitors, visitor_count=visitor_count, time=time, card_list=card_list, update_card_list=update_card_list, department_lists=department_lists, total_visitors=total_visitors, rack_key_list=rack_key_list, no_exit_card_visitor=no_exit_card_visitor, total_card=total_card, no_return_card=no_return_card)
+    else:
+        return render_template('404.html')
+
+
+# 방문객 관리 페이지
+@app.route('/manage_visitors', methods=['GET', 'POST'])
+@login_required
+def manage_visitors():
+    current_timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+    if request.method == 'POST' and current_user.permission == '관리자':
+        update_id = request.form['inputUpdateNumber']
+        name = request.form['inputName']
+        department = request.form['inputDepartment']
+        phone = request.form['inputPhoneNumber']
+        manager = request.form['inputManager']
+        location = request.form.get('inputLocation')
+        device = request.form.get('inputDevice')
+        object = request.form.get('inputObject')
+        personal_computer = request.form.get('inputPC')
+        work = request.form.get('inputWork')
+        company_type = request.form.get('inputCompany')
+        company = request.form.get('inputCompanyName')
+        work_content = request.form.get('inputContent')
+        model_name = request.form.get('inputModelName')
+        serial_number = request.form.get('inputSerialNumber')
+        reason = request.form.get('inputReason')
+        work_division = request.form.get('inputWorkDivision')
+        
+        device_date = request.form.get('inputDeviceDate')
+        device_company = request.form.get('inputDeviceCompany')
+        device_department = request.form.get('inputDeviceDepartment')
+        device_request_manager = request.form.get('inputDeviceRequestManager')
+        device_manager = request.form.get('inputDeviceManager')
+        device_reason = request.form.get('inputDeviceReason')
+        device_remarks = request.form.get('inputDeviceRemarks')
+        print("1231231231232132: " + device_date, device_company, device_department)
+        # approval_team = request.form.get('inputApproval')
+
+        update_visitor = Visitor.query.filter_by(id=update_id).first()
+        update_visitor.name = name
+        update_visitor.department = aes.encrypt(department)
+        update_visitor.phone = aes.encrypt(phone)
+        update_visitor.manager = manager
+
+        if personal_computer == '1':
+            update_visitor.personal_computer = True
+        else:
+            update_visitor.personal_computer = False
+
+        update_visitor.model_name = model_name
+        update_visitor.serial_number = serial_number
+        update_visitor.pc_reason = reason
+
+        if device == '1':
+            update_visitor.device = True
+        else:
+            update_visitor.device = False
+
+        update_visitor.device_date = device_date
+        update_visitor.device_company = device_company
+        update_visitor.device_department = device_department
+        update_visitor.device_request_manager = device_request_manager
+        update_visitor.device_manager = device_manager
+        update_visitor.device_reason = device_reason
+        update_visitor.device_remarks = device_remarks
+        update_visitor.location = location
+        update_visitor.object = object
+
+        if work == '1':
+            update_visitor.work = True
+        else:
+            update_visitor.work = False
+
+        update_visitor.work_division = work_division
+        update_visitor.company_type = company_type
+        update_visitor.company = company
+        update_visitor.work_content = work_content
+        # update_visitor.approval_team = approval_team
+
+        # 수정하기 시 로그 남기기
+        privacy_log = Privacy_log("수정", current_user.id, request.remote_addr, current_timestamp, "내방객 수정", update_visitor.name)
+        db.session.add(privacy_log)
+
+        db.session.commit()
+        return redirect('manage_visitors')
+    elif current_user.permission == '관리자':
+
+        # 타임 스탬프
+        today_weekday = datetime.now().weekday()
+        weekdays = {0: "월요일", 1: "화요일", 2: "수요일", 3: "목요일", 4: "금요일", 5: "토요일", 6: "일요일"}
+        weekday = weekdays.get(today_weekday, "")
+        current_date = datetime.now().strftime('%Y년 %m월 %d일 ') + weekday
+        current_time = datetime.now().strftime('\n%p %H:%M:%S')
+        time = [ current_date, current_time]
+
+        # 승인된 방문객 Sort_Desc
+        approve_visitors = Visitor.query.filter_by(approve=1).order_by(Visitor.id.desc())
+        for visitor in approve_visitors:
+            visitor.department = aes.decrypt(visitor.department)
+            visitor.phone = aes.decrypt(visitor.phone)
+
+        # 출입 카드 목록
+        card_list = Card.query.all()
+
+        # 카드 수정 목록
+        update_card_list = Card.query.with_entities(Card.card_type).distinct().all()
+
+        # 랙 키 목록
+        rack_key_list = Rack.query.all()
+        if approve_visitors:
+            # 실시간 출입 방문객
+            in_visitor = Visitor.query.filter_by(exit=0)
+            in_visitor_card_none = Visitor.query.filter_by(exit=0, card_id=None)
+
+            # 실시간 출입 방문객 카운팅
+            in_visitor = in_visitor.count()
+            in_visitor_card_none = in_visitor_card_none.count()
+            in_visitor = in_visitor - in_visitor_card_none
+
+            # 퇴실하지 않고 카드 받지 않은 방문객
+            no_exit_card_visitor = Visitor.query.filter_by(exit=0, card_id=None).count()
+
+            # 미반납 카드
+            total_card = Card.query.count()
+            no_return_card = Card.query.filter_by(card_status='불출').count()
+
+            today = date.today()
+            total_visitors = db.session.query(func.sum(Year.count)).scalar() # 총 방문객
+            year = Year.query.filter_by(year=today.year).first() # 연간 방문객
+            month = Month.query.filter_by(year=today.year, month=today.month).first() # 월간 방문객
+            day = Day.query.filter_by(year=today.year, month=today.month, day=today.day).first() # 일간 방문객
+            if year:
+                yearly_visitor = year.count
+                if month:
+                    monthly_visitor = month.count
+                    if day:
+                        daily_visitor = day.count
+                        visitor_count = [in_visitor, yearly_visitor, monthly_visitor, daily_visitor]
+                    else:
+                        visitor_count = [in_visitor, yearly_visitor, monthly_visitor, 0]
+                else:
+                    visitor_count = [in_visitor, yearly_visitor, 0, 0]
+            else:
+                visitor_count = [in_visitor, 0, 0, 0]
+
+        # 내방객 등록 - 부서 목록
+        
+        department_lists = Department.query.filter_by(user_id=current_user.id).all()
+        return render_template('visitor_update.html', current_user=current_user, approve_visitors=approve_visitors, visitor_count=visitor_count, time=time, card_list=card_list, update_card_list=update_card_list, department_lists=department_lists, total_visitors=total_visitors, rack_key_list=rack_key_list, no_exit_card_visitor=no_exit_card_visitor, total_card=total_card, no_return_card=no_return_card)
+    else:
+        return render_template('404.html')
 
 @app.errorhandler(jinja2.exceptions.TemplateNotFound)
 def template_not_found(e):

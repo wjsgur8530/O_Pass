@@ -70,7 +70,7 @@
                   </div>
                     <div class="col-md-4">
                       <label for="inputName" class="form-label">내방객 이름</label>
-                      <input type="text" class="form-control" id="inputName" name="inputName" required>
+                      <input type="text" class="form-control" id="inputName" name="inputName" placeholder="이름만 입력해주세요." required>
                       <div class="invalid-feedback">
                         이름을 입력해주세요.
                       </div>
@@ -99,7 +99,7 @@
                     </div>
                     <div class="col-4">
                       <label for="inputManager" class="form-label">담당자</label>
-                      <input type="text" class="form-control" id="inputManager" placeholder="" name="inputManager" required>
+                      <input type="text" class="form-control" id="inputManager" placeholder="이름만 입력해주세요." name="inputManager" required>
                     </div>
                     <div class="col-12" style="display:flex;">
                       <div class="form-check">
@@ -152,7 +152,7 @@
                       <input type="text" class="form-control" id="inputLocation" placeholder="etc. 4층 전산실" disabled="true" name="inputLocation">
                     </div>
                     <div class="col-6">
-                      <label for="inputCompany" class="form-label">작업 요청 회사</label>
+                      <label for="inputCompany" class="form-label">작업 대상 회사</label>
                       <div class="input-group">
                       <select class="form-select col-xl-5" id="inputCompany" name="inputCompany" disabled="true">
                         <option value="계열사">계열사</option>
@@ -161,7 +161,7 @@
                       <input type="text" class="form-control" id="inputCompanyName" disabled="true" name="inputCompanyName">
                       </div>
                     </div>
-                    <h6>[요청자]</h6>
+                    <h6>[출입 요청자]</h6>
                     <div class="col-md-12">
                       <label for="inputDeviceDate" class="form-label">일자</label>
                       <input type="text" class="form-control" id="inputDeviceDate" disabled="true" name="inputDeviceDate" placeholder="etc. 기간 YYYY년 MM월 DD일 ~ YYYY년 MM월 DD일">
@@ -176,12 +176,12 @@
                     </div>
                     <div class="col-md-3">
                       <label for="inputDeviceRequestManager" class="form-label">담당자</label>
-                      <input type="text" class="form-control" id="inputDeviceRequestManager" disabled="true" name="inputDeviceRequestManager">
+                      <input type="text" class="form-control" id="inputDeviceRequestManager" placeholder="이름만 입력해주세요." disabled="true" name="inputDeviceRequestManager">
                     </div>
                     <h6>[장비/파트 반출입 수행자 (데이터센터 근무자)] / 반입, 반출 사유</h6>
                     <div class="col-md-3">
                       <label for="inputDeviceManager" class="form-label">담당자</label>
-                      <input type="text" class="form-control" id="inputDeviceManager" disabled="true" name="inputDeviceManager">
+                      <input type="text" class="form-control" id="inputDeviceManager" placeholder="이름만 입력해주세요." disabled="true" name="inputDeviceManager">
                     </div>
                     <div class="col-md-9">
                       <label for="inputDeviceReason" class="form-label">반입/반출 사유</label>
@@ -222,8 +222,8 @@
                           </select>
                       </div>
                       <div class="col-md-4">
-                        <label for="inputUpdateName" class="form-label">이름</label>
-                        <input type="text" class="form-control" id="inputUpdateName" name="inputUpdateName" required>
+                        <label for="inputUpdateName" class="form-label">내방객 이름</label>
+                        <input type="text" class="form-control" id="inputUpdateName" name="inputUpdateName" placeholder="이름만 입력해주세요." required>
                       </div>
                       <div class="col-4">
                         <label for="inputUpdatePhoneNumber" class="form-label">연락처</label>
@@ -249,7 +249,7 @@
                       </div>
                       <div class="col-4">
                         <label for="inputUpdateManager" class="form-label">담당자</label>
-                        <input type="text" class="form-control" id="inputUpdateManager" placeholder="" name="inputUpdateManager" required>
+                        <input type="text" class="form-control" id="inputUpdateManager" placeholder="이름만 입력해주세요." name="inputUpdateManager" required>
                       </div>
                       <div class="col-12" style="display:flex;">
                         <div class="form-check">
@@ -302,7 +302,7 @@
                         <input type="text" class="form-control" id="inputUpdateLocation" placeholder="etc. 4층 전산실" disabled="true" name="inputUpdateLocation">
                       </div>
                       <div class="col-6">
-                        <label for="inputUpdateCompany" class="form-label">작업 요청 회사</label>
+                        <label for="inputUpdateCompany" class="form-label">작업 대상 회사</label>
                         <div class="input-group">
                         <select class="form-select col-xl-5" id="inputUpdateCompany" name="inputUpdateCompany" disabled="true">
                           <option value="계열사">계열사</option>
@@ -311,7 +311,7 @@
                         <input type="text" class="form-control" id="inputUpdateCompanyName" disabled="true" name="inputUpdateCompanyName">
                         </div>
                       </div>
-                      <h6>[요청자]</h6>
+                      <h6>[출입 요청자]</h6>
                     <div class="col-md-12">
                       <label for="inputUpdateDeviceDate" class="form-label">일자</label>
                       <input type="text" class="form-control" id="inputUpdateDeviceDate" disabled="true" name="inputUpdateDeviceDate" placeholder="etc. 기간 YYYY년 MM월 DD일 ~ YYYY년 MM월 DD일">
@@ -326,12 +326,12 @@
                     </div>
                     <div class="col-md-3">
                       <label for="inputUpdateDeviceRequestManager" class="form-label">담당자</label>
-                      <input type="text" class="form-control" id="inputUpdateDeviceRequestManager" disabled="true" name="inputUpdateDeviceRequestManager">
+                      <input type="text" class="form-control" id="inputUpdateDeviceRequestManager" placeholder="이름만 입력해주세요." disabled="true" name="inputUpdateDeviceRequestManager">
                     </div>
                     <h6>[장비/파트 반출입 수행자 (데이터센터 근무자)] / 반입, 반출 사유</h6>
                     <div class="col-md-3">
                       <label for="inputUpdateDeviceManager" class="form-label">담당자</label>
-                      <input type="text" class="form-control" id="inputUpdateDeviceManager" disabled="true" name="inputUpdateDeviceManager">
+                      <input type="text" class="form-control" id="inputUpdateDeviceManager" placeholder="이름만 입력해주세요." disabled="true" name="inputUpdateDeviceManager">
                     </div>
                     <div class="col-md-9">
                       <label for="inputUpdateDeviceReason" class="form-label">반입/반출 사유</label>
@@ -1118,7 +1118,8 @@
     // DataTable 초기화
     var table = $('#dataTable').DataTable({
       lengthMenu: [10, 15, 20],
-      pageLength: 10 // 기본 페이지 길이 설정
+      pageLength: 10, // 기본 페이지 길이 설정
+      order: [[0, 'desc']]
     });
     // 기존 페이지 길이 조정 기능 활성화
     $('#dataTable_length select').on('change', function() {

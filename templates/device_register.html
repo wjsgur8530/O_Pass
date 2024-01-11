@@ -120,7 +120,7 @@
                       </div>
                       <div class="col-1">
                           <label for="inputQuantity" class="form-label">수량</label>
-                          <input type="text" class="form-control" id="inputQuantity" name="inputQuantity" required>
+                          <input type="number" class="form-control" id="inputQuantity" name="inputQuantity" required>
                       </div>
                       <div class="col-3">
                           <label for="inputSerialNumber" class="form-label">시리얼번호</label>
@@ -178,7 +178,7 @@
                   </div>
                 </div>
                 <div class="card-body">
-                    <table class="table table-bordered" id="dataTable" width="100%" cellspacing="0" style="text-align: center;">
+                    <table class="table table-hover table-bordered" id="dataTable" width="100%" cellspacing="0" style="text-align: center;">
                       <thead>
                         <tr>
                           <th scope="col" style="width:40px;">No</th>
@@ -260,7 +260,7 @@
         </div>
     </body>
   </html>
-  
+
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-ka7Sk0Gln4gmtz2MlQnikT1wXgYsOg+OMhuP+IlRH9sENBO0LRn5q+8nbTov4+1p" crossorigin="anonymous"></script>
 <!-- 팝업 창 스크립트 -->
 <script>
@@ -515,38 +515,14 @@
 </script>
 
 <!-- 커스텀 셀렉트, 검색 기능 -->
-<script>
-  $(document).ready(function() {
-    // DataTable 초기화
+<script type="text/javascript">
+  $(document).ready(function () {
     var table = $('#dataTable').DataTable({
-      lengthMenu: [10, 15, 20],
-      pageLength: 10 // 기본 페이지 길이 설정
+      lengthMenu: [10, 15, 20, 10000],
+      pageLength: 10, // 기본 페이지 길이 설정
+      order: [[0, 'desc']]
     });
-    // 기존 페이지 길이 조정 기능 활성화
-    $('#dataTable_length select').on('change', function() {
-      var newLength = parseInt($(this).val(), 10);
-      table.page.len(newLength).draw();
-    });
-
-    // 셀릭트 이벤트 처리
-    $('#custom-select-box').on('change', function() {
-      var newLength = parseInt($(this).val(), 10);
-      table.page.len(newLength).draw();
-    });
-
-    var initialLength = table.page.len();
-    $('#custom-select-box').val(initialLength);
-
-    // 기존 datatable_length select 요소의 옵션 복사
-    var options = $('#dataTable_length select').html();
-    // 새로운 커스텀 select 요소에 옵션 추가
-    $('#custom-select-box').html(options);
-
-    // 검색 이벤트 처리
-    $('#search-input').on('keyup', function() {
-      table.search(this.value).draw();
-    });
-  });
+  })
 </script>
 
 <!-- 기존 셀렉트, 검색 폼 제거 -->

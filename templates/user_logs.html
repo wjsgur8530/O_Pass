@@ -12,9 +12,10 @@
         </div>
         <div class="card-body">
           <div class="table-responsive">
-            <table class="table table-bordered" id="dataTable" width="100%" cellspacing="0">
+            <table class="table table-hover table-bordered" id="dataTable" width="100%" cellspacing="0">
               <thead>
                 <tr>
+                  <th>No</th>
                   <th>IP 주소</th>
                   <th>로그인 시간</th>
                   <th>로그아웃 시간</th>
@@ -22,6 +23,7 @@
               </thead>
               <tfoot>
                 <tr>
+                  <th>No</th>
                   <th>IP 주소</th>
                   <th>로그인 시간</th>
                   <th>로그아웃 시간</th>
@@ -30,6 +32,7 @@
               <tbody>
                 {% for log in user_log %}
                 <tr>
+                  <td>{{log.id}}</td>
                   <td>{{log.ip_address}}</td>
                   <td>{{log.login_timestamp}}</td>
                   {% if log.logout_timestamp == None %}
@@ -48,7 +51,16 @@
   </div>
   <!-- /.container-fluid -->
 </div>
-      <!-- End of Main Content -->
+<script>
+  $(document).ready(function() {
+    // DataTable 초기화
+    var table = $('#dataTable').DataTable({
+      lengthMenu: [10, 15, 20],
+      pageLength: 10, // 기본 페이지 길이 설정
+      order: [[0, 'desc']]
+    });
+  })
+</script>
 {% endblock %}
 
 {% block js %}

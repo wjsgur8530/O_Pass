@@ -15,6 +15,10 @@
       font-family: "CJ ONLYONE NEW body Regular";
       src: "{{ url_for('static', filename='font/CJ ONLYONE NEW body Regular') }}";
     }
+    @font-face {
+      font-family: "CJ ONLYONE NEW title Bold";
+      src: "{{ url_for('static', filename='font/CJ ONLYONE NEW title Bold') }}";
+    }
   </style>
   <!-- Custom fonts for this template-->
   <link rel="stylesheet" href="{{ url_for('static', filename='vendor/fontawesome-free/css/all.min.css') }}">
@@ -52,7 +56,7 @@
 
   <!-- Custom scripts for all pages-->
   <script src="js/sb-admin-2.min.js"></script>
-<body id="page-top" oncontextmenu="return false" style="font-family: CJ ONLYONE NEW body Regular;">
+<body id="page-top" oncontextmenu="return false" style="font-family: 'CJ ONLYONE NEW body Regular'">
 
   <!-- Page Wrapper -->
   <div id="wrapper">
@@ -67,16 +71,7 @@
           <img src="{{ url_for('static', filename='img/CJ_logo.svg.png')}}" style="width:50px; height:50px;">
           <!-- <i class="fas fa-laugh-wink"></i> -->
         </div>
-        <div class="sidebar-brand-text mx-3">IDC O`Pass</div>
-      </a>
-      {% elif current_user.permission == '상황실' %}
-      <!-- Sidebar - Brand -->
-      <a class="sidebar-brand d-flex align-items-center justify-content-center" href="rack_visitors">
-        <div class="sidebar-brand-icon">
-          <img src="{{ url_for('static', filename='img/CJ_logo.svg.png')}}" style="width:50px; height:50px;">
-          <!-- <i class="fas fa-laugh-wink"></i> -->
-        </div>
-        <div class="sidebar-brand-text mx-3">IDC O`Pass</div>
+        <div class="sidebar-brand-text mx-3">IDC O`PASS</div>
       </a>
       {% else %}
       <a class="sidebar-brand d-flex align-items-center justify-content-center" href="index">
@@ -182,7 +177,7 @@
             <a class="collapse-item" href="process_work_plan">사전 작업 계획</a>
             <a class="collapse-item" href="process_device">장비 반출입</a>
             {% elif current_user.permission == '상황실' %}
-            <a class="collapse-item" href="manage_rack_keys">랙키 관리</a>
+            <!-- <a class="collapse-item" href="manage_rack_keys">랙키 관리</a> -->
             <a class="collapse-item" href="user_logs">로그인 로그</a>
             <a class="collapse-item" href="failure_logs">로그인 실패 로그</a>
             <a class="collapse-item" href="password_change_at">패스워드 변경 로그</a>
@@ -193,6 +188,44 @@
       {% endif %}
       <hr class="sidebar-divider">
       {% if current_user.is_authenticated %}
+
+      <!-- Heading -->
+      <div class="sidebar-heading">
+        Log
+      </div>
+
+      <!-- Nav Item - Pages Collapse Menu -->
+      <li class="nav-item">
+        <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseLogs" aria-expanded="true" aria-controls="collapseThree">
+          <i class="fas fa-fw fa-pen"></i>
+          <span>Logs</span>
+        </a>
+        <div id="collapseLogs" class="collapse" aria-labelledby="headingThree" data-parent="#accordionSidebar">
+          <div class="bg-white py-2 collapse-inner rounded">
+            <h6 class="collapse-header">Logs:</h6>
+            {% if current_user.permission in allowed_permission %}
+            <a class="collapse-item" href="user_logs">로그인 로그</a>
+            <a class="collapse-item" href="failure_logs">로그인 실패 로그</a>
+            <a class="collapse-item" href="password_change_at">패스워드 변경 로그</a>
+            {% elif current_user.permission == '관리자' %}
+            <a class="collapse-item" href="card_logs">카드 로그</a>
+            <a class="collapse-item" href="manage_logs">로그인 로그</a>
+            <a class="collapse-item" href="failure_logs">로그인 실패 로그</a>
+            <a class="collapse-item" href="password_change_at">패스워드 변경 로그</a>
+            <a class="collapse-item" href="account_delete_logs">계정 삭제 로그</a>
+            <h6 class="collapse-header">Confidential/Personal Info:</h6>
+            <a class="collapse-item" href="privacy_1">내방객 등록 로그</a>
+            <a class="collapse-item" href="privacy_2">내방객 승인 로그</a>
+            <a class="collapse-item" href="privacy_3">내방객 수정 로그</a>
+            <a class="collapse-item" href="privacy_4">내방객 조회 로그</a>
+            <a class="collapse-item" href="privacy_5">내방객 반려 로그</a>
+            <a class="collapse-item" href="privacy_6">내방객 삭제 로그</a>
+            {% endif %}
+          </div>
+        </div>
+      </li>
+
+      <hr class="sidebar-divider">
       <!-- Heading -->
       <div class="sidebar-heading">
         Interface
@@ -206,28 +239,14 @@
         </a>
         <div id="collapseManagements" class="collapse" aria-labelledby="headingTwo" data-parent="#accordionSidebar">
           <div class="bg-white py-2 collapse-inner rounded">
-            <h6 class="collapse-header">Custom Managements:</h6>
+            <h6 class="collapse-header">Managements:</h6>
             {% if current_user.permission in allowed_permission %}
             <a class="collapse-item" href="departments">부서/소속 관리</a>
-            <a class="collapse-item" href="user_logs">로그인 로그</a>
-            <a class="collapse-item" href="failure_logs">로그인 실패 로그</a>
-            <a class="collapse-item" href="password_change_at">패스워드 변경 로그</a>
             {% elif current_user.permission == '관리자' %}
             <a class="collapse-item" href="departments">부서/소속 관리</a>
             <a class="collapse-item" href="manage_cards">카드 관리</a>
-            <a class="collapse-item" href="card_logs">카드 로그</a>
-            <a class="collapse-item" href="manage_rack_keys">랙키 관리</a>
-            <a class="collapse-item" href="manage_logs">로그인 로그</a>
-            <a class="collapse-item" href="failure_logs">로그인 실패 로그</a>
-            <a class="collapse-item" href="password_change_at">패스워드 변경 로그</a>
-            <a class="collapse-item" href="account_logs">계정 로그</a>
-            <a class="collapse-item" href="privacy_logs">기밀/개인정보 로그</a>
-            <a class="collapse-item" href="permission">권한</a>
-            {% elif current_user.permission == '상황실' %}
-            <a class="collapse-item" href="manage_rack_keys">랙키 관리</a>
-            <a class="collapse-item" href="user_logs">로그인 로그</a>
-            <a class="collapse-item" href="failure_logs">로그인 실패 로그</a>
-            <a class="collapse-item" href="password_change_at">패스워드 변경 로그</a>
+            <a class="collapse-item" href="permission">권한 관리</a>
+            <a class="collapse-item" href="account_manage">계정 관리</a>
             {% endif %}
           </div>
         </div>
@@ -259,19 +278,6 @@
         </li>
       {% endif %}
 
-      <!-- Nav Item - Tables -->
-      <!-- <li class="nav-item">
-        <a class="nav-link" href="tables">
-          <i class="fas fa-fw fa-table"></i>
-          <span>Tables</span></a>
-      </li>
-
-      <li class="nav-item">
-        <a class="nav-link" href="tables_test">
-          <i class="fas fa-fw fa-table"></i>
-          <span>Tables</span></a>
-      </li> -->
-
       <!-- Divider -->
       <hr class="sidebar-divider d-none d-md-block">
 
@@ -296,18 +302,6 @@
           <button id="sidebarToggleTop" class="btn btn-link d-md-none rounded-circle mr-3">
             <i class="fa fa-bars"></i>
           </button>
-
-          <!-- Topbar Search
-          <form class="d-none d-sm-inline-block form-inline mr-auto ml-md-3 my-2 my-md-0 mw-100 navbar-search">
-            <div class="input-group">
-              <input type="text" class="form-control bg-light border-0 small" placeholder="Search for..." aria-label="Search" aria-describedby="basic-addon2">
-              <div class="input-group-append">
-                <button class="btn btn-primary" type="button">
-                  <i class="fas fa-search fa-sm"></i>
-                </button>
-              </div>
-            </div>
-          </form> -->
 
           <!-- Topbar Navbar -->
           <ul class="navbar-nav ml-auto">
@@ -335,7 +329,7 @@
             {% if current_user.is_authenticated %}
             <li class="nav-item dropdown no-arrow mx-1">
               <a class="nav-link dropdown-toggle" href="#" id="alertsDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" style="color:#343a40;">
-                <i class="fas fa-bell fa-fw"></i>  비인가 접근 및 오남용에 대한 경고
+                <i class="fas fa-bell fa-fw"></i> <span data-toggle="tooltip" data-placement="bottom" title="본 시스템은 CJ올리브네트웍스 임직원에 한하여 사용하실 수 있습니다. 불법적인 접근 및 사용시 관련법규에 의해 처벌되실 수 있습니다.">비인가 접근 및 오남용에 대한 경고</span>
               </a>
             </li>
             {% endif %}
@@ -380,20 +374,6 @@
           </ul>
 
         </nav>
-        <!-- End of Topbar -->
-
-          <!-- <div id="page-wrapper">
-            {% with messages = get_flashed_messages() %} {% if messages %}
-            <div class="container">>
-                <ul class="flashes">
-                    {% for message in messages %}
-                    <li>{{ message }}</li>
-                    {% endfor %}
-                </ul>
-            </div>
-            {% endif %} {% endwith %} 
-          </div> -->
-
           {% block content %} {% endblock %}
           {% block login %} {% endblock %}
           {% block register %} {% endblock %}
